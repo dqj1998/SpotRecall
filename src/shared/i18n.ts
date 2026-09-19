@@ -46,7 +46,10 @@ const en: Dict = {
   mIndexed: 'Indexed',
   mPending: 'Pending',
   mCTR: 'Recall click-through',
+  mCTRTip: 'Of effective searches (had input and at least one result), the share that led to a click. Higher means results were useful.',
   mMRR: 'MRR',
+  mMRRTip:
+    'Mean Reciprocal Rank: the average of 1/(rank of the result you clicked). 1.00 = you always clicked the very first result; ~0.50 ≈ 2nd on average; ~0.33 ≈ 3rd. Higher is better — it measures how close to the top the right answer appears.',
   effectiveN: '{n} effective searches',
   openRate: 'open success',
   semanticTitle: 'Semantic search',
@@ -119,7 +122,10 @@ const ja: Dict = {
   mIndexed: 'インデックス済み',
   mPending: '待機中',
   mCTR: '有効呼び出しクリック率',
+  mCTRTip: '有効な検索（入力があり結果が1件以上）のうち、クリックに至った割合。高いほど結果が役立っている。',
   mMRR: 'MRR',
+  mMRRTip:
+    '平均逆順位（MRR）：クリックした結果の 1/順位 の平均。1.00＝常に1位をクリック、約0.50＝平均2位、約0.33＝3位。高いほど良く、正解がどれだけ上位に出るかを表す。',
   effectiveN: '有効検索 {n} 回',
   openRate: '開封成功率',
   semanticTitle: 'セマンティック検索',
@@ -192,7 +198,10 @@ const zh: Dict = {
   mIndexed: '已索引',
   mPending: '待向量化',
   mCTR: '有效召回点击率',
+  mCTRTip: '在"有效检索(有输入且至少一条结果)"中最终产生点击的比例。越高说明结果越有用。',
   mMRR: 'MRR',
+  mMRRTip:
+    '平均倒数排名(Mean Reciprocal Rank):对你点击的那条结果取 1/排名 再求平均。1.00=每次都点第 1 条;≈0.50≈平均点到第 2 条;≈0.33≈第 3 条。越高越好——它衡量正确结果出现得有多靠前。',
   effectiveN: '有效检索 {n} 次',
   openRate: '打开成功率',
   semanticTitle: '语义搜索',

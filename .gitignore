@@ -4,4 +4,6 @@ dist/
 .DS_Store
 public/models/
 public/ort/
+eval/labels.json
+.cache/
 SpotRecall-dev-plan.v1.bak.md

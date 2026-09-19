@@ -25,6 +25,6 @@
       "@search/*": ["src/search/*"]
     }
   },
-  "include": ["src", "scripts", "vite.config.ts"],
+  "include": ["src", "scripts", "eval", "vite.config.ts"],
   "exclude": ["node_modules", "dist"]
 }

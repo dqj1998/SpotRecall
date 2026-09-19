@@ -34,6 +34,8 @@ body {
 .lang-seg.light button.on { background: var(--sr-bg-solid); color: var(--sr-blue); font-weight: 650; box-shadow: var(--sr-shadow-sm); }
 
 .note.ok { color: #16a34a; }
+.note.dim { font-size: 11px; color: var(--sr-fg-faint); margin-top: 6px; }
+.metric[title] { cursor: help; }
 
 .card {
   background: var(--sr-bg);

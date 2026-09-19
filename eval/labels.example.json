@@ -1,0 +1,20 @@
+[
+  {
+    "query": "typescript 类型错误 修复",
+    "relevantUrls": [
+      "https://github.com/microsoft/TypeScript/issues/12345"
+    ]
+  },
+  {
+    "query": "how to configure nginx reverse proxy",
+    "relevantUrls": [
+      "https://example.com/docs/nginx/reverse-proxy"
+    ]
+  },
+  {
+    "query": "確定申告 やり方",
+    "relevantUrls": [
+      "https://www.nta.go.jp/taxes/shiraberu/shinkoku"
+    ]
+  }
+]
