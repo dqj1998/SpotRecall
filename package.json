@@ -1,0 +1,32 @@
+{
+  "name": "spotrecall",
+  "version": "0.1.0",
+  "description": "Local-First Context & Entry Recall — Chrome Extension (MV3)",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "scripts": {
+    "dev": "npm run copy-ort && vite",
+    "build": "npm run copy-ort && tsc --noEmit && vite build && node scripts/prune-dist.mjs",
+    "copy-ort": "node scripts/copy-ort.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "download-model": "node scripts/download-model.mjs"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^3.3.3",
+    "fflate": "^0.8.3",
+    "idb": "^8.0.0",
+    "minisearch": "^7.1.1",
+    "preact": "^10.25.4"
+  },
+  "devDependencies": {
+    "@crxjs/vite-plugin": "^2.0.0-beta.28",
+    "@preact/preset-vite": "^2.9.4",
+    "@types/chrome": "^0.0.297",
+    "fake-indexeddb": "^6.0.0",
+    "typescript": "^5.7.3",
+    "vite": "^5.4.11",
+    "vitest": "^2.1.8"
+  }
+}

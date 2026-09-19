@@ -1,0 +1,23 @@
+/* Action popup (anchored dropdown panel). Popup size is driven by body
+   dimensions (Chrome caps at 800x600). Reuses shared layout; vars from tokens. */
+@import './tokens.css';
+@import './palette-layout.css';
+
+html,
+body {
+  margin: 0;
+}
+body {
+  width: 400px;
+  height: 560px;
+  overflow: hidden;
+  background: var(--sr-bg-solid);
+}
+
+.wrap {
+  height: 560px;
+}
+.card {
+  height: 560px;
+  background: var(--sr-bg-solid);
+}

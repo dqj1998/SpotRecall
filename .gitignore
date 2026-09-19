@@ -1,0 +1,7 @@
+node_modules/
+dist/
+*.log
+.DS_Store
+public/models/
+public/ort/
+SpotRecall-dev-plan.v1.bak.md
