@@ -2,7 +2,7 @@
 // in-memory state as the source of truth.
 
 import { handleInit, handleCommit, handleTabRemoved, handleFrameGone } from './lifecycle';
-import { bm25Stage, vectorStage } from './search';
+import { bm25Stage, vectorStage, recentBuckets } from './search';
 import { drainQueue, queueDepth } from './embed-queue';
 import { resetBm25 } from './bm25-manager';
 import {
@@ -167,6 +167,10 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse): boolean => {
         }
         case 'GET_INDEX_STATUS': {
           sendResponse(await indexStatus());
+          return;
+        }
+        case 'GET_RECENT': {
+          sendResponse({ buckets: await recentBuckets() });
           return;
         }
 

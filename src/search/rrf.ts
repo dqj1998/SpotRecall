@@ -33,3 +33,20 @@ export function reciprocalRankFusion<T extends Ranked>(
     .map(([id, score]) => ({ id, score }))
     .sort((a, b) => b.score - a.score);
 }
+
+/**
+ * Weighted RRF over N ranked id-lists — used to fuse BM25 + vector across
+ * multiple query variants (e.g. original + translations). Pure & unit-tested.
+ */
+export function fuseRanked(
+  lists: { ids: string[]; weight: number }[],
+  k = 60,
+): { id: string; score: number }[] {
+  const scores = new Map<string, number>();
+  for (const { ids, weight } of lists) {
+    ids.forEach((id, i) => scores.set(id, (scores.get(id) ?? 0) + weight * (1 / (k + i + 1))));
+  }
+  return [...scores.entries()]
+    .map(([id, score]) => ({ id, score }))
+    .sort((a, b) => b.score - a.score);
+}

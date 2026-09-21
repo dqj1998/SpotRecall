@@ -36,7 +36,10 @@ export async function drainQueue(): Promise<void> {
       const stale: string[] = [];
       ids.forEach((id, i) => {
         const r = recs[i];
-        if (r && r.cleanText) items.push({ id, text: r.cleanText });
+        // Embed title + description + body so salient terms (often only in the
+        // title) are represented, not just the (noisier) page body.
+        const text = r ? [r.title, r.description, r.cleanText].filter(Boolean).join('\n').slice(0, 2200) : '';
+        if (text) items.push({ id, text });
         else stale.push(id);
       });
       if (stale.length) await removePending(stale);

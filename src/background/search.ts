@@ -4,24 +4,15 @@
 
 import { getBm25 } from './bm25-manager';
 import { vectorSearch, expandQuery } from './offscreen-manager';
-import { getRecord } from '@storage/dao';
+import { getRecord, allRecords } from '@storage/dao';
+import { fuseRanked } from '@search/rrf';
+import { bucketByTime } from '@search/timeline';
 import type { PageRecord, SearchHit, TimelineBucket } from '@shared/types';
 import { type SearchResultsUpdateMsg, TRANSLATE_TARGETS } from '@shared/protocol';
 
 const TOP_K = 50;
 const BM25_WEIGHT = 1.2;
 const VEC_WEIGHT = 1.0;
-
-/** Weighted RRF over N ranked id-lists (variants × {bm25, vector}). */
-function fuseMany(lists: { ids: string[]; weight: number }[], k = 60): { id: string; score: number }[] {
-  const scores = new Map<string, number>();
-  for (const { ids, weight } of lists) {
-    ids.forEach((id, i) => scores.set(id, (scores.get(id) ?? 0) + weight * (1 / (k + i + 1))));
-  }
-  return [...scores.entries()]
-    .map(([id, score]) => ({ id, score }))
-    .sort((a, b) => b.score - a.score);
-}
 
 // Search results are ranked by RELEVANCE, not time. We return a single flat
 // bucket in score order; the UI shows a relative-time label per row for context.
@@ -51,6 +42,16 @@ async function hitsFor(ids: { id: string; score: number }[]): Promise<SearchHit[
     if (r) out.push(toHit(r, score));
   }
   return out;
+}
+
+/** Empty-query browse mode: most-recently-visited pages, grouped by time. */
+export async function recentBuckets(limit = 50): Promise<TimelineBucket[]> {
+  const hits = (await allRecords())
+    .filter((r) => r.status === 'committed' || r.title)
+    .sort((a, b) => b.lastVisited - a.lastVisited)
+    .slice(0, limit)
+    .map((r) => toHit(r, 0));
+  return bucketByTime(hits);
 }
 
 /** Stage 1: synchronous BM25, ranked by relevance. */
@@ -89,7 +90,7 @@ export async function vectorStage(queryId: string, text: string): Promise<void> 
   // Nothing beyond the instant stage-1 (no translation, no vector) — skip.
   if (!anyVector && variants.length === 1) return;
 
-  const fused = fuseMany(lists);
+  const fused = fuseRanked(lists);
   const buckets = relevanceBuckets(await hitsFor(fused.slice(0, TOP_K)));
   const msg: SearchResultsUpdateMsg = {
     type: 'SEARCH_RESULTS_UPDATE',

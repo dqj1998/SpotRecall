@@ -47,6 +47,7 @@ export function PaletteApp({ onClose }: { onClose: () => void }) {
   const [query, setQuery] = useState('');
   const [buckets, setBuckets] = useState<TimelineBucket[]>([]);
   const [stage, setStage] = useState<1 | 2>(1);
+  const [browseMode, setBrowseMode] = useState(true);
   const [status, setStatus] = useState<IndexStatus | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const queryIdRef = useRef('');
@@ -62,6 +63,13 @@ export function PaletteApp({ onClose }: { onClose: () => void }) {
   useEffect(() => {
     inputRef.current?.focus();
     chrome.runtime.sendMessage({ type: 'TELEMETRY', event: { type: 'palette_open' } }).catch(() => {});
+    // Show recent pages immediately (before any typing).
+    chrome.runtime
+      .sendMessage({ type: 'GET_RECENT' })
+      .then((r: { buckets: TimelineBucket[] }) => {
+        if (!queryIdRef.current) setBuckets(r?.buckets ?? []);
+      })
+      .catch(() => {});
     const refreshStatus = () =>
       chrome.runtime
         .sendMessage({ type: 'GET_INDEX_STATUS' })
@@ -90,9 +98,17 @@ export function PaletteApp({ onClose }: { onClose: () => void }) {
     queryIdRef.current = qid;
     setStage(1);
     if (!text.trim()) {
-      setBuckets([]);
+      // Browse mode: show most-recent pages grouped by time.
+      setBrowseMode(true);
+      chrome.runtime
+        .sendMessage({ type: 'GET_RECENT' })
+        .then((resp: { buckets: TimelineBucket[] }) => {
+          if (queryIdRef.current === qid) setBuckets(resp?.buckets ?? []);
+        })
+        .catch(() => {});
       return;
     }
+    setBrowseMode(false);
     chrome.runtime
       .sendMessage({ type: 'SEARCH_QUERY', queryId: qid, text })
       .then((resp: { queryId: string; buckets: TimelineBucket[] }) => {
@@ -184,7 +200,7 @@ export function PaletteApp({ onClose }: { onClose: () => void }) {
           ) : (
             buckets.map((b) => (
               <div key={b.key}>
-                {b.label && <div class="bucket-label">{b.label}</div>}
+                {browseMode && <div class="bucket-label">{t(`bucket_${b.key}`)}</div>}
                 {b.items.map((hit) => (
                   <div key={hit.id} class="row" onClick={() => open(hit)}>
                     <img

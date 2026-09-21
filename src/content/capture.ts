@@ -10,15 +10,30 @@
   let tickTimer: ReturnType<typeof setInterval> | null = null;
 
   function extractClean(): string {
-    if (!document.body) return '';
-    const clone = document.body.cloneNode(true) as HTMLElement;
+    // Prefer the main content region; falls back to <body>. This alone removes
+    // most site chrome (Amazon-style nav/menus that otherwise dominate the text).
+    const root =
+      (document.querySelector('main, article, [role="main"]') as HTMLElement) || document.body;
+    if (!root) return '';
+    const clone = root.cloneNode(true) as HTMLElement;
     clone
       .querySelectorAll(
-        'script,style,nav,footer,svg,noscript,input,textarea,select,' +
-          '[type=password],[autocomplete^="cc-"],[autocomplete="one-time-code"]',
+        'script,style,noscript,svg,iframe,nav,header,footer,aside,form,button,' +
+          'input,textarea,select,[role="navigation"],[role="banner"],[role="contentinfo"],' +
+          '[aria-hidden="true"],[hidden],[type="password"],[autocomplete^="cc-"],[autocomplete="one-time-code"]',
       )
       .forEach((el) => el.remove());
-    return (clone.innerText || '').replace(/\s+/g, ' ').trim().slice(0, 2000);
+    // Drop repeated short lines (nav labels, breadcrumbs) that dilute the signal.
+    const seen = new Set<string>();
+    const lines: string[] = [];
+    for (const line of (clone.innerText || '').split('\n')) {
+      const t = line.trim();
+      if (!t) continue;
+      if (t.length < 40 && seen.has(t)) continue;
+      seen.add(t);
+      lines.push(t);
+    }
+    return lines.join(' ').replace(/\s+/g, ' ').trim().slice(0, 2000);
   }
 
   function commitPage(): void {
