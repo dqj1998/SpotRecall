@@ -45,6 +45,9 @@ const en: Dict = {
   dashboard: 'Dashboard',
   mIndexed: 'Indexed',
   mPending: 'Pending',
+  mOpen: 'Open success',
+  mOpenTip:
+    'Of results you clicked, the share whose page actually finished loading — separates "clicked" from "opened successfully".',
   mCTR: 'Recall click-through',
   mCTRTip: 'Of effective searches (had input and at least one result), the share that led to a click. Higher means results were useful.',
   mMRR: 'MRR',
@@ -121,6 +124,9 @@ const ja: Dict = {
   dashboard: 'ダッシュボード',
   mIndexed: 'インデックス済み',
   mPending: '待機中',
+  mOpen: '開封成功率',
+  mOpenTip:
+    'クリックした結果のうち、ページの読み込みが実際に完了した割合。「クリック」と「正常に開けた」を区別します。',
   mCTR: '有効呼び出しクリック率',
   mCTRTip: '有効な検索（入力があり結果が1件以上）のうち、クリックに至った割合。高いほど結果が役立っている。',
   mMRR: 'MRR',
@@ -197,6 +203,8 @@ const zh: Dict = {
   dashboard: '仪表板',
   mIndexed: '已索引',
   mPending: '待向量化',
+  mOpen: '打开成功率',
+  mOpenTip: '在你点击的结果中,页面真正加载完成的比例——区分"点了"和"成功打开"。',
   mCTR: '有效召回点击率',
   mCTRTip: '在"有效检索(有输入且至少一条结果)"中最终产生点击的比例。越高说明结果越有用。',
   mMRR: 'MRR',

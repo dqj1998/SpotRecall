@@ -185,21 +185,20 @@ function App() {
         <h2>{t('dashboard')}</h2>
         <div class="metrics">
           <div class="metric"><div class="v">{s.total}</div><div class="k">{t('mIndexed')}</div></div>
-          <div class="metric"><div class="v">{s.pending}</div><div class="k">{t('mPending')}</div></div>
+          <div class="metric" title={t('mOpenTip')}>
+            <div class="v">{metrics ? `${Math.round(metrics.openSuccess * 100)}%` : '—'}</div>
+            <div class="k">{t('mOpen')} ⓘ</div>
+          </div>
           <div class="metric" title={t('mCTRTip')}>
             <div class="v">{metrics ? `${Math.round(metrics.ctr * 100)}%` : '—'}</div>
-            <div class="k">{t('mCTR')}</div>
+            <div class="k">{t('mCTR')} ⓘ</div>
           </div>
           <div class="metric" title={t('mMRRTip')}>
             <div class="v">{metrics ? metrics.mrr.toFixed(2) : '—'}</div>
             <div class="k">{t('mMRR')} ⓘ</div>
           </div>
         </div>
-        <p class="note" style="margin-top:14px">
-          {t('effectiveN', { n: metrics?.effective ?? 0 })} · {t('openRate')}{' '}
-          {metrics ? `${Math.round(metrics.openSuccess * 100)}%` : '—'}
-        </p>
-        <p class="note dim">{t('mMRRTip')}</p>
+        <p class="note" style="margin-top:14px">{t('effectiveN', { n: metrics?.effective ?? 0 })}</p>
       </div>
 
       <div class="card">
