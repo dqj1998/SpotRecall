@@ -14,11 +14,12 @@ Everything needed to fill both stores' forms. The **same package** works for bot
 
 ## Assets (in this repo)
 - Store icon 128×128: packaged (`src/ui/assets/icon128.png`).
-- Screenshots: `release-screenshots/screenshot-1..5.jpg` — all **1280×800** (valid
-  for both stores; Chrome allows up to 5, Edge up to 10).
-- Square art `release-images.jpeg` (2048×2048): resize to **300×300** for the Edge
-  store logo. Chrome promo tiles are landscape (440×280 small; 1400×560 marquee)
-  and are **optional** — skip or design landscape art later.
+- Screenshots: `release-screenshots/screenshot-1..5.png` — all **1280×800**, real
+  UI rendered with mock data (reproducible: `npm run make-screenshots`). Valid for
+  both stores (Chrome up to 5, Edge up to 10).
+- Chrome promo tiles: `release-screenshots/promo-marquee-1400x560.png` and
+  `promo-small-440x280.png` (reproducible: `npm run make-promo`). Optional.
+- Edge store logo 300×300: `release-screenshots/edge-logo-300.png`.
 
 ---
 
@@ -95,12 +96,12 @@ model file (data, not code) is downloaded once and cached locally.
 
 ---
 
-## Screenshot captions (match to the 5 images; reorder as needed)
-1. "Recall any page from a fast command palette."
-2. "Keyword + semantic search — describe what you remember."
-3. "Find pages across languages (EN / 日本語 / 简体中文)."
-4. "Recent searches and recent pages, grouped by time."
-5. "Private by design — dashboard, blocklist, one-click wipe."
+## Screenshot captions (screenshot-1..5.png, in order)
+1. Recall any page, instantly — fast keyword search over your history.
+2. Search by meaning, across languages — English query, Japanese page.
+3. Pick up where you left off — recent searches, one click to re-run.
+4. Your recent pages, grouped by time — with content previews.
+5. Private by design — 100% on-device, no cloud, no tracking.
 
 ---
 
