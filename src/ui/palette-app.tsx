@@ -191,8 +191,15 @@ export function PaletteApp({ onClose }: { onClose: () => void }) {
         ? t('statusIndexing', { count: status.pending })
         : t('statusAllIndexed', { count: status.total });
 
+  // History suggestions: full list when empty, else past searches containing the
+  // current input (autocomplete-style).
+  const q = query.trim().toLowerCase();
+  const histList = q
+    ? history.filter((h) => h.toLowerCase().includes(q) && h.toLowerCase() !== q)
+    : history;
   const hasResults = flat.length > 0;
-  const showHistory = browseMode && history.length > 0;
+  const showHistory = histList.length > 0;
+  const histScrollable = histList.length > 3;
   const nothing = !hasResults && !showHistory;
 
   return (
@@ -245,25 +252,30 @@ export function PaletteApp({ onClose }: { onClose: () => void }) {
               {showHistory && (
                 <div>
                   <div class="bucket-label">{t('histLabel')}</div>
-                  {history.map((q) => (
-                    <div key={q} class="hist-row" title={q} onClick={() => applyQuery(q)}>
-                      <svg class="hist-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="9" />
-                        <path d="M12 7v5l3 2" />
-                      </svg>
-                      <span class="hist-q">{q}</span>
-                      <button
-                        class="hist-del"
-                        title={t('histRemove')}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          removeHistory(q);
-                        }}
-                      >
-                        ×
-                      </button>
+                  <div class="hist-wrap">
+                    <div class={`hist-scroll${histScrollable ? ' more' : ''}`}>
+                      {histList.map((h) => (
+                        <div key={h} class="hist-row" title={h} onClick={() => applyQuery(h)}>
+                          <svg class="hist-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="9" />
+                            <path d="M12 7v5l3 2" />
+                          </svg>
+                          <span class="hist-q">{h}</span>
+                          <button
+                            class="hist-del"
+                            title={t('histRemove')}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeHistory(h);
+                            }}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                    {histScrollable && <div class="hist-fade" />}
+                  </div>
                 </div>
               )}
 

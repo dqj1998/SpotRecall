@@ -196,6 +196,32 @@
   padding-top: 10px;
 }
 
+.hist-wrap {
+  position: relative;
+}
+.hist-scroll {
+  /* ~3 rows tall; scroll when there are more. */
+  max-height: 108px;
+  overflow-y: auto;
+}
+.hist-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.hist-scroll::-webkit-scrollbar-thumb {
+  background: var(--sr-border-strong);
+  border-radius: 3px;
+}
+/* Bottom fade cue: signals more scrollable rows below. */
+.hist-fade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 22px;
+  pointer-events: none;
+  background: linear-gradient(to top, var(--sr-bg-solid), transparent);
+}
+
 .hist-row {
   display: flex;
   align-items: center;
