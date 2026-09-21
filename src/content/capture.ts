@@ -13,29 +13,53 @@
   let fgSince: number | null = null;
   let tickTimer: ReturnType<typeof setInterval> | null = null;
 
-  function extractClean(): string {
-    // Prefer the main content region; falls back to <body>. This alone removes
-    // most site chrome (Amazon-style nav/menus that otherwise dominate the text).
-    const root =
-      (document.querySelector('main, article, [role="main"]') as HTMLElement) || document.body;
+  const BOILERPLATE =
+    'script,style,noscript,svg,iframe,frame,nav,header,footer,aside,form,button,' +
+    'input,textarea,select,[role="navigation"],[role="banner"],[role="contentinfo"],' +
+    '[aria-hidden="true"],[hidden],[type="password"],[autocomplete^="cc-"],[autocomplete="one-time-code"]';
+
+  function cleanDocText(doc: Document): string {
+    // Prefer the main content region; falls back to <body>.
+    const root = (doc.querySelector('main, article, [role="main"]') as HTMLElement) || doc.body;
     if (!root) return '';
     const clone = root.cloneNode(true) as HTMLElement;
-    clone
-      .querySelectorAll(
-        'script,style,noscript,svg,iframe,nav,header,footer,aside,form,button,' +
-          'input,textarea,select,[role="navigation"],[role="banner"],[role="contentinfo"],' +
-          '[aria-hidden="true"],[hidden],[type="password"],[autocomplete^="cc-"],[autocomplete="one-time-code"]',
-      )
-      .forEach((el) => el.remove());
+    clone.querySelectorAll(BOILERPLATE).forEach((el) => el.remove());
+    return clone.innerText || '';
+  }
+
+  // Merge text from readable (same-origin) child frames so sites that render
+  // content inside iframes / a frameset are still captured — as part of the top
+  // page's single record. Cross-origin frames (ads, reCAPTCHA, widgets) are
+  // unreadable by the browser and thus naturally excluded.
+  function collectFrameText(doc: Document, depth: number, out: string[]): void {
+    if (depth <= 0) return;
+    doc.querySelectorAll('frame, iframe').forEach((f) => {
+      try {
+        const cd = (f as HTMLIFrameElement | HTMLFrameElement).contentDocument;
+        if (cd && cd.body) {
+          out.push(cleanDocText(cd));
+          collectFrameText(cd, depth - 1, out);
+        }
+      } catch {
+        /* cross-origin frame: not readable — skip */
+      }
+    });
+  }
+
+  function extractClean(): string {
+    const parts = [cleanDocText(document)];
+    collectFrameText(document, 2, parts);
     // Drop repeated short lines (nav labels, breadcrumbs) that dilute the signal.
     const seen = new Set<string>();
     const lines: string[] = [];
-    for (const line of (clone.innerText || '').split('\n')) {
-      const t = line.trim();
-      if (!t) continue;
-      if (t.length < 40 && seen.has(t)) continue;
-      seen.add(t);
-      lines.push(t);
+    for (const part of parts) {
+      for (const line of part.split('\n')) {
+        const t = line.trim();
+        if (!t) continue;
+        if (t.length < 40 && seen.has(t)) continue;
+        seen.add(t);
+        lines.push(t);
+      }
     }
     return lines.join(' ').replace(/\s+/g, ' ').trim().slice(0, 2000);
   }
