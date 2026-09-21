@@ -13,7 +13,8 @@
     "test:watch": "vitest",
     "eval:recall": "tsx eval/recall-eval.ts",
     "eval:bench": "tsx eval/bench.ts",
-    "download-model": "node scripts/download-model.mjs"
+    "download-model": "node scripts/download-model.mjs",
+    "make-promo": "node scripts/make-promo.mjs"
   },
   "dependencies": {
     "@huggingface/transformers": "^3.3.3",
@@ -25,6 +26,7 @@
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.0.0-beta.28",
     "@preact/preset-vite": "^2.9.4",
+    "@resvg/resvg-js": "^2.6.2",
     "@types/chrome": "^0.0.297",
     "@types/pngjs": "^6.0.5",
     "fake-indexeddb": "^6.0.0",
