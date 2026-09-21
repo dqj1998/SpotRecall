@@ -14,3 +14,6 @@ spotrecall-backup-*.zip
 
 # store build artifacts
 *-store-*.zip
+
+# marketing drafts (not for the public repo)
+marketing/
