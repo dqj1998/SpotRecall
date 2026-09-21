@@ -97,11 +97,11 @@ model file (data, not code) is downloaded once and cached locally.
 ---
 
 ## Screenshot captions (screenshot-1..5.png, in order)
-1. Recall any page, instantly — fast keyword search over your history.
-2. Search by meaning, across languages — English query, Japanese page.
-3. Pick up where you left off — recent searches, one click to re-run.
-4. Your recent pages, grouped by time — with content previews.
-5. Private by design — 100% on-device, no cloud, no tracking.
+1. Recall any page instantly — fast keyword search across your history.
+2. Search by meaning, across languages — an English query finds a Japanese page.
+3. Your recent searches, one click to re-run — remove any with a tap.
+4. Recent pages grouped by time, with a content preview instead of a URL.
+5. Private by design — 100% on-device. No cloud, no account, no tracking.
 
 ---
 
