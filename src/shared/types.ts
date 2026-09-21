@@ -68,6 +68,8 @@ export interface SearchHit {
   title: string;
   domain: string;
   description: string;
+  /** Short content excerpt shown under the title (2-line clamp; full text in tooltip). */
+  snippet: string;
   favicon?: string;
   lastVisited: number;
   score: number;

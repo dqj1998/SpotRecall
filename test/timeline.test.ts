@@ -3,7 +3,7 @@ import { bucketByTime } from '@search/timeline';
 import type { SearchHit } from '@shared/types';
 
 function hit(id: string, lastVisited: number): SearchHit {
-  return { id, url: `https://x/${id}`, title: id, domain: 'x', description: '', lastVisited, score: 1 };
+  return { id, url: `https://x/${id}`, title: id, domain: 'x', description: '', snippet: '', lastVisited, score: 1 };
 }
 
 describe('bucketByTime', () => {

@@ -39,6 +39,9 @@ const en: Dict = {
   statusAllIndexed: 'All indexed · {count}',
   semanticHintOff: 'Semantic search is off — download the model in the panel to enable it.',
   langLabel: 'Language',
+  histLabel: 'Recent searches',
+  histRemove: 'Remove',
+  recentLabel: 'Recent pages',
 
   // panel
   panelTitle: 'SpotRecall Panel',
@@ -119,6 +122,9 @@ const ja: Dict = {
   statusAllIndexed: 'インデックス完了 · {count}',
   semanticHintOff: 'セマンティック検索は無効です — パネルでモデルをダウンロードして有効化してください。',
   langLabel: '言語',
+  histLabel: '最近の検索',
+  histRemove: '削除',
+  recentLabel: '最近のページ',
 
   panelTitle: 'SpotRecall パネル',
   dashboard: 'ダッシュボード',
@@ -198,6 +204,9 @@ const zh: Dict = {
   statusAllIndexed: '全部已索引 · {count}',
   semanticHintOff: '语义搜索未启用 — 在面板中下载模型即可开启。',
   langLabel: '语言',
+  histLabel: '最近搜索',
+  histRemove: '删除',
+  recentLabel: '最近页面',
 
   panelTitle: 'SpotRecall 面板',
   dashboard: '仪表板',

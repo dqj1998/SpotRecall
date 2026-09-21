@@ -23,12 +23,14 @@ function relevanceBuckets(hits: SearchHit[]): TimelineBucket[] {
 }
 
 function toHit(r: PageRecord, score: number): SearchHit {
+  const snippet = (r.description || r.cleanText || '').replace(/\s+/g, ' ').trim().slice(0, 300);
   return {
     id: r.id,
     url: r.url,
     title: r.title || r.url,
     domain: r.domain,
     description: r.description,
+    snippet,
     favicon: r.favicon,
     lastVisited: r.lastVisited,
     score,

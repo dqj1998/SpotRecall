@@ -12,6 +12,7 @@ export default defineManifest({
   minimum_chrome_version: '116',
   icons: {
     '16': 'src/ui/assets/icon16.png',
+    '32': 'src/ui/assets/icon32.png',
     '48': 'src/ui/assets/icon48.png',
     '128': 'src/ui/assets/icon128.png',
   },
@@ -19,8 +20,8 @@ export default defineManifest({
     default_title: 'SpotRecall',
     default_icon: {
       '16': 'src/ui/assets/icon16.png',
+      '32': 'src/ui/assets/icon32.png',
       '48': 'src/ui/assets/icon48.png',
-      '128': 'src/ui/assets/icon128.png',
     },
     default_popup: 'src/ui/palette-page.html',
   },

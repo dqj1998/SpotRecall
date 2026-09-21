@@ -8,11 +8,23 @@ interface FlatItem {
   rank: number;
 }
 
+const PANEL_URL = 'src/ui/options.html';
+const HISTORY_KEY = 'sr_history';
+const HISTORY_MAX = 20;
+
 function flatten(buckets: TimelineBucket[]): FlatItem[] {
   const out: FlatItem[] = [];
   let rank = 0;
   for (const b of buckets) for (const hit of b.items) out.push({ hit, rank: rank++ });
   return out;
+}
+
+/** Add a query to history, collapsing typing-progression prefixes. Most-recent first. */
+function addHistory(list: string[], raw: string): string[] {
+  const q = raw.trim();
+  if (q.length < 2) return list;
+  const filtered = list.filter((x) => x !== q && !x.startsWith(q) && !q.startsWith(x));
+  return [q, ...filtered].slice(0, HISTORY_MAX);
 }
 
 function relTime(ts: number, lang: string): string {
@@ -40,18 +52,19 @@ function faviconFor(url: string): string {
   return u.toString();
 }
 
-const PANEL_URL = 'src/ui/options.html';
-
 export function PaletteApp({ onClose }: { onClose: () => void }) {
   const { lang, setLang, t } = useI18n();
   const [query, setQuery] = useState('');
   const [buckets, setBuckets] = useState<TimelineBucket[]>([]);
   const [stage, setStage] = useState<1 | 2>(1);
   const [browseMode, setBrowseMode] = useState(true);
+  const [history, setHistory] = useState<string[]>([]);
   const [status, setStatus] = useState<IndexStatus | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const queryIdRef = useRef('');
+  const queryRef = useRef('');
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const histTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const flat = useMemo(() => flatten(buckets), [buckets]);
   const rankOf = useMemo(() => {
@@ -63,7 +76,7 @@ export function PaletteApp({ onClose }: { onClose: () => void }) {
   useEffect(() => {
     inputRef.current?.focus();
     chrome.runtime.sendMessage({ type: 'TELEMETRY', event: { type: 'palette_open' } }).catch(() => {});
-    // Show recent pages immediately (before any typing).
+    chrome.storage.local.get(HISTORY_KEY).then((r) => setHistory((r[HISTORY_KEY] as string[]) ?? []));
     chrome.runtime
       .sendMessage({ type: 'GET_RECENT' })
       .then((r: { buckets: TimelineBucket[] }) => {
@@ -93,12 +106,27 @@ export function PaletteApp({ onClose }: { onClose: () => void }) {
     };
   }, []);
 
+  const recordHistory = useCallback((text: string) => {
+    setHistory((prev) => {
+      const next = addHistory(prev, text);
+      if (next !== prev) void chrome.storage.local.set({ [HISTORY_KEY]: next });
+      return next;
+    });
+  }, []);
+
+  const removeHistory = useCallback((q: string) => {
+    setHistory((prev) => {
+      const next = prev.filter((x) => x !== q);
+      void chrome.storage.local.set({ [HISTORY_KEY]: next });
+      return next;
+    });
+  }, []);
+
   const runSearch = useCallback((text: string) => {
     const qid = crypto.randomUUID();
     queryIdRef.current = qid;
     setStage(1);
     if (!text.trim()) {
-      // Browse mode: show most-recent pages grouped by time.
       setBrowseMode(true);
       chrome.runtime
         .sendMessage({ type: 'GET_RECENT' })
@@ -120,11 +148,22 @@ export function PaletteApp({ onClose }: { onClose: () => void }) {
   const onInput = (e: Event) => {
     const text = (e.target as HTMLInputElement).value;
     setQuery(text);
+    queryRef.current = text;
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => runSearch(text), 150);
+    if (histTimerRef.current) clearTimeout(histTimerRef.current);
+    if (text.trim().length >= 2) histTimerRef.current = setTimeout(() => recordHistory(text), 1500);
+  };
+
+  const applyQuery = (q: string) => {
+    setQuery(q);
+    queryRef.current = q;
+    inputRef.current?.focus();
+    runSearch(q);
   };
 
   const open = (hit: SearchHit) => {
+    if (queryRef.current.trim()) recordHistory(queryRef.current);
     chrome.runtime
       .sendMessage({
         type: 'OPEN_RESULT',
@@ -151,6 +190,10 @@ export function PaletteApp({ onClose }: { onClose: () => void }) {
       : status.pending > 0
         ? t('statusIndexing', { count: status.pending })
         : t('statusAllIndexed', { count: status.total });
+
+  const hasResults = flat.length > 0;
+  const showHistory = browseMode && history.length > 0;
+  const nothing = !hasResults && !showHistory;
 
   return (
     <div class="wrap">
@@ -195,28 +238,64 @@ export function PaletteApp({ onClose }: { onClose: () => void }) {
         )}
 
         <div class="list">
-          {flat.length === 0 ? (
+          {nothing ? (
             <div class="empty">{query ? t('emptyNoResults') : t('emptyStart')}</div>
           ) : (
-            buckets.map((b) => (
-              <div key={b.key}>
-                {browseMode && <div class="bucket-label">{t(`bucket_${b.key}`)}</div>}
-                {b.items.map((hit) => (
-                  <div key={hit.id} class="row" onClick={() => open(hit)}>
-                    <img
-                      class="favicon"
-                      src={hit.favicon || faviconFor(hit.url)}
-                      onError={(e) => ((e.target as HTMLImageElement).style.visibility = 'hidden')}
-                    />
-                    <div class="row-main">
-                      <div class="row-title">{hit.title}</div>
-                      <div class="row-url">{hit.domain}</div>
+            <>
+              {showHistory && (
+                <div>
+                  <div class="bucket-label">{t('histLabel')}</div>
+                  {history.map((q) => (
+                    <div key={q} class="hist-row" title={q} onClick={() => applyQuery(q)}>
+                      <svg class="hist-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M12 7v5l3 2" />
+                      </svg>
+                      <span class="hist-q">{q}</span>
+                      <button
+                        class="hist-del"
+                        title={t('histRemove')}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeHistory(q);
+                        }}
+                      >
+                        ×
+                      </button>
                     </div>
-                    <div class="row-time">{relTime(hit.lastVisited, lang)}</div>
+                  ))}
+                </div>
+              )}
+
+              {hasResults && showHistory && browseMode && (
+                <div class="bucket-label section">{t('recentLabel')}</div>
+              )}
+              {hasResults &&
+                buckets.map((b) => (
+                  <div key={b.key}>
+                    {browseMode && <div class="bucket-label">{t(`bucket_${b.key}`)}</div>}
+                    {b.items.map((hit) => (
+                      <div
+                        key={hit.id}
+                        class="row"
+                        title={`${hit.title}\n${hit.url}${hit.snippet ? `\n\n${hit.snippet}` : ''}`}
+                        onClick={() => open(hit)}
+                      >
+                        <img
+                          class="favicon"
+                          src={hit.favicon || faviconFor(hit.url)}
+                          onError={(e) => ((e.target as HTMLImageElement).style.visibility = 'hidden')}
+                        />
+                        <div class="row-main">
+                          <div class="row-title">{hit.title}</div>
+                          <div class="row-snippet">{hit.snippet || hit.domain}</div>
+                        </div>
+                        <div class="row-time">{relTime(hit.lastVisited, lang)}</div>
+                      </div>
+                    ))}
                   </div>
                 ))}
-              </div>
-            ))
+            </>
           )}
         </div>
 
