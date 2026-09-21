@@ -278,7 +278,11 @@ export function PaletteApp({ onClose }: { onClose: () => void }) {
                       <div
                         key={hit.id}
                         class="row"
-                        title={`${hit.title}\n${hit.url}${hit.snippet ? `\n\n${hit.snippet}` : ''}`}
+                        title={
+                          `${hit.title}` +
+                          (hit.domain ? `\n${hit.domain}` : '') +
+                          (hit.snippet ? `\n\n${hit.snippet}` : '')
+                        }
                         onClick={() => open(hit)}
                       >
                         <img
