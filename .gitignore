@@ -4,6 +4,10 @@ dist/
 .DS_Store
 public/models/
 public/ort/
-eval/labels.json
+eval/labels*.json
+!eval/labels.example.json
 .cache/
 SpotRecall-dev-plan.v1.bak.md
+
+# personal backup exports (contain real browsing data)
+spotrecall-backup-*.zip

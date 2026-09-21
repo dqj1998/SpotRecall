@@ -15,6 +15,23 @@ function flatten(buckets: TimelineBucket[]): FlatItem[] {
   return out;
 }
 
+function relTime(ts: number, lang: string): string {
+  try {
+    const rtf = new Intl.RelativeTimeFormat(lang, { numeric: 'auto' });
+    const diff = ts - Date.now();
+    const min = 60_000;
+    const hour = 60 * min;
+    const day = 24 * hour;
+    if (Math.abs(diff) < hour) return rtf.format(Math.round(diff / min), 'minute');
+    if (Math.abs(diff) < day) return rtf.format(Math.round(diff / hour), 'hour');
+    const days = Math.round(diff / day);
+    if (Math.abs(days) < 30) return rtf.format(days, 'day');
+    return rtf.format(Math.round(days / 30), 'month');
+  } catch {
+    return '';
+  }
+}
+
 function faviconFor(url: string): string {
   // Chrome's LOCAL favicon cache — no network, no domain leak to third parties.
   const u = new URL(chrome.runtime.getURL('/_favicon/'));
@@ -167,7 +184,7 @@ export function PaletteApp({ onClose }: { onClose: () => void }) {
           ) : (
             buckets.map((b) => (
               <div key={b.key}>
-                <div class="bucket-label">{t(`bucket_${b.key}`)}</div>
+                {b.label && <div class="bucket-label">{b.label}</div>}
                 {b.items.map((hit) => (
                   <div key={hit.id} class="row" onClick={() => open(hit)}>
                     <img
@@ -179,6 +196,7 @@ export function PaletteApp({ onClose }: { onClose: () => void }) {
                       <div class="row-title">{hit.title}</div>
                       <div class="row-url">{hit.domain}</div>
                     </div>
+                    <div class="row-time">{relTime(hit.lastVisited, lang)}</div>
                   </div>
                 ))}
               </div>

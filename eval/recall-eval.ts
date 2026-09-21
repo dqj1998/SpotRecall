@@ -17,7 +17,7 @@ import { quantizeInt8, scoreInt8, l2normalize } from '../src/shared/quantize';
 import { reciprocalRankFusion } from '../src/search/rrf';
 import { Bm25Index } from '../src/search/bm25';
 
-const MODEL_ID = 'Xenova/multilingual-e5-small';
+const DEFAULT_MODEL = 'Xenova/multilingual-e5-small';
 
 interface Rec {
   id: string;
@@ -90,10 +90,12 @@ async function main() {
   const recordsPath = arg('records');
   const labelsPath = arg('labels', 'eval/labels.json')!;
   const K = parseInt(arg('k', '10')!, 10);
+  const MODEL_ID = arg('model', DEFAULT_MODEL)!;
 
   const records = await loadRecords(backup, recordsPath);
   const labels = JSON.parse(await readFile(labelsPath, 'utf8')) as Label[];
-  console.log(`Loaded ${records.length} records, ${labels.length} labeled queries. K=${K}\n`);
+  console.log(`Loaded ${records.length} records, ${labels.length} labeled queries. K=${K}`);
+  console.log(`Model: ${MODEL_ID}\n`);
 
   env.allowRemoteModels = true; // eval downloads the model to a local cache
   console.log('Loading model (first run downloads to cache)…');

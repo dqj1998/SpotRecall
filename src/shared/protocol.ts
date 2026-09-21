@@ -90,13 +90,28 @@ export interface EnsureModelMsg {
   target: 'offscreen';
   type: 'ENSURE_MODEL';
 }
+export interface ExpandQueryMsg {
+  target: 'offscreen';
+  type: 'EXPAND_QUERY';
+  text: string;
+  targets: string[];
+}
 
 export type OffscreenRequest =
   | EmbedBatchMsg
   | VectorSearchMsg
   | VectorRemoveMsg
   | OffscreenPingMsg
-  | EnsureModelMsg;
+  | EnsureModelMsg
+  | ExpandQueryMsg;
+
+export interface ExpandQueryResult {
+  ok: boolean;
+  variants: string[]; // original query + available translations (deduped)
+}
+
+// UI languages we translate cross-lingual queries into.
+export const TRANSLATE_TARGETS = ['en', 'ja', 'zh'];
 
 export interface EmbedBatchResult {
   ok: boolean;

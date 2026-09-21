@@ -41,6 +41,28 @@ Fused     Recall@10=0.833   MRR=0.741   FirstHit=0.667
 > A labeled set only measures what it encodes — a small or careless set gives
 > false confidence. Add queries that reflect how you actually search.
 
+### Cross-lingual note
+
+When the query language differs from the page language, keyword (BM25) can't
+match and the small model's cross-lingual alignment is weak — the right page
+often lands in the top-10 but not at #1. The extension addresses this at runtime
+with **on-device query translation** (Chrome Translation API): the query is
+translated into the UI languages and every variant is searched, turning a
+cross-lingual query into a same-language one.
+
+`--model` lets you compare embedding models (e.g. `Xenova/multilingual-e5-base`).
+Measured on a real 243-doc corpus, 7 cross-lingual queries:
+
+| approach | Recall@10 | MRR | FirstHit |
+|---|---|---|---|
+| e5-small (raw cross-lingual) | 0.71 | 0.40 | 0.29 |
+| e5-large (raw cross-lingual) | 0.86 | 0.53 | 0.43 |
+| e5-small + translation | 1.00 | 0.87 | 0.86 |
+
+i.e. translating the query beats a 4× larger model. Node has no Translation API,
+so the translation path is validated offline via a hand-translated label set
+(`labels-translated.json`) and verified for real in the browser.
+
 ## 2. Micro-benchmark (`eval:bench`)
 
 Pure-JS hot paths (no browser, no model): BM25 build+search and the int8

@@ -3,14 +3,33 @@
 // from an old query can be ignored by the palette.
 
 import { getBm25 } from './bm25-manager';
-import { vectorSearch } from './offscreen-manager';
+import { vectorSearch, expandQuery } from './offscreen-manager';
 import { getRecord } from '@storage/dao';
-import { reciprocalRankFusion } from '@search/rrf';
-import { bucketByTime } from '@search/timeline';
 import type { PageRecord, SearchHit, TimelineBucket } from '@shared/types';
-import type { SearchResultsUpdateMsg } from '@shared/protocol';
+import { type SearchResultsUpdateMsg, TRANSLATE_TARGETS } from '@shared/protocol';
 
 const TOP_K = 50;
+const BM25_WEIGHT = 1.2;
+const VEC_WEIGHT = 1.0;
+
+/** Weighted RRF over N ranked id-lists (variants × {bm25, vector}). */
+function fuseMany(lists: { ids: string[]; weight: number }[], k = 60): { id: string; score: number }[] {
+  const scores = new Map<string, number>();
+  for (const { ids, weight } of lists) {
+    ids.forEach((id, i) => scores.set(id, (scores.get(id) ?? 0) + weight * (1 / (k + i + 1))));
+  }
+  return [...scores.entries()]
+    .map(([id, score]) => ({ id, score }))
+    .sort((a, b) => b.score - a.score);
+}
+
+// Search results are ranked by RELEVANCE, not time. We return a single flat
+// bucket in score order; the UI shows a relative-time label per row for context.
+// (Time bucketing is reserved for an empty-query "recent" browse mode.)
+function relevanceBuckets(hits: SearchHit[]): TimelineBucket[] {
+  if (hits.length === 0) return [];
+  return [{ key: 'today', label: '', items: hits }];
+}
 
 function toHit(r: PageRecord, score: number): SearchHit {
   return {
@@ -34,30 +53,44 @@ async function hitsFor(ids: { id: string; score: number }[]): Promise<SearchHit[
   return out;
 }
 
-/** Stage 1: synchronous BM25 buckets. */
+/** Stage 1: synchronous BM25, ranked by relevance. */
 export async function bm25Stage(text: string): Promise<TimelineBucket[]> {
   const bm25 = await getBm25();
   const ranked = bm25.search(text, TOP_K);
   const scored = ranked.map((r, i) => ({ id: r.id, score: 1 / (i + 1) }));
-  return bucketByTime(await hitsFor(scored));
+  return relevanceBuckets(await hitsFor(scored));
 }
 
 /**
- * Stage 2: vector + RRF fusion, broadcast to the palette popup via runtime
- * messaging (the action popup has no tab, so tabs.sendMessage cannot reach it).
- * The palette matches on queryId and ignores stale/other messages.
+ * Stage 2: cross-lingual query expansion (on-device translation) + BM25 and
+ * vector over every variant, fused via weighted RRF, broadcast to the palette
+ * popup. Turning a cross-lingual query into same-language variants beats relying
+ * on the model's cross-lingual alignment (see eval). Falls back to the original
+ * query alone when translation is unavailable.
  */
 export async function vectorStage(queryId: string, text: string): Promise<void> {
-  const bm25 = await getBm25();
-  const bm25Ranked = bm25.search(text, TOP_K);
-  const vec = await vectorSearch(text, TOP_K);
-  if (!vec.ok) return; // stay with stage-1 results
+  const variants = (await expandQuery(text, TRANSLATE_TARGETS).catch(() => ({ variants: [text] })))
+    .variants;
 
-  const fused = reciprocalRankFusion(
-    bm25Ranked.map((r) => ({ id: r.id })),
-    vec.results.map((r) => ({ id: r.id })),
-  );
-  const buckets = bucketByTime(await hitsFor(fused.slice(0, TOP_K)));
+  const bm25 = await getBm25();
+  const lists: { ids: string[]; weight: number }[] = [];
+  for (const v of variants) {
+    lists.push({ ids: bm25.search(v, TOP_K).map((r) => r.id), weight: BM25_WEIGHT });
+  }
+
+  let anyVector = false;
+  for (const v of variants) {
+    const res = await vectorSearch(v, TOP_K);
+    if (res.ok) {
+      anyVector = true;
+      lists.push({ ids: res.results.map((r) => r.id), weight: VEC_WEIGHT });
+    }
+  }
+  // Nothing beyond the instant stage-1 (no translation, no vector) — skip.
+  if (!anyVector && variants.length === 1) return;
+
+  const fused = fuseMany(lists);
+  const buckets = relevanceBuckets(await hitsFor(fused.slice(0, TOP_K)));
   const msg: SearchResultsUpdateMsg = {
     type: 'SEARCH_RESULTS_UPDATE',
     queryId,

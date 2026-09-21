@@ -4,6 +4,7 @@
 // Vectors cache in memory; IndexedDB (written by the SW) is the source of truth.
 
 import { loadModel, embedPassages, embedQuery, currentBackend, isModelLoaded, type LoadProgress } from './embedder';
+import { expandQuery } from './translate';
 import { VectorStore } from './vectorstore';
 import { quantizeInt8, l2normalize } from '@shared/quantize';
 import { allVectors } from '@storage/dao';
@@ -138,6 +139,16 @@ chrome.runtime.onMessage.addListener(
           store.remove(msg.ids);
           sendResponse({ ok: true });
           return;
+
+        case 'EXPAND_QUERY': {
+          try {
+            const variants = await expandQuery(msg.text, msg.targets);
+            sendResponse({ ok: true, variants });
+          } catch {
+            sendResponse({ ok: true, variants: [msg.text] });
+          }
+          return;
+        }
 
         default:
           sendResponse({ ok: false, error: 'unknown message' });

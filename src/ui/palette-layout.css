@@ -164,6 +164,12 @@
   min-width: 0;
   flex: 1;
 }
+.row-time {
+  flex: 0 0 auto;
+  font-size: 11px;
+  color: var(--sr-fg-faint);
+  white-space: nowrap;
+}
 .row-title {
   font-size: 14px;
   white-space: nowrap;

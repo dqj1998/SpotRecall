@@ -6,6 +6,7 @@ import type {
   EmbedBatchResult,
   VectorSearchResult,
   OffscreenState,
+  ExpandQueryResult,
 } from '@shared/protocol';
 
 const OFFSCREEN_PATH = 'src/offscreen/offscreen.html';
@@ -58,6 +59,11 @@ export function vectorRemove(ids: string[]): Promise<{ ok: boolean }> {
 /** Trigger model load (first-run download + cache, then offline). */
 export function ensureModel(): Promise<OffscreenState> {
   return call<OffscreenState>({ target: 'offscreen', type: 'ENSURE_MODEL' });
+}
+
+/** Expand a query with on-device translations into the given target languages. */
+export function expandQuery(text: string, targets: string[]): Promise<ExpandQueryResult> {
+  return call<ExpandQueryResult>({ target: 'offscreen', type: 'EXPAND_QUERY', text, targets });
 }
 
 export async function closeOffscreen(): Promise<void> {
