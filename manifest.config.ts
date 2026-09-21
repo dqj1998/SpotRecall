@@ -7,7 +7,8 @@ import pkg from './package.json';
 export default defineManifest({
   manifest_version: 3,
   name: 'SpotRecall',
-  description: 'Local-First Context & Entry Recall — find where you were before.',
+  description:
+    "Instantly find pages you've visited — private, on-device search over your history by keyword and meaning. No cloud, no tracking.",
   version: pkg.version,
   minimum_chrome_version: '116',
   icons: {
