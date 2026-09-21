@@ -107,10 +107,18 @@ model file (data, not code) is downloaded once and cached locally.
 
 ## Edge Add-ons notes
 - Upload the **same** `spotrecall-store-1.0.0.zip`.
-- Store logo: **300×300** (resize `release-images.jpeg`).
+- Store logo: **300×300** (`release-screenshots/edge-logo-300.png`).
 - Screenshots: 1280×800 (same files).
 - Provide the same description, category (Productivity), and privacy policy URL.
 - Edge also asks for supported languages and an author/publisher display name.
+- **Search terms** (≤7 terms, ≤30 chars each, ≤21 words total → this set is 18 words):
+  1. `history search`
+  2. `semantic search`
+  3. `browsing history recall`
+  4. `find visited pages`
+  5. `private on-device search`
+  6. `AI page finder`
+  7. `command palette`
 
 ---
 
