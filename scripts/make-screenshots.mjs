@@ -87,17 +87,25 @@ function palette({ value, mode, semantic, hist, sections, badge }) {
   void semantic;
 }
 
+// English-market content (most screens). Japanese appears only in the
+// cross-lingual screenshot, to demonstrate "English query → Japanese page".
+const VERGE = { l: 'V', c: '#e2136e', title: 'Sony WH-1000XM5 Review: the new king of noise cancelling — The Verge', snippet: 'Class-leading ANC, refined design and 30-hour battery. Here is how it stacks up against the XM4 and the competition.', time: '6 min ago' };
+const WIRE = { l: 'W', c: '#111827', title: 'The Best Noise-Cancelling Headphones for 2026 — Wirecutter', snippet: 'After 60+ hours of testing we picked the best for commuting, flights and the open office. Top pick, upgrade pick and budget pick.', time: '22 min ago' };
+const AMZN = { l: 'a', c: '#ff9900', title: 'Amazon.com: Bose QuietComfort Ultra Headphones', snippet: 'Wireless noise cancelling headphones with spatial audio, immersive sound and up to 24 hours of battery life.', time: 'yesterday' };
+const CART = { l: 'a', c: '#ff9900', title: 'Amazon.com Shopping Cart', snippet: 'Subtotal (1 item) · Proceed to checkout · Saved for later', time: '2 min ago' };
+const ENG_ROWS = [VERGE, WIRE, AMZN];
+
+// Japanese pages — used only in the cross-lingual scene.
 const AC1 = { l: 'a', c: '#ff9900', title: "Amazon | 【標準取付工事費込み】COMFEE' エアコン 6畳 2.2kw", snippet: '大風量快適 冷暖房 静音 除湿 内部清浄 ルームエアコン 上下ルーバー 一人暮らし 保証1年', time: '7 min ago' };
 const AC2 = { l: 'a', c: '#ff9900', title: "Amazon.co.jp: [2026年モデル] COMFEE' エアコン 10畳", snippet: 'オンライン通販のAmazon公式サイトなら COMFEE インバーター冷暖房 省エネ 6畳〜10畳', time: '8 min ago' };
 const KAK = { l: '価', c: '#2f80ff', title: '価格.com - エアコン 人気売れ筋ランキング', snippet: '自分にピッタリのエアコンを選べる 比較・検討 メーカー・畳数・価格で絞り込み', time: 'yesterday' };
-const CART = { l: 'a', c: '#ff9900', title: 'Amazon.co.jp ショッピングカート', snippet: 'お届け先 ご注文内容の確認 レジに進む', time: '1 min ago' };
 
 const scenes = [
   {
     name: 'screenshot-1',
     h: 'Recall any page,<br/>instantly',
     p: "Blazing-fast keyword search across everything you've visited — error codes, versions, exact titles.",
-    body: palette({ value: 'COMFEE エアコン', mode: 'Keyword', sections: [{ rows: [AC1, AC2, KAK] }] }),
+    body: palette({ value: 'noise cancelling headphones', mode: 'Keyword', sections: [{ rows: ENG_ROWS }] }),
   },
   {
     name: 'screenshot-2',
@@ -110,7 +118,13 @@ const scenes = [
     h: 'Pick up where<br/>you left off',
     p: 'Recent searches are one click away — run again, or remove any with a tap.',
     body: palette({
-      hist: ['電気の価格比較', 'air conditioner installation', 'キッチン 収納', 'LLM benchmark', 'RLCD 強化学習'],
+      hist: [
+        'noise cancelling headphones',
+        'flexbox center a div',
+        'chrome web store review time',
+        'typescript satisfies operator',
+        'best ramen near me',
+      ],
       sections: [],
     }),
   },
@@ -120,8 +134,8 @@ const scenes = [
     p: 'Reopen anything from today, yesterday, or earlier — with a content preview, not a cryptic URL.',
     body: palette({
       sections: [
-        { label: 'Today', rows: [CART, AC1] },
-        { label: 'Yesterday', rows: [KAK] },
+        { label: 'Today', rows: [CART, VERGE] },
+        { label: 'Yesterday', rows: [WIRE] },
       ],
     }),
   },
@@ -129,7 +143,7 @@ const scenes = [
     name: 'screenshot-5',
     h: 'Private by design.<br/>Nothing leaves<br/>your device.',
     p: 'No cloud, no account, no tracking. Fully offline after a one-time setup. Open source.',
-    body: palette({ value: 'COMFEE エアコン', mode: 'Keyword', badge: '100% on-device', sections: [{ rows: [AC1, AC2, KAK] }] }),
+    body: palette({ value: 'noise cancelling headphones', mode: 'Keyword', badge: '100% on-device', sections: [{ rows: ENG_ROWS }] }),
   },
 ];
 
