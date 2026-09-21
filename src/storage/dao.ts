@@ -213,6 +213,19 @@ export async function enforceRetention(limit: number): Promise<string[]> {
   return removed;
 }
 
+/** Hard-delete records (any status) + their vectors + queue entries, atomically. */
+export async function deleteRecordsCascade(ids: string[]): Promise<void> {
+  if (ids.length === 0) return;
+  const db = await getDb();
+  const tx = db.transaction(['records', 'vectors', 'pendingEmbed'], 'readwrite');
+  for (const id of ids) {
+    await tx.objectStore('records').delete(id);
+    await tx.objectStore('vectors').delete(id);
+    await tx.objectStore('pendingEmbed').delete(id);
+  }
+  await tx.done;
+}
+
 // ---------- events ----------
 export async function addEvent(ev: EventRecord): Promise<void> {
   const db = await getDb();

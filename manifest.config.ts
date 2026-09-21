@@ -34,7 +34,9 @@ export default defineManifest({
       matches: ['<all_urls>'],
       js: ['src/content/capture.ts'],
       run_at: 'document_idle',
-      all_frames: true,
+      // Top-level frames only — capturing sub-frames records ad / reCAPTCHA /
+      // widget iframes as their own junk entries.
+      all_frames: false,
       match_about_blank: false,
     },
   ],

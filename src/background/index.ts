@@ -1,7 +1,13 @@
 // Service Worker — the scheduling hub. Never does inference; never treats
 // in-memory state as the source of truth.
 
-import { handleInit, handleCommit, handleTabRemoved, handleFrameGone } from './lifecycle';
+import {
+  handleInit,
+  handleCommit,
+  handleTabRemoved,
+  handleFrameGone,
+  purgeBuiltinJunk,
+} from './lifecycle';
 import { bm25Stage, vectorStage, recentBuckets } from './search';
 import { drainQueue, queueDepth } from './embed-queue';
 import { resetBm25 } from './bm25-manager';
@@ -42,6 +48,16 @@ async function bootstrap(): Promise<void> {
   if (!(await getMeta<string | null>(META_KEYS.sourceDeviceId, null))) {
     await setMeta(META_KEYS.sourceDeviceId, crypto.randomUUID());
   }
+  // One-time purge of pre-existing ad/tracker/captcha junk records.
+  if (!(await getMeta<boolean>('junkPurged_v1', false))) {
+    const removed = await purgeBuiltinJunk();
+    if (removed.length) {
+      await resetBm25();
+      await vectorRemove(removed).catch(() => {});
+    }
+    await setMeta('junkPurged_v1', true);
+  }
+
   chrome.alarms.create('maintenance', { periodInMinutes: 1 });
   // Returning users with semantic enabled: warm the model (from cache, offline).
   if (await isSemanticEnabled()) {

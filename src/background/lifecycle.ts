@@ -10,6 +10,8 @@ import {
   gcProvisional,
   isPaused,
   getBlacklist,
+  allRecords,
+  deleteRecordsCascade,
 } from '@storage/dao';
 import {
   registerProvisional,
@@ -29,9 +31,40 @@ function domainBlacklisted(domain: string, blacklist: string[]): boolean {
   });
 }
 
+// Built-in denylist of non-content hosts/paths (ads, trackers, captcha). These
+// are unambiguously not pages a user "was on"; skipping them keeps the index
+// clean even if such a URL ever loads as a top-level document.
+const BUILTIN_BLOCK_HOSTS = [
+  'doubleclick.net',
+  'googlesyndication.com',
+  'adservice.google.com',
+  'amazon-adsystem.com',
+  'static.affiliate.rakuten.co.jp',
+  'recaptcha.net',
+  'googletagmanager.com',
+  'google-analytics.com',
+];
+const BUILTIN_BLOCK_PATHS = ['/recaptcha/', '/pagead/', '/gampad/'];
+
+function isBuiltinJunk(url: string, domain: string): boolean {
+  if (BUILTIN_BLOCK_HOSTS.some((h) => domain === h || domain.endsWith(`.${h}`))) return true;
+  try {
+    const p = new URL(url).pathname;
+    if (BUILTIN_BLOCK_PATHS.some((x) => p.startsWith(x))) return true;
+  } catch {
+    /* ignore */
+  }
+  return false;
+}
+
 /** Returns true if capture should proceed; false means send STOP_CAPTURE. */
-export async function shouldCapture(sender: chrome.runtime.MessageSender, domain: string): Promise<boolean> {
+export async function shouldCapture(
+  sender: chrome.runtime.MessageSender,
+  url: string,
+  domain: string,
+): Promise<boolean> {
   if (sender.tab?.incognito) return false;
+  if (isBuiltinJunk(url, domain)) return false;
   if (await isPaused()) return false;
   const blacklist = await getBlacklist();
   if (domainBlacklisted(domain, blacklist)) return false;
@@ -57,7 +90,7 @@ export async function handleInit(
   const frameId = sender.frameId ?? 0;
   const domain = data.domain || domainOf(data.url);
 
-  if (!(await shouldCapture(sender, domain))) return { stop: true };
+  if (!(await shouldCapture(sender, data.url, domain))) return { stop: true };
 
   const normalizedUrl = normalizeUrl(data.url);
   const id = await recordIdFor(normalizedUrl);
@@ -106,6 +139,19 @@ export async function handleCommit(
   if (!result) return;
   await bm25Upsert(result.record);
   if (result.contentChanged) void drainQueue();
+}
+
+/**
+ * One-time cleanup of previously-captured junk (ad/tracker/captcha records) that
+ * predate the top-frame + denylist fix. Returns removed ids so caller can drop
+ * them from the BM25 index and offscreen vector buffer.
+ */
+export async function purgeBuiltinJunk(): Promise<string[]> {
+  const junk = (await allRecords())
+    .filter((r) => isBuiltinJunk(r.url, r.domain))
+    .map((r) => r.id);
+  await deleteRecordsCascade(junk);
+  return junk;
 }
 
 export async function handleTabRemoved(tabId: number): Promise<void> {

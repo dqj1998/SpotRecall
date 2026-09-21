@@ -3,6 +3,10 @@
 // the SW from the MessageSender — this script never self-reports it.
 
 (() => {
+  // Only capture the top document. Sub-frames (ads, reCAPTCHA, embedded widgets)
+  // must never become their own records. (Belt-and-suspenders vs all_frames.)
+  if (window.top !== window.self) return;
+
   let isCommitted = false;
   let stopped = false;
   let fgAccumMs = 0;
