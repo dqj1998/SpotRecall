@@ -11,3 +11,6 @@ SpotRecall-dev-plan.v1.bak.md
 
 # personal backup exports (contain real browsing data)
 spotrecall-backup-*.zip
+
+# store build artifacts
+*-store-*.zip
