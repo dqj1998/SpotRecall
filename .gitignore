@@ -7,7 +7,9 @@ public/ort/
 eval/labels*.json
 !eval/labels.example.json
 .cache/
-SpotRecall-dev-plan.v1.bak.md
+
+# local planning docs (kept local, not for the public repo)
+plans/
 
 # personal backup exports (contain real browsing data)
 spotrecall-backup-*.zip
