@@ -9,6 +9,7 @@
 
 import { pipeline, env } from '@huggingface/transformers';
 import { MODEL_ID } from '@shared/protocol';
+import { checkModelConfigJson } from '@shared/model-file';
 
 // Loosely typed to avoid Transformers.js's huge option union blowing up tsc.
 type Extractor = (
@@ -38,6 +39,31 @@ if (env.backends?.onnx) {
 
 let extractor: Extractor | null = null;
 let backend = 'unknown';
+
+// A corrupt/empty locally-bundled model (e.g. 0-byte files from an interrupted
+// `npm run download-model`) makes transformers.js trust a 200-but-empty local
+// fetch and die with "SyntaxError: Unexpected end of JSON input" without ever
+// falling back to the remote download — leaving the panel's progress at 0%.
+// Probe the bundle's config.json once; if it is broken, disable local models
+// so the intended first-run remote download can proceed.
+let localBundleChecked = false;
+
+async function probeLocalBundle(): Promise<void> {
+  if (!env.allowLocalModels || localBundleChecked) return;
+  localBundleChecked = true;
+  try {
+    const res = await fetch(`${env.localModelPath}${MODEL_ID}/config.json`);
+    if (!res.ok) return; // not bundled → transformers' own local→remote fallback applies
+    const check = checkModelConfigJson(await res.text());
+    if (!check.ok) {
+      console.warn(`[SpotRecall] local model bundle is corrupt (${check.reason}); falling back to remote download`);
+      env.allowLocalModels = false;
+    }
+  } catch {
+    // fetch threw (bundle missing entirely) → keep local models enabled; for a
+    // missing file transformers already falls back to remote on its own.
+  }
+}
 
 export interface LoadProgress {
   status: string;
@@ -69,6 +95,7 @@ export function isModelLoaded(): boolean {
 
 export async function loadModel(onProgress?: (p: LoadProgress) => void): Promise<void> {
   if (extractor) return;
+  await probeLocalBundle();
   // logSeverityLevel 3 = error: silence benign ORT session warnings.
   const opts: Omit<PipelineOpts, 'device'> = {
     dtype: 'q8',
