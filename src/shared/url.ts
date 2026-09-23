@@ -18,15 +18,39 @@ const TRACKING_PARAM_PATTERNS: RegExp[] = [
   /^igshid$/i,
 ];
 
-function isTracking(key: string): boolean {
-  return TRACKING_PARAM_PATTERNS.some((re) => re.test(key));
+// Per-request random auth/CSRF/session params. Stripping them collapses the many
+// distinct URLs of the SAME login/OAuth page into one dedup id. Deliberately
+// conservative: only names that are unambiguously nonces/tokens/correlation ids
+// (never page-content selectors), so two genuinely different pages can't collide.
+// `state`, `code`, and bare `token` are intentionally NOT listed — too generic.
+const VOLATILE_PARAM_PATTERNS: RegExp[] = [
+  /^nonce$/i,
+  /^sso_nonce$/i,
+  /^session_state$/i,
+  /^code_challenge$/i,
+  /^code_verifier$/i,
+  /^client[-_]request[-_]id$/i,
+  /^request[-_]?id$/i,
+  /^correlation[-_]?id$/i,
+  /^_?csrf(_token)?$/i,
+  /^xsrf(_token)?$/i,
+  /^uaid$/i,
+  /^access_token$/i,
+  /^id_token$/i,
+];
+
+function isStrippable(key: string): boolean {
+  return (
+    TRACKING_PARAM_PATTERNS.some((re) => re.test(key)) ||
+    VOLATILE_PARAM_PATTERNS.some((re) => re.test(key))
+  );
 }
 
 /**
  * Produce a stable, dedup-friendly URL string:
  *  - lowercased host
  *  - fragment removed
- *  - tracking query params stripped, remaining params sorted
+ *  - tracking + volatile auth/session params stripped, remaining params sorted
  *  - trailing slash on path normalized (but "/" kept)
  * Non-http(s) URLs are returned lowercased-origin best-effort.
  */
@@ -43,7 +67,7 @@ export function normalizeUrl(raw: string): string {
 
   const kept: [string, string][] = [];
   for (const [k, v] of u.searchParams.entries()) {
-    if (!isTracking(k)) kept.push([k, v]);
+    if (!isStrippable(k)) kept.push([k, v]);
   }
   kept.sort((a, b) => (a[0] === b[0] ? a[1].localeCompare(b[1]) : a[0].localeCompare(b[0])));
   u.search = '';

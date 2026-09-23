@@ -34,4 +34,27 @@ describe('normalizeUrl', () => {
   it('is a no-op-ish for non-URLs', () => {
     expect(normalizeUrl('not a url')).toBe('not a url');
   });
+
+  it('strips volatile auth/session params so one login page dedupes to one id', () => {
+    const a = normalizeUrl(
+      'https://login.live.com/oauth20?client_id=app&nonce=AAA&code_challenge=X1&client-request-id=r1&session_state=s1',
+    );
+    const b = normalizeUrl(
+      'https://login.live.com/oauth20?client_id=app&nonce=BBB&code_challenge=X2&client-request-id=r2&session_state=s2',
+    );
+    expect(a).toBe(b);
+    expect(a).toBe('https://login.live.com/oauth20?client_id=app');
+  });
+
+  it('strips csrf / correlation / token families', () => {
+    expect(
+      normalizeUrl('https://x.com/p?csrf_token=1&correlation_id=2&access_token=3&keep=yes'),
+    ).toBe('https://x.com/p?keep=yes');
+  });
+
+  it('keeps generic content params (state/code) — too ambiguous to strip', () => {
+    // These can carry real content; only content-hash dedup (query-time) merges them.
+    expect(normalizeUrl('https://x.com/p?state=CA')).toBe('https://x.com/p?state=CA');
+    expect(normalizeUrl('https://x.com/p?code=PROMO')).toBe('https://x.com/p?code=PROMO');
+  });
 });

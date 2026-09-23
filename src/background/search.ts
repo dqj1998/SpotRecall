@@ -57,20 +57,38 @@ function toHit(r: PageRecord, score: number): SearchHit {
   };
 }
 
+/**
+ * Collapse entries that share a non-empty contentHash, keeping the first (i.e.
+ * the best-ranked / most-recent, since callers pass ordered lists). This hides
+ * URL-distinct but content-identical pages — typically login/OAuth pages whose
+ * URLs differ only by per-visit auth params. Empty hashes never collapse.
+ */
+export function dedupeByContent<T>(items: T[], hashOf: (t: T) => string): T[] {
+  const seen = new Set<string>();
+  return items.filter((it) => {
+    const h = hashOf(it);
+    if (!h) return true;
+    if (seen.has(h)) return false;
+    seen.add(h);
+    return true;
+  });
+}
+
 async function hitsFor(ids: { id: string; score: number }[]): Promise<SearchHit[]> {
-  const out: SearchHit[] = [];
+  const scored: { rec: PageRecord; score: number }[] = [];
   for (const { id, score } of ids) {
     const r = await getRecord(id);
-    if (r) out.push(toHit(r, score));
+    if (r) scored.push({ rec: r, score });
   }
-  return out;
+  return dedupeByContent(scored, (x) => x.rec.contentHash).map((x) => toHit(x.rec, x.score));
 }
 
 /** Empty-query browse mode: most-recently-visited pages, grouped by time. */
 export async function recentBuckets(limit = 50): Promise<TimelineBucket[]> {
-  const hits = (await allRecords())
+  const ordered = (await allRecords())
     .filter((r) => r.status === 'committed' || r.title)
-    .sort((a, b) => b.lastVisited - a.lastVisited)
+    .sort((a, b) => b.lastVisited - a.lastVisited);
+  const hits = dedupeByContent(ordered, (r) => r.contentHash)
     .slice(0, limit)
     .map((r) => toHit(r, 0));
   return bucketByTime(decorateBookmarks(hits, await getBookmarkedIds(), false));
