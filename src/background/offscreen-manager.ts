@@ -5,6 +5,7 @@ import type {
   OffscreenRequest,
   EmbedBatchResult,
   VectorSearchResult,
+  ScoreAgainstResult,
   OffscreenState,
   ExpandQueryResult,
 } from '@shared/protocol';
@@ -54,6 +55,18 @@ export function vectorSearch(text: string, topK: number): Promise<VectorSearchRe
 export function vectorRemove(ids: string[]): Promise<{ ok: boolean }> {
   if (ids.length === 0) return Promise.resolve({ ok: true });
   return call<{ ok: boolean }>({ target: 'offscreen', type: 'VECTOR_REMOVE', ids });
+}
+
+/**
+ * Score candidate doc ids against context signals. Callers MUST gate on
+ * offscreenState().state === 'READY' first — this goes through `call`, which
+ * would otherwise create the offscreen document (and could pull the model).
+ */
+export function scoreAgainst(signals: string[], ids: string[]): Promise<ScoreAgainstResult> {
+  if (ids.length === 0 || signals.length === 0) {
+    return Promise.resolve({ ok: true, scores: [] });
+  }
+  return call<ScoreAgainstResult>({ target: 'offscreen', type: 'SCORE_AGAINST', signals, ids });
 }
 
 /** Trigger model load (first-run download + cache, then offline). */

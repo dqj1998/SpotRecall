@@ -84,6 +84,17 @@ export interface IndexStatus {
   semanticEnabled: boolean;
 }
 
+/** A tab the auto-close engine closed; retained for the recent-closures view. */
+export interface AutoClosedEntry {
+  url: string;
+  title: string;
+  domain: string;
+  favicon?: string;
+  closedAt: number;
+  /** Committed & searchable in SpotRecall (false = thin page, not recoverable). */
+  indexed: boolean;
+}
+
 export const META_KEYS = {
   schemaVersion: 'schemaVersion',
   modelId: 'modelId',
@@ -94,4 +105,8 @@ export const META_KEYS = {
   blacklist: 'blacklist',
   retentionLimit: 'retentionLimit',
   semanticEnabled: 'semanticEnabled',
+  autoCloseEnabled: 'autoCloseEnabled',
+  autoCloseKeep: 'autoCloseKeep',
+  autoCloseConsented: 'autoCloseConsented',
+  autoCloseLog: 'autoCloseLog',
 } as const;

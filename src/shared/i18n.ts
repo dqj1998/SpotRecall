@@ -101,6 +101,26 @@ const en: Dict = {
   clearConfirm: 'Clear all local data? This cannot be undone.',
   cleared: 'Cleared',
   loading: 'Loading…',
+
+  // auto-close
+  autoCloseTitle: 'Auto-close tabs',
+  autoCloseDesc:
+    'Quietly closes inactive tabs when you have too many open. Closed pages stay searchable in SpotRecall (except empty ones). Best-effort — pinned, grouped, audible, and active tabs are never touched.',
+  autoCloseLabel: 'Enable auto-close',
+  autoCloseNote:
+    'Off until you turn it on. A window is never emptied, and recently-restored tabs get a grace period.',
+  autoCloseKeepLabel: 'Tabs to keep open',
+  autoCloseKeepDesc: 'Target number of open tabs across all normal windows (default 12).',
+  autoCloseLogTitle: 'Closed in the last 48h ({n})',
+  autoCloseLogEmpty: 'Nothing closed yet.',
+  autoCloseIndexed: 'Indexed — searchable in SpotRecall.',
+  autoCloseNotIndexed: 'Not indexed (empty page) — not recoverable.',
+  autoCloseNotIndexedTag: 'not indexed',
+  autoCloseTooltip:
+    'Auto-close: quietly closes inactive tabs when you have more than your keep limit open. Already-indexed pages stay searchable here. Pinned, grouped, audible and active tabs are never touched.',
+  autoCloseClosed: '{n} closed · 48h',
+  autoCloseCountTip: 'View the tabs closed in the last 48h',
+  autoCloseReopen: 'Click to reopen',
 };
 
 const ja: Dict = {
@@ -184,6 +204,26 @@ const ja: Dict = {
   clearConfirm: 'すべてのローカルデータを消去しますか？元に戻せません。',
   cleared: '消去しました',
   loading: '読み込み中…',
+
+  // auto-close
+  autoCloseTitle: 'タブ自動クローズ',
+  autoCloseDesc:
+    '開きすぎた非アクティブなタブを静かに閉じます。閉じたページは SpotRecall で検索可能なまま（中身が空のものを除く）。ベストエフォート — 固定・グループ・音声再生中・アクティブなタブは対象外です。',
+  autoCloseLabel: '自動クローズを有効化',
+  autoCloseNote:
+    'オンにするまで動作しません。ウィンドウ最後の1枚は閉じず、復元直後のタブには猶予期間があります。',
+  autoCloseKeepLabel: '開いたままにするタブ数',
+  autoCloseKeepDesc: '通常ウィンドウ全体で開いておく目標タブ数（既定 12）。',
+  autoCloseLogTitle: '直近48時間で閉じたタブ（{n}）',
+  autoCloseLogEmpty: 'まだ閉じたタブはありません。',
+  autoCloseIndexed: 'インデックス済み — SpotRecall で検索できます。',
+  autoCloseNotIndexed: '未インデックス（空ページ）— 復元できません。',
+  autoCloseNotIndexedTag: '未インデックス',
+  autoCloseTooltip:
+    '自動クローズ：保持上限を超えたとき、非アクティブなタブを静かに閉じます。インデックス済みのページはここから検索可能。固定・グループ・音声再生中・アクティブなタブは対象外です。',
+  autoCloseClosed: '{n} 件 · 48h',
+  autoCloseCountTip: '直近48時間で閉じたタブを表示',
+  autoCloseReopen: 'クリックで再度開く',
 };
 
 const zh: Dict = {
@@ -264,6 +304,25 @@ const zh: Dict = {
   clearConfirm: '确定清空全部本地数据？此操作不可撤销。',
   cleared: '已清空',
   loading: '载入中…',
+
+  // auto-close
+  autoCloseTitle: '自动关闭标签页',
+  autoCloseDesc:
+    '当打开的标签页过多时，静默关闭不活跃的标签页。被关闭的页面仍可在 SpotRecall 中搜到（内容为空的除外）。尽力而为——固定、分组、正在播放音频、当前活动的标签页永不处理。',
+  autoCloseLabel: '启用自动关闭',
+  autoCloseNote: '开启前不会动作。绝不关闭窗口最后一个标签页；刚恢复的标签页有宽限期。',
+  autoCloseKeepLabel: '保持打开的标签页数',
+  autoCloseKeepDesc: '所有普通窗口合计要保留的目标标签页数（默认 12）。',
+  autoCloseLogTitle: '最近 48 小时关闭的标签页（{n}）',
+  autoCloseLogEmpty: '暂无自动关闭的标签页。',
+  autoCloseIndexed: '已收录——可在 SpotRecall 中搜到。',
+  autoCloseNotIndexed: '未收录（空页面）——无法找回。',
+  autoCloseNotIndexedTag: '未收录',
+  autoCloseTooltip:
+    '自动关闭：当打开的标签页超过保留上限时，静默关闭不活跃的标签页。已收录的页面仍可在此搜到。固定、分组、正在播放音频、当前活动的标签页永不处理。',
+  autoCloseClosed: '已关 {n} · 48h',
+  autoCloseCountTip: '查看最近 48 小时自动关闭的标签页',
+  autoCloseReopen: '点击重新打开',
 };
 
 const dicts: Record<Lang, Dict> = { en, ja, zh };

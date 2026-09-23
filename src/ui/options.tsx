@@ -1,8 +1,8 @@
 import './options.css';
 import { render } from 'preact';
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { exportBackup, importBackup } from '@storage/backup';
-import type { EventRecord } from '@shared/types';
+import type { EventRecord, AutoClosedEntry } from '@shared/types';
 import { LANGS } from '@shared/i18n';
 import { useI18n } from './useI18n';
 
@@ -20,12 +20,36 @@ interface Settings {
   retentionLimit: number;
   persistGranted: boolean;
   semanticEnabled: boolean;
+  autoCloseEnabled: boolean;
+  autoCloseKeep: number;
+  autoCloseConsented: boolean;
+  autoCloseLog: AutoClosedEntry[];
   total: number;
   pending: number;
   offscreen: ModelStatus | null;
 }
 
 const send = <T,>(msg: unknown): Promise<T> => chrome.runtime.sendMessage(msg) as Promise<T>;
+
+function relTime(ts: number, lang: string): string {
+  try {
+    const rtf = new Intl.RelativeTimeFormat(lang, { numeric: 'auto' });
+    const diff = ts - Date.now();
+    const min = 60_000;
+    const hour = 60 * min;
+    if (Math.abs(diff) < hour) return rtf.format(Math.round(diff / min), 'minute');
+    return rtf.format(Math.round(diff / hour), 'hour');
+  } catch {
+    return '';
+  }
+}
+
+function faviconFor(url: string): string {
+  const u = new URL(chrome.runtime.getURL('/_favicon/'));
+  u.searchParams.set('pageUrl', url);
+  u.searchParams.set('size', '32');
+  return u.toString();
+}
 
 interface Metrics {
   effective: number;
@@ -74,9 +98,11 @@ function App() {
   const { lang, setLang, t } = useI18n();
   const [s, setS] = useState<Settings | null>(null);
   const [blacklistText, setBlacklistText] = useState('');
+  const [keepInput, setKeepInput] = useState('');
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [model, setModel] = useState<ModelStatus | null>(null);
   const [busy, setBusy] = useState('');
+  const scrolledRef = useRef(false);
 
   const modelLabel = (m: ModelStatus | null): string => {
     switch (m?.state) {
@@ -100,6 +126,7 @@ function App() {
     setS(settings);
     setModel(settings.offscreen);
     setBlacklistText((settings.blacklist ?? []).join('\n'));
+    setKeepInput(String(settings.autoCloseKeep));
     const { events } = await send<{ events: EventRecord[] }>({ type: 'GET_EVENTS' });
     setMetrics(computeMetrics(events));
   };
@@ -120,10 +147,32 @@ function App() {
     document.title = t('panelTitle');
   }, [lang]);
 
+  // Deep-link from the popup footer: scroll to the auto-close section once.
+  useEffect(() => {
+    if (!s || scrolledRef.current || location.hash !== '#autoclose') return;
+    scrolledRef.current = true;
+    requestAnimationFrame(() =>
+      document.getElementById('autoclose')?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+    );
+  }, [s]);
+
   if (!s) return <div class="page">{t('loading')}</div>;
 
   const setPaused = async (paused: boolean) => {
     await send({ type: 'SET_PAUSED', paused });
+    await load();
+  };
+  const setAutoClose = async (enabled: boolean) => {
+    await send({ type: 'SET_AUTOCLOSE', enabled });
+    await load();
+  };
+  const commitKeep = async () => {
+    const n = parseInt(keepInput, 10);
+    if (!Number.isFinite(n) || n < 1) {
+      setKeepInput(String(s?.autoCloseKeep ?? 12)); // revert invalid input
+      return;
+    }
+    await send({ type: 'SET_AUTOCLOSE', keep: n });
     await load();
   };
   const saveBlacklist = async () => {
@@ -239,6 +288,77 @@ function App() {
             placeholder={'example-bank.com\nmail.company.com'}
           />
           <div class="actions"><button class="primary" onClick={saveBlacklist}>{t('saveBlocklist')}</button></div>
+        </div>
+      </div>
+
+      <div class="card" id="autoclose">
+        <h2>{t('autoCloseTitle')}</h2>
+        <p class="desc">{t('autoCloseDesc')}</p>
+        <div class="row">
+          <div>
+            <div class="label">{t('autoCloseLabel')}</div>
+            <div class="desc">{t('autoCloseNote')}</div>
+          </div>
+          <label class="switch">
+            <input
+              type="checkbox"
+              checked={s.autoCloseEnabled && s.autoCloseConsented}
+              onChange={(e) => setAutoClose((e.target as HTMLInputElement).checked)}
+            />
+            <span class="slider" />
+          </label>
+        </div>
+        <div class="row">
+          <div>
+            <div class="label">{t('autoCloseKeepLabel')}</div>
+            <div class="desc">{t('autoCloseKeepDesc')}</div>
+          </div>
+          <input
+            type="number"
+            min={1}
+            style="width:80px"
+            value={keepInput}
+            onInput={(e) => setKeepInput((e.target as HTMLInputElement).value)}
+            onBlur={commitKeep}
+            onKeyDown={(e) => {
+              if ((e as KeyboardEvent).key === 'Enter') (e.target as HTMLInputElement).blur();
+            }}
+          />
+        </div>
+        <div class="row" style="display:block">
+          <div class="label" style="margin-bottom:8px">
+            {t('autoCloseLogTitle', { n: s.autoCloseLog.length })}
+          </div>
+          {s.autoCloseLog.length === 0 ? (
+            <p class="desc">{t('autoCloseLogEmpty')}</p>
+          ) : (
+            <div class="ac-log">
+              {s.autoCloseLog.map((e) => (
+                <div
+                  key={`${e.url}:${e.closedAt}`}
+                  class="ac-log-row"
+                  title={`${e.title}\n${e.url}\n${e.indexed ? t('autoCloseIndexed') : t('autoCloseNotIndexed')}\n${t('autoCloseReopen')}`}
+                  onClick={() => {
+                    if (e.url) chrome.tabs.create({ url: e.url }).catch(() => {});
+                  }}
+                >
+                  <img
+                    class="ac-log-fav"
+                    src={e.favicon || faviconFor(e.url)}
+                    onError={(ev) => ((ev.target as HTMLImageElement).style.visibility = 'hidden')}
+                  />
+                  <div class="ac-log-main">
+                    <div class="ac-log-title">{e.title || e.url}</div>
+                    <div class="ac-log-sub">
+                      {e.domain}
+                      {!e.indexed && <span class="ac-log-tag">{t('autoCloseNotIndexedTag')}</span>}
+                    </div>
+                  </div>
+                  <div class="ac-log-time">{relTime(e.closedAt, lang)}</div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

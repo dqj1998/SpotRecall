@@ -13,6 +13,7 @@ import type {
   OffscreenRequest,
   EmbedBatchResult,
   VectorSearchResult,
+  ScoreAgainstResult,
   OffscreenState,
   ModelState,
 } from '@shared/protocol';
@@ -131,6 +132,32 @@ chrome.runtime.onMessage.addListener(
             sendResponse({ ok: true, results } satisfies VectorSearchResult);
           } catch (e) {
             sendResponse({ ok: false, error: String(e), results: [] } satisfies VectorSearchResult);
+          }
+          return;
+        }
+
+        case 'SCORE_AGAINST': {
+          if (state !== 'READY') {
+            sendResponse({ ok: false, error: 'model not ready', scores: [] } satisfies ScoreAgainstResult);
+            return;
+          }
+          try {
+            const qs = await Promise.all(
+              msg.signals.filter(Boolean).map((s) => embedQuery(s).then(l2normalize)),
+            );
+            // Per candidate: best cosine across signals — a tab relevant to ANY
+            // recent context (active page / recent tab / recent query) is kept.
+            const scores = msg.ids.map((id) => {
+              let best = -1;
+              for (const q of qs) {
+                const sc = store.scoreOne(q, id);
+                if (sc !== null && sc > best) best = sc;
+              }
+              return { id, score: best };
+            });
+            sendResponse({ ok: true, scores } satisfies ScoreAgainstResult);
+          } catch (e) {
+            sendResponse({ ok: false, error: String(e), scores: [] } satisfies ScoreAgainstResult);
           }
           return;
         }

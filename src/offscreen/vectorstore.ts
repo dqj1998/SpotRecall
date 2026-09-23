@@ -67,6 +67,21 @@ export class VectorStore {
     }
   }
 
+  /**
+   * Score a single stored vector (by id) against an L2-normalized float32 query.
+   * Returns null when the id is not in the buffer. Used by SCORE_AGAINST to rank
+   * specific candidate tabs rather than the whole buffer.
+   */
+  scoreOne(query: Float32Array, id: string): number | null {
+    const row = this.rowOf.get(id);
+    if (row === undefined) return null;
+    const uq = query.length === this.dim ? query : l2normalize(query);
+    const base = row * this.dim;
+    let dot = 0;
+    for (let i = 0; i < this.dim; i++) dot += this.data[base + i] * uq[i];
+    return dot * this.scales[row];
+  }
+
   /** query must be L2-normalized float32. Returns top-K by approx cosine. */
   search(query: Float32Array, topK: number): { id: string; score: number }[] {
     const uq = query.length === this.dim ? query : l2normalize(query);

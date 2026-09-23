@@ -78,6 +78,35 @@
     if (window.scrollY > window.innerHeight * 0.5) commitPage();
   };
 
+  // Unsaved-form-input tracking (independent of the capture/commit lifecycle so
+  // it keeps working after a page commits). A tab the user has typed into but not
+  // submitted must never be auto-closed — closing it would lose their input.
+  let formDirty = false;
+  function isEditable(el: EventTarget | null): boolean {
+    const node = el as HTMLElement | null;
+    if (!node || !node.tagName) return false;
+    const tag = node.tagName;
+    if (tag === 'TEXTAREA') return true;
+    if (tag === 'INPUT') {
+      const type = ((node as HTMLInputElement).type || 'text').toLowerCase();
+      return !['button', 'submit', 'reset', 'checkbox', 'radio', 'file', 'range', 'color', 'image', 'hidden'].includes(type);
+    }
+    return (node as HTMLElement).isContentEditable === true;
+  }
+  const onFormEdit = (e: Event) => {
+    if (formDirty || !isEditable(e.target)) return;
+    formDirty = true;
+    chrome.runtime.sendMessage({ type: 'FORM_DIRTY' }).catch(() => {});
+  };
+  const onFormCleared = () => {
+    if (!formDirty) return;
+    formDirty = false;
+    chrome.runtime.sendMessage({ type: 'FORM_CLEAN' }).catch(() => {});
+  };
+  window.addEventListener('input', onFormEdit, true);
+  window.addEventListener('submit', onFormCleared, true);
+  window.addEventListener('reset', onFormCleared, true);
+
   function tickForeground(): void {
     const active = document.visibilityState === 'visible' && document.hasFocus();
     if (active && fgSince === null) fgSince = Date.now();
@@ -123,6 +152,7 @@
 
   chrome.runtime.onMessage.addListener((msg: { type?: string }) => {
     if (msg?.type === 'SPA_NAVIGATED') {
+      onFormCleared(); // new route: previous form state no longer applies
       teardown();
       initProvisional();
     } else if (msg?.type === 'STOP_CAPTURE') {

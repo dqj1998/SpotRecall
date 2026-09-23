@@ -96,6 +96,14 @@ export interface ExpandQueryMsg {
   text: string;
   targets: string[];
 }
+export interface ScoreAgainstMsg {
+  target: 'offscreen';
+  type: 'SCORE_AGAINST';
+  /** Context signals, each embedded as a `query:` vector. */
+  signals: string[];
+  /** Candidate document (record) ids to score. */
+  ids: string[];
+}
 
 export type OffscreenRequest =
   | EmbedBatchMsg
@@ -103,7 +111,8 @@ export type OffscreenRequest =
   | VectorRemoveMsg
   | OffscreenPingMsg
   | EnsureModelMsg
-  | ExpandQueryMsg;
+  | ExpandQueryMsg
+  | ScoreAgainstMsg;
 
 export interface ExpandQueryResult {
   ok: boolean;
@@ -122,6 +131,12 @@ export interface VectorSearchResult {
   ok: boolean;
   error?: string;
   results: { id: string; score: number }[];
+}
+export interface ScoreAgainstResult {
+  ok: boolean;
+  error?: string;
+  /** Per-id best cosine across all signals; -1 when the id has no stored vector. */
+  scores: { id: string; score: number }[];
 }
 export type ModelState =
   | 'IDLE' // not loaded, not downloaded yet

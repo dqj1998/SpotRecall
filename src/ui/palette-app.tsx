@@ -60,6 +60,7 @@ export function PaletteApp({ onClose }: { onClose: () => void }) {
   const [browseMode, setBrowseMode] = useState(true);
   const [history, setHistory] = useState<string[]>([]);
   const [status, setStatus] = useState<IndexStatus | null>(null);
+  const [ac, setAc] = useState<{ enabled: boolean; consented: boolean; count: number } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const queryIdRef = useRef('');
   const queryRef = useRef('');
@@ -83,11 +84,16 @@ export function PaletteApp({ onClose }: { onClose: () => void }) {
         if (!queryIdRef.current) setBuckets(r?.buckets ?? []);
       })
       .catch(() => {});
-    const refreshStatus = () =>
+    const refreshStatus = () => {
       chrome.runtime
         .sendMessage({ type: 'GET_INDEX_STATUS' })
         .then((s: IndexStatus) => s && setStatus(s))
         .catch(() => {});
+      chrome.runtime
+        .sendMessage({ type: 'GET_AUTOCLOSE_SUMMARY' })
+        .then((r: { enabled: boolean; consented: boolean; count: number }) => r && setAc(r))
+        .catch(() => {});
+    };
     refreshStatus();
     const iv = setInterval(refreshStatus, 3000);
 
@@ -177,9 +183,19 @@ export function PaletteApp({ onClose }: { onClose: () => void }) {
     onClose();
   };
 
-  const openPanel = () => {
-    chrome.tabs.create({ url: chrome.runtime.getURL(PANEL_URL) }).catch(() => {});
+  const openPanel = (hash?: string) => {
+    const suffix = typeof hash === 'string' ? hash : '';
+    chrome.tabs.create({ url: chrome.runtime.getURL(PANEL_URL + suffix) }).catch(() => {});
     onClose();
+  };
+
+  const acOn = !!(ac && ac.enabled && ac.consented);
+  const toggleAutoClose = () => {
+    chrome.runtime
+      .sendMessage({ type: 'SET_AUTOCLOSE', enabled: !acOn })
+      .then(() => chrome.runtime.sendMessage({ type: 'GET_AUTOCLOSE_SUMMARY' }))
+      .then((r: { enabled: boolean; consented: boolean; count: number }) => r && setAc(r))
+      .catch(() => {});
   };
 
   const semanticOff = status ? !status.semanticEnabled : false;
@@ -215,7 +231,7 @@ export function PaletteApp({ onClose }: { onClose: () => void }) {
                 </button>
               ))}
             </div>
-            <button class="panel-btn" onClick={openPanel}>
+            <button class="panel-btn" onClick={() => openPanel()}>
               {t('openPanel')}
             </button>
           </div>
@@ -239,7 +255,7 @@ export function PaletteApp({ onClose }: { onClose: () => void }) {
         </div>
 
         {semanticOff && (
-          <div class="hint" onClick={openPanel}>
+          <div class="hint" onClick={() => openPanel()}>
             {t('semanticHintOff')}
           </div>
         )}
@@ -335,6 +351,21 @@ export function PaletteApp({ onClose }: { onClose: () => void }) {
               <i />
               <i />
             </span>
+          )}
+          {ac && (
+            <div class="footer-ac">
+              <label class="ac-mini" title={t('autoCloseTooltip')}>
+                <input type="checkbox" checked={acOn} onChange={toggleAutoClose} />
+                <span class="ac-mini-slider" />
+              </label>
+              <button
+                class="ac-count"
+                title={t('autoCloseCountTip')}
+                onClick={() => openPanel('#autoclose')}
+              >
+                {t('autoCloseClosed', { n: ac.count })}
+              </button>
+            </div>
           )}
         </div>
       </div>

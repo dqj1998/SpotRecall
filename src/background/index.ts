@@ -8,6 +8,14 @@ import {
   handleFrameGone,
   purgeBuiltinJunk,
 } from './lifecycle';
+import {
+  runAutoClose,
+  recordActivation,
+  recordCreation,
+  forgetTab,
+  markFormDirty,
+  clearFormDirty,
+} from './autoclose';
 import { runBackfill, backfillOneBookmark } from './backfill';
 import { invalidateBookmarks } from './bookmarks';
 import { bm25Stage, vectorStage, recentBuckets } from './search';
@@ -33,6 +41,10 @@ import {
   clearAllData,
   allEvents,
   clearEvents,
+  isAutoCloseEnabled,
+  getAutoCloseKeep,
+  isAutoCloseConsented,
+  getAutoCloseLog,
 } from '@storage/dao';
 import { META_KEYS } from '@shared/types';
 import type { IndexStatus } from '@shared/types';
@@ -85,10 +97,34 @@ async function maintenance(): Promise<void> {
   await drainQueue();
 }
 
-chrome.runtime.onInstalled.addListener(() => void bootstrap());
+chrome.runtime.onInstalled.addListener((details) => {
+  void bootstrap();
+  // First install: open the panel so the user sees (and can enable) auto-close.
+  // Updates never auto-open a page — the panel toggle is the consent path.
+  if (details.reason === 'install') chrome.runtime.openOptionsPage?.();
+});
 chrome.runtime.onStartup.addListener(() => void bootstrap());
 chrome.alarms.onAlarm.addListener((a) => {
-  if (a.name === 'maintenance') void maintenance();
+  if (a.name === 'maintenance') {
+    void maintenance();
+    void runAutoClose();
+  }
+});
+
+// ---------- auto-close tab tracking ----------
+chrome.tabs.onActivated.addListener((info) => void recordActivation(info.tabId));
+
+let autoCloseDebounce: ReturnType<typeof setTimeout> | null = null;
+function scheduleAutoClose(): void {
+  if (autoCloseDebounce) clearTimeout(autoCloseDebounce);
+  autoCloseDebounce = setTimeout(() => {
+    autoCloseDebounce = null;
+    void runAutoClose();
+  }, 3000);
+}
+chrome.tabs.onCreated.addListener((tab) => {
+  if (tab.id !== undefined) void recordCreation(tab.id);
+  scheduleAutoClose();
 });
 
 // ---------- bookmark signal (feature 2) + metadata seeding (feature 1) ----------
@@ -107,7 +143,10 @@ chrome.bookmarks.onChanged.addListener(() => invalidateBookmarks());
 chrome.bookmarks.onMoved.addListener(() => invalidateBookmarks());
 
 // ---------- capture events ----------
-chrome.tabs.onRemoved.addListener((tabId) => void handleTabRemoved(tabId));
+chrome.tabs.onRemoved.addListener((tabId) => {
+  void handleTabRemoved(tabId);
+  void forgetTab(tabId);
+});
 
 chrome.webNavigation.onHistoryStateUpdated.addListener((details) => {
   // SPA route change: content script is NOT re-injected, so ask it to re-init.
@@ -121,6 +160,7 @@ chrome.webNavigation.onHistoryStateUpdated.addListener((details) => {
 chrome.webNavigation.onCommitted.addListener((d) => {
   if (d.frameId === 0 && d.transitionType !== 'auto_subframe') {
     void handleFrameGone(d.tabId, d.frameId);
+    void clearFormDirty(d.tabId); // new document: prior unsaved-form state is gone
   }
 });
 
@@ -180,6 +220,16 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse): boolean => {
           sendResponse({ ok: true });
           return;
         }
+        case 'FORM_DIRTY': {
+          if (sender.tab?.id !== undefined) await markFormDirty(sender.tab.id);
+          sendResponse({ ok: true });
+          return;
+        }
+        case 'FORM_CLEAN': {
+          if (sender.tab?.id !== undefined) await clearFormDirty(sender.tab.id);
+          sendResponse({ ok: true });
+          return;
+        }
 
         // ----- search (palette -> SW) -----
         case 'SEARCH_QUERY': {
@@ -222,6 +272,10 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse): boolean => {
             retentionLimit: await getRetentionLimit(),
             persistGranted: await getMeta<boolean>(META_KEYS.persistGranted, false),
             semanticEnabled: await isSemanticEnabled(),
+            autoCloseEnabled: await isAutoCloseEnabled(),
+            autoCloseKeep: await getAutoCloseKeep(),
+            autoCloseConsented: await isAutoCloseConsented(),
+            autoCloseLog: await getAutoCloseLog(),
             offscreen: await offscreenState(),
             total: await recordCount(),
             pending: await queueDepth(),
@@ -254,6 +308,27 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse): boolean => {
         }
         case 'SET_RETENTION': {
           await setMeta(META_KEYS.retentionLimit, Math.max(1000, msg.limit | 0));
+          sendResponse({ ok: true });
+          return;
+        }
+        case 'GET_AUTOCLOSE_SUMMARY': {
+          const log = await getAutoCloseLog();
+          sendResponse({
+            enabled: await isAutoCloseEnabled(),
+            consented: await isAutoCloseConsented(),
+            count: log.length,
+          });
+          return;
+        }
+        case 'SET_AUTOCLOSE': {
+          if (typeof msg.enabled === 'boolean') {
+            await setMeta(META_KEYS.autoCloseEnabled, msg.enabled);
+            // Enabling via the panel IS the consent — the gate opens here.
+            if (msg.enabled) await setMeta(META_KEYS.autoCloseConsented, true);
+          }
+          if (typeof msg.keep === 'number') {
+            await setMeta(META_KEYS.autoCloseKeep, Math.max(1, msg.keep | 0));
+          }
           sendResponse({ ok: true });
           return;
         }

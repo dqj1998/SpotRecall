@@ -6,6 +6,7 @@ import type {
   PageRecord,
   VectorRecord,
   EventRecord,
+  AutoClosedEntry,
 } from '@shared/types';
 import { META_KEYS } from '@shared/types';
 
@@ -308,4 +309,37 @@ export async function getRetentionLimit(): Promise<number> {
 export async function isSemanticEnabled(): Promise<boolean> {
   // Semantic search is on by default: the model auto-downloads on first run.
   return getMeta<boolean>(META_KEYS.semanticEnabled, true);
+}
+export async function isAutoCloseEnabled(): Promise<boolean> {
+  return getMeta<boolean>(META_KEYS.autoCloseEnabled, true);
+}
+export async function getAutoCloseKeep(): Promise<number> {
+  return getMeta<number>(META_KEYS.autoCloseKeep, 12);
+}
+export async function isAutoCloseConsented(): Promise<boolean> {
+  // Gate: the feature never acts until the user has explicitly enabled it once.
+  return getMeta<boolean>(META_KEYS.autoCloseConsented, false);
+}
+
+const AUTOCLOSE_LOG_WINDOW_MS = 48 * 60 * 60_000; // 48h view window
+const AUTOCLOSE_LOG_CAP = 500;
+
+/** Recent auto-closed tabs within the 48h window, most-recent first. */
+export async function getAutoCloseLog(): Promise<AutoClosedEntry[]> {
+  const now = Date.now();
+  const raw = await getMeta<AutoClosedEntry[]>(META_KEYS.autoCloseLog, []);
+  return raw
+    .filter((e) => now - e.closedAt <= AUTOCLOSE_LOG_WINDOW_MS)
+    .sort((a, b) => b.closedAt - a.closedAt);
+}
+
+/** Append closures, pruning entries older than 48h and capping total length. */
+export async function appendAutoCloseLog(entries: AutoClosedEntry[]): Promise<void> {
+  if (entries.length === 0) return;
+  const now = Date.now();
+  const cur = await getMeta<AutoClosedEntry[]>(META_KEYS.autoCloseLog, []);
+  const merged = [...cur, ...entries]
+    .filter((e) => now - e.closedAt <= AUTOCLOSE_LOG_WINDOW_MS)
+    .slice(-AUTOCLOSE_LOG_CAP);
+  await setMeta(META_KEYS.autoCloseLog, merged);
 }
