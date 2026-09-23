@@ -59,6 +59,7 @@ export default defineManifest({
     'offscreen',
     'alarms',
     'favicon',
+    'bookmarks',
   ],
   host_permissions: ['<all_urls>'],
   content_security_policy: {

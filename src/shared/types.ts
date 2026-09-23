@@ -73,6 +73,8 @@ export interface SearchHit {
   favicon?: string;
   lastVisited: number;
   score: number;
+  /** URL is in the user's bookmarks — surfaced with an icon and ranked higher. */
+  isBookmark?: boolean;
 }
 
 export interface IndexStatus {

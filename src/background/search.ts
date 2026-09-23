@@ -4,6 +4,7 @@
 
 import { getBm25 } from './bm25-manager';
 import { vectorSearch, expandQuery } from './offscreen-manager';
+import { getBookmarkedIds } from './bookmarks';
 import { getRecord, allRecords } from '@storage/dao';
 import { fuseRanked } from '@search/rrf';
 import { bucketByTime } from '@search/timeline';
@@ -13,6 +14,25 @@ import { type SearchResultsUpdateMsg, TRANSLATE_TARGETS } from '@shared/protocol
 const TOP_K = 50;
 const BM25_WEIGHT = 1.2;
 const VEC_WEIGHT = 1.0;
+const BOOKMARK_BOOST = 1.5;
+
+/**
+ * Tag bookmarked hits and (when boosting) lift them via a score multiplier, then
+ * re-sort. Pure: exported for tests. Browse mode marks without re-ordering.
+ */
+export function decorateBookmarks(
+  hits: SearchHit[],
+  bookmarked: Set<string>,
+  boost: boolean,
+): SearchHit[] {
+  if (bookmarked.size === 0) return hits;
+  const out = hits.map((h) =>
+    bookmarked.has(h.id)
+      ? { ...h, isBookmark: true, score: boost ? h.score * BOOKMARK_BOOST : h.score }
+      : h,
+  );
+  return boost ? out.sort((a, b) => b.score - a.score) : out;
+}
 
 // Search results are ranked by RELEVANCE, not time. We return a single flat
 // bucket in score order; the UI shows a relative-time label per row for context.
@@ -53,7 +73,7 @@ export async function recentBuckets(limit = 50): Promise<TimelineBucket[]> {
     .sort((a, b) => b.lastVisited - a.lastVisited)
     .slice(0, limit)
     .map((r) => toHit(r, 0));
-  return bucketByTime(hits);
+  return bucketByTime(decorateBookmarks(hits, await getBookmarkedIds(), false));
 }
 
 /** Stage 1: synchronous BM25, ranked by relevance. */
@@ -61,7 +81,8 @@ export async function bm25Stage(text: string): Promise<TimelineBucket[]> {
   const bm25 = await getBm25();
   const ranked = bm25.search(text, TOP_K);
   const scored = ranked.map((r, i) => ({ id: r.id, score: 1 / (i + 1) }));
-  return relevanceBuckets(await hitsFor(scored));
+  const hits = decorateBookmarks(await hitsFor(scored), await getBookmarkedIds(), true);
+  return relevanceBuckets(hits);
 }
 
 /**
@@ -93,7 +114,8 @@ export async function vectorStage(queryId: string, text: string): Promise<void> 
   if (!anyVector && variants.length === 1) return;
 
   const fused = fuseRanked(lists);
-  const buckets = relevanceBuckets(await hitsFor(fused.slice(0, TOP_K)));
+  const hits = decorateBookmarks(await hitsFor(fused.slice(0, TOP_K)), await getBookmarkedIds(), true);
+  const buckets = relevanceBuckets(hits);
   const msg: SearchResultsUpdateMsg = {
     type: 'SEARCH_RESULTS_UPDATE',
     queryId,

@@ -303,7 +303,19 @@ export function PaletteApp({ onClose }: { onClose: () => void }) {
                           onError={(e) => ((e.target as HTMLImageElement).style.visibility = 'hidden')}
                         />
                         <div class="row-main">
-                          <div class="row-title">{hit.title}</div>
+                          <div class="row-title">
+                            {hit.isBookmark && (
+                              <svg
+                                class="bm-icon"
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
+                                aria-label={t('bookmarkLabel')}
+                              >
+                                <path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z" />
+                              </svg>
+                            )}
+                            {hit.title}
+                          </div>
                           <div class="row-snippet">{hit.snippet || hit.domain}</div>
                         </div>
                         <div class="row-time">{relTime(hit.lastVisited, lang)}</div>

@@ -8,6 +8,8 @@ import {
   handleFrameGone,
   purgeBuiltinJunk,
 } from './lifecycle';
+import { runBackfill, backfillOneBookmark } from './backfill';
+import { invalidateBookmarks } from './bookmarks';
 import { bm25Stage, vectorStage, recentBuckets } from './search';
 import { drainQueue, queueDepth } from './embed-queue';
 import { resetBm25 } from './bm25-manager';
@@ -58,6 +60,13 @@ async function bootstrap(): Promise<void> {
     await setMeta('junkPurged_v1', true);
   }
 
+  // One-time metadata backfill from bookmarks + open tabs (covers new installs
+  // and existing users on the update that adds this feature).
+  if (!(await getMeta<boolean>('backfillMetaV1', false))) {
+    await runBackfill().catch(() => {});
+    await setMeta('backfillMetaV1', true);
+  }
+
   chrome.alarms.create('maintenance', { periodInMinutes: 1 });
   // Returning users with semantic enabled: warm the model (from cache, offline).
   if (await isSemanticEnabled()) {
@@ -81,6 +90,21 @@ chrome.runtime.onStartup.addListener(() => void bootstrap());
 chrome.alarms.onAlarm.addListener((a) => {
   if (a.name === 'maintenance') void maintenance();
 });
+
+// ---------- bookmark signal (feature 2) + metadata seeding (feature 1) ----------
+chrome.bookmarks.onCreated.addListener((_id, node) => {
+  invalidateBookmarks();
+  if (node.url) {
+    void backfillOneBookmark({
+      url: node.url,
+      title: node.title || node.url,
+      dateAdded: node.dateAdded ?? Date.now(),
+    });
+  }
+});
+chrome.bookmarks.onRemoved.addListener(() => invalidateBookmarks());
+chrome.bookmarks.onChanged.addListener(() => invalidateBookmarks());
+chrome.bookmarks.onMoved.addListener(() => invalidateBookmarks());
 
 // ---------- capture events ----------
 chrome.tabs.onRemoved.addListener((tabId) => void handleTabRemoved(tabId));

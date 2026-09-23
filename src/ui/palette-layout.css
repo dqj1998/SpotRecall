@@ -178,6 +178,14 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.bm-icon {
+  width: 11px;
+  height: 11px;
+  color: var(--sr-blue, #2e7cf6);
+  vertical-align: -1px;
+  margin-right: 4px;
+  flex: 0 0 auto;
+}
 .row-snippet {
   font-size: 12px;
   line-height: 1.4;

@@ -213,6 +213,50 @@ export async function enforceRetention(limit: number): Promise<string[]> {
   return removed;
 }
 
+/**
+ * Seed metadata-only records (title + URL, no body text) for pages the user
+ * already has — bookmarks and open tabs — so they are keyword-searchable from
+ * first run. Inserts ONLY when absent: an already-visited/committed record is
+ * never touched (so its content and real lastVisited are preserved). No network,
+ * no embedding (empty cleanText is not queued). Returns count of records created.
+ */
+export async function backfillRecords(
+  items: {
+    id: string;
+    url: string;
+    normalizedUrl: string;
+    title: string;
+    domain: string;
+    ts: number;
+  }[],
+): Promise<number> {
+  if (items.length === 0) return 0;
+  const db = await getDb();
+  const tx = db.transaction('records', 'readwrite');
+  let created = 0;
+  for (const it of items) {
+    if (await tx.store.get(it.id)) continue; // never overwrite an existing record
+    await tx.store.put({
+      id: it.id,
+      url: it.url,
+      normalizedUrl: it.normalizedUrl,
+      title: it.title,
+      domain: it.domain,
+      description: '',
+      cleanText: '',
+      contentHash: '',
+      status: 'provisional',
+      firstSeen: it.ts,
+      lastVisited: it.ts,
+      committedVisits: 0,
+      embedModelId: null,
+    });
+    created++;
+  }
+  await tx.done;
+  return created;
+}
+
 /** Hard-delete records (any status) + their vectors + queue entries, atomically. */
 export async function deleteRecordsCascade(ids: string[]): Promise<void> {
   if (ids.length === 0) return;

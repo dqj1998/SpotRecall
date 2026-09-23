@@ -42,6 +42,7 @@ const en: Dict = {
   histLabel: 'Recent searches',
   histRemove: 'Remove',
   recentLabel: 'Recent pages',
+  bookmarkLabel: 'Bookmarked',
 
   // panel
   panelTitle: 'SpotRecall Panel',
@@ -125,6 +126,7 @@ const ja: Dict = {
   histLabel: '最近の検索',
   histRemove: '削除',
   recentLabel: '最近のページ',
+  bookmarkLabel: 'ブックマーク済み',
 
   panelTitle: 'SpotRecall パネル',
   dashboard: 'ダッシュボード',
@@ -207,6 +209,7 @@ const zh: Dict = {
   histLabel: '最近搜索',
   histRemove: '删除',
   recentLabel: '最近页面',
+  bookmarkLabel: '已收藏',
 
   panelTitle: 'SpotRecall 面板',
   dashboard: '仪表板',
