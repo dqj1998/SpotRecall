@@ -183,9 +183,28 @@ export function PaletteApp({ onClose }: { onClose: () => void }) {
     onClose();
   };
 
-  const openPanel = (hash?: string) => {
+  const openPanel = async (hash?: string) => {
     const suffix = typeof hash === 'string' ? hash : '';
-    chrome.tabs.create({ url: chrome.runtime.getURL(PANEL_URL + suffix) }).catch(() => {});
+    const base = chrome.runtime.getURL(PANEL_URL);
+    const full = base + suffix;
+    try {
+      const all = await chrome.tabs.query({});
+      const existing = all.find((t) => t.url?.startsWith(base));
+      if (existing?.id !== undefined) {
+        // Reuse the open panel: focus it, apply the target section (#hash), then
+        // reload so it remounts — refreshes data and re-runs the scroll-to-section
+        // effect even when only the fragment changed (same-document nav).
+        await chrome.tabs.update(existing.id, { active: true, url: full });
+        await chrome.tabs.reload(existing.id);
+        if (existing.windowId !== undefined) {
+          await chrome.windows.update(existing.windowId, { focused: true });
+        }
+      } else {
+        await chrome.tabs.create({ url: full });
+      }
+    } catch {
+      chrome.tabs.create({ url: full }).catch(() => {});
+    }
     onClose();
   };
 

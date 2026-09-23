@@ -37,6 +37,7 @@ export const AC_DEFAULTS = {
   recentOpenedCap: 20,
   signalQueryCap: 5,
   signalTitleCap: 5,
+  captureCap: 15, // max never-committed tabs to force-capture per tick
 } as const;
 
 // ---- pure decision layer (no chrome.*) ----
@@ -80,22 +81,35 @@ function freshness(now: number, lastActive: number, tau: number): number {
   return Math.exp(-Math.max(0, now - lastActive) / tau);
 }
 
+export interface AutoCloseDecision {
+  /** Close now — already indexed (committed) or genuinely empty (thin/over-age). */
+  close: number[];
+  /**
+   * Never-committed but inactive: index them first (force-capture), then they
+   * become closable on a later tick. This satisfies "only close indexed pages"
+   * without waiting for the 24h over-age fallback.
+   */
+  capture: number[];
+}
+
 /**
- * Decide which tab ids to close. Only acts when the total non-incognito tab
- * count exceeds `keep`; then closes candidates in priority order (thin first,
- * then ascending keepScore) until the total is back at `keep` — never emptying
- * a window and never touching an excluded tab.
+ * Decide which tabs to close / capture. Only acts when the total non-incognito
+ * tab count exceeds `keep`; then walks candidates in priority order (thin first,
+ * then ascending keepScore) up to the overflow — never emptying a window and
+ * never touching an excluded tab. Never-committed inactive tabs are routed to
+ * `capture` (indexed then closed next tick) instead of being skipped.
  */
 export function selectTabsToClose(
   tabs: TabInfo[],
   s: AutoCloseSettings,
   ctx: AutoCloseContext,
-): number[] {
-  if (ctx.withinGrace) return [];
+): AutoCloseDecision {
+  const empty: AutoCloseDecision = { close: [], capture: [] };
+  if (ctx.withinGrace) return empty;
 
   const normal = tabs.filter((t) => !t.incognito);
   const total = normal.length;
-  if (total <= s.keep) return [];
+  if (total <= s.keep) return empty;
 
   const winRemaining = new Map<number, number>();
   for (const t of normal) winRemaining.set(t.windowId, (winRemaining.get(t.windowId) ?? 0) + 1);
@@ -105,6 +119,7 @@ export function selectTabsToClose(
     tabId: number;
     windowId: number;
     thin: boolean;
+    capturable: boolean; // never-committed: index before closing
     keepScore: number;
   }
   const cands: Cand[] = [];
@@ -116,21 +131,20 @@ export function selectTabsToClose(
     if ((winRemaining.get(t.windowId) ?? 0) <= 1) continue; // window's only tab
     if (now - t.lastActive < s.minInactiveMs) continue; // too recently used / just restored
 
-    const committedThin = t.committed && t.cleanTextLen < s.thinCharLimit;
-    const committedSubstantive = t.committed && t.cleanTextLen >= s.thinCharLimit;
-    const overAgeUncommitted = !t.committed && now - t.lastActive > s.overAgeMs;
-
     const fresh = freshness(now, t.lastActive, s.tauMs);
-    if (committedThin || overAgeUncommitted) {
-      cands.push({ tabId: t.tabId, windowId: t.windowId, thin: true, keepScore: fresh });
-    } else if (committedSubstantive) {
-      const rel = ctx.relevance?.get(t.tabId);
+    if (t.committed) {
+      const thin = t.cleanTextLen < s.thinCharLimit;
+      const rel = thin ? undefined : ctx.relevance?.get(t.tabId);
       const keepScore =
         rel === undefined ? fresh : s.wRelevance * ((rel + 1) / 2) + s.wFreshness * fresh;
-      cands.push({ tabId: t.tabId, windowId: t.windowId, thin: false, keepScore });
+      cands.push({ tabId: t.tabId, windowId: t.windowId, thin, capturable: false, keepScore });
+    } else if (now - t.lastActive > s.overAgeMs) {
+      // Uncapturable-so-far & very old: treat as empty, close directly.
+      cands.push({ tabId: t.tabId, windowId: t.windowId, thin: true, capturable: false, keepScore: fresh });
+    } else {
+      // Never committed but inactive: index it first, then close on a later tick.
+      cands.push({ tabId: t.tabId, windowId: t.windowId, thin: false, capturable: true, keepScore: fresh });
     }
-    // else: never-committed & not over-age -> not eligible (may never commit,
-    // but too young to assume it's junk).
   }
 
   // Priority: thin (junk) first; then least-worth-keeping (lowest keepScore).
@@ -139,16 +153,17 @@ export function selectTabsToClose(
     return a.keepScore - b.keepScore;
   });
 
-  let remaining = total;
-  const toClose: number[] = [];
+  let overflow = total - s.keep;
+  const decision: AutoCloseDecision = { close: [], capture: [] };
   for (const c of cands) {
-    if (remaining <= s.keep) break;
+    if (overflow <= 0) break;
     if ((winRemaining.get(c.windowId) ?? 0) <= 1) continue; // don't empty a window
-    toClose.push(c.tabId);
+    if (c.capturable) decision.capture.push(c.tabId);
+    else decision.close.push(c.tabId);
     winRemaining.set(c.windowId, (winRemaining.get(c.windowId) ?? 0) - 1);
-    remaining--;
+    overflow--;
   }
-  return toClose;
+  return decision;
 }
 
 export function isInternalUrl(url: string): boolean {
@@ -328,7 +343,14 @@ export async function runAutoClose(): Promise<void> {
       recordId,
       committed: !!rec && rec.status === 'committed' && rec.cleanText.length > 0,
       cleanTextLen: rec?.cleanText.length ?? 0,
-      lastActive: lastActive[tab.id] ?? now, // unknown => just-activated (protective)
+      // Prefer the browser's authoritative last-accessed time (Chrome/Edge 121+);
+      // it reflects real inactivity even for tabs never activated during this SW
+      // session (background-opened / session-restored). Fall back to our own
+      // activation map, then to `now` (protective) when nothing is known.
+      lastActive:
+        (tab as chrome.tabs.Tab & { lastAccessed?: number }).lastAccessed ??
+        lastActive[tab.id] ??
+        now,
     });
   }
 
@@ -351,8 +373,18 @@ export async function runAutoClose(): Promise<void> {
     }
   }
 
-  const toClose = selectTabsToClose(tabInfos, settings, { now, withinGrace: false, relevance });
-  if (!toClose.length) return;
+  const decision = selectTabsToClose(tabInfos, settings, { now, withinGrace: false, relevance });
+  const infoById = new Map(tabInfos.map((t) => [t.tabId, t]));
+
+  // Force-capture never-committed inactive tabs so they become indexed (and thus
+  // closable on a later tick), rather than waiting for the 24h over-age fallback.
+  // Best-effort: needs a live content script; discarded/uncapturable tabs simply
+  // stay until they age out. Capped per tick to smooth CPU.
+  for (const id of decision.capture.slice(0, AC_DEFAULTS.captureCap)) {
+    chrome.tabs.sendMessage(id, { type: 'FORCE_CAPTURE' }).catch(() => {});
+  }
+
+  if (!decision.close.length) return;
 
   // Re-verify against a fresh snapshot right before removing: the async scan may
   // have raced with the user closing tabs (never empty a window).
@@ -360,10 +392,9 @@ export async function runAutoClose(): Promise<void> {
   const winCount = new Map<number, number>();
   for (const t of fresh) if (!t.incognito) winCount.set(t.windowId, (winCount.get(t.windowId) ?? 0) + 1);
   const alive = new Set(fresh.map((t) => t.id));
-  const infoById = new Map(tabInfos.map((t) => [t.tabId, t]));
 
   const finalClose: number[] = [];
-  for (const id of toClose) {
+  for (const id of decision.close) {
     const info = infoById.get(id);
     if (!info || !alive.has(id)) continue;
     if ((winCount.get(info.windowId) ?? 0) <= 1) continue;

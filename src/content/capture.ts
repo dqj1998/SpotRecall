@@ -155,6 +155,10 @@
       onFormCleared(); // new route: previous form state no longer applies
       teardown();
       initProvisional();
+    } else if (msg?.type === 'FORCE_CAPTURE') {
+      // Auto-close wants to index this tab before closing it (dev plan: only
+      // close indexed pages). Commit now with whatever content is present.
+      commitPage();
     } else if (msg?.type === 'STOP_CAPTURE') {
       stopped = true;
       teardown();

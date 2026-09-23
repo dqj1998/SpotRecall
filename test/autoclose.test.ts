@@ -46,12 +46,18 @@ function tab(over: Partial<TabInfo> = {}): TabInfo {
 describe('selectTabsToClose (autoclose-plan v2, R6 contracts)', () => {
   it('does nothing when total tabs <= keep', () => {
     const tabs = [tab(), tab(), tab()];
-    expect(selectTabsToClose(tabs, settings(12), { now: NOW, withinGrace: false })).toEqual([]);
+    expect(selectTabsToClose(tabs, settings(12), { now: NOW, withinGrace: false })).toEqual({
+      close: [],
+      capture: [],
+    });
   });
 
   it('closes nothing during the post-restart grace window', () => {
     const tabs = Array.from({ length: 20 }, () => tab());
-    expect(selectTabsToClose(tabs, settings(12), { now: NOW, withinGrace: true })).toEqual([]);
+    expect(selectTabsToClose(tabs, settings(12), { now: NOW, withinGrace: true })).toEqual({
+      close: [],
+      capture: [],
+    });
   });
 
   it('never touches active / pinned / audible / grouped / internal tabs', () => {
@@ -64,7 +70,8 @@ describe('selectTabsToClose (autoclose-plan v2, R6 contracts)', () => {
     const tabs = [active, pinned, audible, grouped, internal, closable];
     // keep=1 wants 5 closed, but only `closable` is eligible.
     const out = selectTabsToClose(tabs, settings(1), { now: NOW, withinGrace: false });
-    expect(out).toEqual([closable.tabId]);
+    expect(out.close).toEqual([closable.tabId]);
+    expect(out.capture).toEqual([]);
   });
 
   it('never closes a window\'s only tab', () => {
@@ -72,9 +79,9 @@ describe('selectTabsToClose (autoclose-plan v2, R6 contracts)', () => {
     const a = tab({ windowId: 2 });
     const b = tab({ windowId: 2 });
     const out = selectTabsToClose([lone, a, b], settings(2), { now: NOW, withinGrace: false });
-    expect(out).not.toContain(lone.tabId);
-    expect(out.length).toBe(1);
-    expect([a.tabId, b.tabId]).toContain(out[0]);
+    expect(out.close).not.toContain(lone.tabId);
+    expect(out.close.length).toBe(1);
+    expect([a.tabId, b.tabId]).toContain(out.close[0]);
   });
 
   it('never closes a tab with unsaved form input, even if old and over keep', () => {
@@ -85,14 +92,18 @@ describe('selectTabsToClose (autoclose-plan v2, R6 contracts)', () => {
       now: NOW,
       withinGrace: false,
     });
-    expect(out).not.toContain(formTab.tabId);
-    expect(out).toEqual([idleClosable.tabId]);
+    expect(out.close).not.toContain(formTab.tabId);
+    expect(out.capture).not.toContain(formTab.tabId);
+    expect(out.close).toEqual([idleClosable.tabId]);
   });
 
   it('protects just-restored tabs (lastActive unknown => now) via min-inactivity', () => {
     // Simulates browser restart: session activation table empty -> caller passes now.
     const tabs = Array.from({ length: 20 }, () => tab({ lastActive: NOW }));
-    expect(selectTabsToClose(tabs, settings(12), { now: NOW, withinGrace: false })).toEqual([]);
+    expect(selectTabsToClose(tabs, settings(12), { now: NOW, withinGrace: false })).toEqual({
+      close: [],
+      capture: [],
+    });
   });
 
   it('closes thin (no substantive content) tabs first', () => {
@@ -104,20 +115,21 @@ describe('selectTabsToClose (autoclose-plan v2, R6 contracts)', () => {
       now: NOW,
       withinGrace: false,
     });
-    expect(out).toEqual([thin.tabId]);
+    expect(out.close).toEqual([thin.tabId]);
   });
 
-  it('option A: never-committed is skipped until over-age, then treated as thin', () => {
+  it('routes never-committed inactive tabs to capture; closes over-age ones as thin', () => {
     const anchor = tab({ active: true });
-    const young = tab({ committed: false, cleanTextLen: 0, lastActive: OLD }); // 1h, not over-age
+    const young = tab({ committed: false, cleanTextLen: 0, lastActive: OLD }); // 1h -> capture (index then close)
     const old = tab({
       committed: false,
       cleanTextLen: 0,
-      lastActive: NOW - 30 * 60 * 60_000, // 30h > 24h over-age
+      lastActive: NOW - 30 * 60 * 60_000, // 30h > 24h -> close as thin now
     });
-    const out = selectTabsToClose([anchor, young, old], settings(2), { now: NOW, withinGrace: false });
-    expect(out).toEqual([old.tabId]);
-    expect(out).not.toContain(young.tabId);
+    // keep=1, total=3 (anchor excluded) -> overflow 2, both acted on.
+    const out = selectTabsToClose([anchor, young, old], settings(1), { now: NOW, withinGrace: false });
+    expect(out.close).toEqual([old.tabId]); // thin (over-age) first
+    expect(out.capture).toEqual([young.tabId]); // indexed before closing later
   });
 
   it('among substantive tabs, closes the least relevant first', () => {
@@ -133,15 +145,15 @@ describe('selectTabsToClose (autoclose-plan v2, R6 contracts)', () => {
       withinGrace: false,
       relevance,
     });
-    expect(out).toEqual([irrelevant.tabId]);
+    expect(out.close).toEqual([irrelevant.tabId]);
   });
 
-  it('closes exactly down to keep (N boundary), no further', () => {
+  it('acts on exactly the overflow (N boundary), no further', () => {
     const anchor = tab({ active: true });
     const closable = Array.from({ length: 5 }, () => tab());
     const tabs = [anchor, ...closable]; // total 6
     const out = selectTabsToClose(tabs, settings(4), { now: NOW, withinGrace: false });
-    expect(out.length).toBe(2); // 6 -> 4
+    expect(out.close.length + out.capture.length).toBe(2); // 6 -> 4
   });
 });
 
