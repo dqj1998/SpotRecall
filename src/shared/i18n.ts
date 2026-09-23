@@ -105,7 +105,7 @@ const en: Dict = {
   // auto-close
   autoCloseTitle: 'Auto-close tabs',
   autoCloseDesc:
-    'Quietly closes inactive tabs when you have too many open. Closed pages stay searchable in SpotRecall (except empty ones). Best-effort — pinned, grouped, audible, and active tabs are never touched.',
+    'Quietly closes inactive tabs when you have too many open. Closed pages stay searchable in SpotRecall (except empty ones). Pinned, grouped, audible, and active tabs are never touched.',
   autoCloseLabel: 'Enable auto-close',
   autoCloseNote:
     'Off until you turn it on. A window is never emptied, and recently-restored tabs get a grace period.',
@@ -208,7 +208,7 @@ const ja: Dict = {
   // auto-close
   autoCloseTitle: 'タブ自動クローズ',
   autoCloseDesc:
-    '開きすぎた非アクティブなタブを静かに閉じます。閉じたページは SpotRecall で検索可能なまま（中身が空のものを除く）。ベストエフォート — 固定・グループ・音声再生中・アクティブなタブは対象外です。',
+    '開きすぎた非アクティブなタブを静かに閉じます。閉じたページは SpotRecall で検索可能なまま（中身が空のものを除く）。固定・グループ・音声再生中・アクティブなタブは対象外です。',
   autoCloseLabel: '自動クローズを有効化',
   autoCloseNote:
     'オンにするまで動作しません。ウィンドウ最後の1枚は閉じず、復元直後のタブには猶予期間があります。',
@@ -308,7 +308,7 @@ const zh: Dict = {
   // auto-close
   autoCloseTitle: '自动关闭标签页',
   autoCloseDesc:
-    '当打开的标签页过多时，静默关闭不活跃的标签页。被关闭的页面仍可在 SpotRecall 中搜到（内容为空的除外）。尽力而为——固定、分组、正在播放音频、当前活动的标签页永不处理。',
+    '当打开的标签页过多时，静默关闭不活跃的标签页。被关闭的页面仍可在 SpotRecall 中搜到（内容为空的除外）。固定、分组、正在播放音频、当前活动的标签页永不处理。',
   autoCloseLabel: '启用自动关闭',
   autoCloseNote: '开启前不会动作。绝不关闭窗口最后一个标签页；刚恢复的标签页有宽限期。',
   autoCloseKeepLabel: '保持打开的标签页数',
