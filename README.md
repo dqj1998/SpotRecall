@@ -8,6 +8,8 @@ zero network at runtime.**
 Design & architecture: [SpotRecall-dev-plan.md](SpotRecall-dev-plan.md) ·
 Privacy: [PRIVACY.md](PRIVACY.md)
 
+On Chrome Store: https://chromewebstore.google.com/detail/spotrecall/lfdjmifmmmimonedmclkpckjebmcabcg
+
 ## Quick start
 
 ```bash
