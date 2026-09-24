@@ -36,6 +36,7 @@ export function mergeRecord(local: PageRecord | undefined, incoming: PageRecord)
     firstSeen: Math.min(local.firstSeen, incoming.firstSeen),
     lastVisited: Math.max(local.lastVisited, incoming.lastVisited),
     committedVisits: Math.max(local.committedVisits, incoming.committedVisits),
+    language: newer.language ?? local.language ?? incoming.language,
     // status: committed dominates provisional
     status: local.status === 'committed' || incoming.status === 'committed' ? 'committed' : newer.status,
   };

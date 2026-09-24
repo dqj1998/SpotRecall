@@ -53,6 +53,13 @@ describe('mergeRecord idempotency (dev plan §7.3, P0-3)', () => {
     const incoming = rec({ cleanText: 'new', lastVisited: 200 });
     expect(mergeRecord(local, incoming).cleanText).toBe('new');
   });
+
+  it('keeps a known language when a newer legacy record has none', () => {
+    const local = rec({ language: 'ja', lastVisited: 100 });
+    const incoming = rec({ lastVisited: 200 });
+
+    expect(mergeRecord(local, incoming).language).toBe('ja');
+  });
 });
 
 describe('backup round-trip idempotency (dev plan §11.3-9)', () => {

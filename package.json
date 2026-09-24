@@ -1,6 +1,6 @@
 {
   "name": "spotrecall",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Local-First Context & Entry Recall — Chrome Extension (MV3)",
   "license": "AGPL-3.0-only",
   "type": "module",

@@ -83,7 +83,7 @@ async function gcAll(ids: string[]): Promise<void> {
 
 export async function handleInit(
   sender: chrome.runtime.MessageSender,
-  data: { url: string; title: string; description: string; domain: string },
+  data: { url: string; title: string; description: string; domain: string; lang?: string },
 ): Promise<{ stop: boolean }> {
   const tabId = sender.tab?.id;
   if (tabId === undefined) return { stop: true };
@@ -106,6 +106,7 @@ export async function handleInit(
     title: data.title,
     domain,
     description: data.description,
+    language: data.lang,
     now,
   });
   await bm25Upsert(rec);

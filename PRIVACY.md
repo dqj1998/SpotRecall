@@ -1,6 +1,6 @@
 # SpotRecall Privacy Policy
 
-_Last updated: 2026-09-21_
+_Last updated: 2026-09-24_
 
 SpotRecall is a **local-first** Chrome extension. Your browsing data never leaves
 your device. There is no account, no cloud sync, no analytics, and no tracking.
@@ -12,6 +12,8 @@ For pages you visit, SpotRecall stores **locally** (in your browser's IndexedDB)
 - your local search/usage events (used only for the on-device dashboard).
 
 All of this stays **100% on your device**. It is never sent to any server.
+Each record represents a top-level page. Readable same-origin embedded content
+may be included in that record; cross-origin frames are not read.
 
 ## Network use (the only two, and neither sends your data)
 1. **One-time model download.** The semantic search model is downloaded once from
@@ -62,6 +64,7 @@ Material changes to this policy will be noted here with an updated date.
 SpotRecall 是**本地优先**的 Chrome 扩展。你的浏览数据**始终不出本机**。无账号、无云端同步、无统计分析、无追踪。
 
 **本地存储的内容**（存于浏览器 IndexedDB）：所访问页面的 URL、标题、meta 描述、favicon、访问时间戳，以及清洗后的可见正文摘要（约 2000 字以内）、本地检索/使用事件（仅用于端侧仪表板）。这些**100% 留在本机**,绝不上传。
+每条记录对应一个顶层页面；可读取的同源嵌入内容可能会包含在该记录中，跨源 frame 不会被读取。
 
 **仅有的两处联网,且都不发送你的数据**：
 1. **一次性模型下载**——语义模型首次从公开模型主机（Hugging Face）下载并缓存,之后完全离线;只拉取公开模型,**不发送任何浏览数据**。（也可打包内网离线版。）
@@ -82,6 +85,7 @@ SpotRecall 是**本地优先**的 Chrome 扩展。你的浏览数据**始终不�
 SpotRecall は**ローカルファースト**の Chrome 拡張です。閲覧データが端末外に出ることはありません。アカウント・クラウド同期・分析・トラッキングはありません。
 
 **ローカル保存の内容**（ブラウザの IndexedDB）：訪問ページの URL・タイトル・meta 説明・favicon・訪問時刻、クリーニング済み本文の抜粋（約2000文字以内）、ローカルの検索/利用イベント（端末内ダッシュボード用のみ）。すべて**端末内に留まり**、送信されません。
+各レコードはトップレベルのページを表します。読み取り可能な同一オリジンの埋め込みコンテンツはそのレコードに含まれる場合がありますが、クロスオリジンのフレームは読み取りません。
 
 **ネットワーク利用は次の2つのみ（いずれも閲覧データを送りません）**：
 1. **モデルの一度きりのダウンロード**——セマンティック検索モデルを公開ホスト（Hugging Face）から一度取得しローカルにキャッシュ、以降は完全オフライン。公開モデルのみ取得し、**閲覧データは送信しません**。

@@ -52,9 +52,9 @@ export async function expandQuery(text: string, targets: string[]): Promise<stri
   const variants = [text];
   const src = await detectLang(text);
   if (!src) return variants;
-  for (const target of targets) {
-    if (target === src) continue;
-    const t = await translate(text, src, target);
+  const uniqueTargets = [...new Set(targets)].filter((target) => target !== src);
+  const translations = await Promise.all(uniqueTargets.map((target) => translate(text, src, target)));
+  for (const t of translations) {
     if (t && t.trim() && t !== text) variants.push(t);
   }
   return [...new Set(variants)];

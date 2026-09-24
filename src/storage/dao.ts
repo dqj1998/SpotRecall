@@ -54,6 +54,7 @@ export async function upsertProvisional(input: {
   title: string;
   domain: string;
   description: string;
+  language?: string;
   now: number;
 }): Promise<PageRecord> {
   const db = await getDb();
@@ -66,6 +67,7 @@ export async function upsertProvisional(input: {
       url: input.url,
       title: input.title || existing.title,
       description: input.description || existing.description,
+      language: input.language || existing.language,
       lastVisited: input.now,
     };
   } else {
@@ -76,6 +78,7 @@ export async function upsertProvisional(input: {
       title: input.title,
       domain: input.domain,
       description: input.description,
+      language: input.language,
       cleanText: '',
       contentHash: '',
       status: 'provisional',

@@ -345,3 +345,12 @@
   0%, 100% { opacity: 0.35; transform: translateY(0); }
   50% { opacity: 1; transform: translateY(-2px); }
 }
+
+.version-bar {
+  text-align: center;
+  font-size: 10px;
+  color: var(--sr-fg-faint);
+  padding: 3px 14px 8px;
+  opacity: 0.65;
+  user-select: none;
+}

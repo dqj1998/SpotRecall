@@ -121,6 +121,7 @@ const en: Dict = {
   autoCloseClosed: '{n} closed · 48h',
   autoCloseCountTip: 'View the tabs closed in the last 48h',
   autoCloseReopen: 'Click to reopen',
+  versionLabel: 'Version {version}',
 };
 
 const ja: Dict = {
@@ -224,6 +225,7 @@ const ja: Dict = {
   autoCloseClosed: '{n} 件 · 48h',
   autoCloseCountTip: '直近48時間で閉じたタブを表示',
   autoCloseReopen: 'クリックで再度開く',
+  versionLabel: 'バージョン {version}',
 };
 
 const zh: Dict = {
@@ -323,6 +325,7 @@ const zh: Dict = {
   autoCloseClosed: '已关 {n} · 48h',
   autoCloseCountTip: '查看最近 48 小时自动关闭的标签页',
   autoCloseReopen: '点击重新打开',
+  versionLabel: '版本 {version}',
 };
 
 const dicts: Record<Lang, Dict> = { en, ja, zh };

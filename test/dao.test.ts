@@ -88,6 +88,14 @@ describe('capture lifecycle DAO (dev plan §3, §4)', () => {
     expect(rec?.lastVisited).toBe(now + 5000);
   });
 
+  it('stores a declared page language without replacing it on a later missing declaration', async () => {
+    const now = Date.now();
+    await upsertProvisional({ ...base('a', 'https://x.com/a', now), language: 'ja' });
+    await upsertProvisional(base('a', 'https://x.com/a', now + 5000));
+
+    expect((await getRecord('a'))?.language).toBe('ja');
+  });
+
   it('LRU retention removes oldest beyond limit, cascading vectors', async () => {
     for (let i = 0; i < 5; i++) {
       await upsertProvisional(base(`r${i}`, `https://x.com/${i}`, 1000 + i));

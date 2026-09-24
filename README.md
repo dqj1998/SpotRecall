@@ -112,6 +112,80 @@ Submission kit (Chrome Web Store + Microsoft Edge Add-ons): see
 [release-screenshots/](release-screenshots/) and reproducible with
 `npm run make-screenshots`.
 
+### Chrome Web Store release workflow
+
+Use this sequence for each Chrome Web Store release.
+
+1. Update the version in `package.json` and `package-lock.json`; update the
+  release copy in [STORE_LISTING.md](STORE_LISTING.md) and the localized files
+  in [store-listings/](store-listings/README.md).
+2. Validate the package before uploading:
+  ```bash
+  npm run typecheck
+  npm test
+  npm run build
+  npm run make-screenshots
+  (cd dist && zip -rq ../spotrecall-store-<version>.zip . -x '*.DS_Store')
+  ```
+3. Upload the ZIP to the existing Chrome Web Store draft. Confirm its displayed
+  version before changing listing metadata.
+4. For every Store locale, paste the matching localized name, summary, What's
+  New, and detailed description from `store-listings/`.
+5. Upload localized screenshots from
+  `release-screenshots/localized/<locale>/screenshot-1.png`. These are separate
+  from the screenshots for all languages. Each locale must contain **exactly one**
+  localized first screenshot; check its thumbnail and delete control after a
+  reload. Do not overwrite the all-languages screenshots.
+6. Complete **Privacy practices**. Keep each permission explanation aligned with
+  the implementation and save the draft. For `bookmarks`, explain that it is
+  read only to identify bookmarked HTTP(S) pages and prioritize them in results;
+  the extension never adds, changes, or deletes bookmarks.
+7. Reload the affected dashboard pages and verify saved values, the package
+  version, all 21 localized listings, and localized screenshot counts. Only then
+  have the release owner use the Store's review/submit action.
+
+#### Current dashboard references
+
+- Publisher dashboard ID: `8f5c0ca0-da64-4de9-857f-0545491d98cf`
+- Extension ID: `lfdjmifmmmimonedmclkpckjebmcabcg`
+- Listing editor:
+  `https://chrome.google.com/webstore/devconsole/8f5c0ca0-da64-4de9-857f-0545491d98cf/lfdjmifmmmimonedmclkpckjebmcabcg/edit/listing`
+
+#### Local browser connection
+
+1. Log in to the Chrome Web Store dashboard manually in a dedicated Chrome
+   profile.
+2. Start a separate Chrome instance for local dashboard automation:
+   ```bash
+   open -na "Google Chrome" --args \
+     --remote-debugging-port=9222 \
+     --user-data-dir="$HOME/.spotrecall-cdp"
+   ```
+3. Connect local Playwright tooling to `http://127.0.0.1:9222`.
+4. Do not call `browser.close()` or `browser.disconnect()` on a CDP connection;
+   that can disrupt the interactive Store session.
+
+This documentation intentionally excludes credentials, cookies, API keys, and
+browser session data.
+
+#### Store dashboard lessons
+
+- The Store distinguishes manifest locales, localized listing text, localized
+  assets, and all-languages assets. Updating one does not update the others.
+- Treat each localized screenshot upload as a replace operation: remove stale or
+  duplicate images, upload the locale-matched image, save the draft, then reload
+  to confirm exactly one image persists.
+- The dashboard's language picker is a custom control. Always confirm the
+  selected locale label before uploading or editing; a positional file-input
+  selector can target the wrong asset area.
+- Deleting a screenshot opens a confirmation dialog. Confirm each deletion before
+  uploading the replacement, then save the draft.
+- Dashboard controls can re-render during uploads. If a save control disappears,
+  reload the relevant locale, check whether the asset persisted, and retry only
+  that locale instead of continuing a batch blindly.
+- Do not automate the final review submission. A human release owner should make
+  the final Store submission after inspecting the completed draft.
+
 ## License
 
 AGPL-3.0-only

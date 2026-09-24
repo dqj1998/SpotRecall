@@ -9,7 +9,7 @@ export const MODEL_DIM = 384;
 // ---- Page (content) -> Service Worker ----
 export interface InitProvisionalMsg {
   type: 'INIT_PROVISIONAL_RECORD';
-  data: { url: string; title: string; description: string; domain: string };
+  data: { url: string; title: string; description: string; domain: string; lang?: string };
 }
 export interface CommitPageMsg {
   type: 'COMMIT_PAGE_RECORD';

@@ -54,6 +54,7 @@ function faviconFor(url: string): string {
 
 export function PaletteApp({ onClose }: { onClose: () => void }) {
   const { lang, setLang, t } = useI18n();
+  const version = chrome.runtime.getManifest().version;
   const [query, setQuery] = useState('');
   const [buckets, setBuckets] = useState<TimelineBucket[]>([]);
   const [stage, setStage] = useState<1 | 2>(1);
@@ -387,6 +388,7 @@ export function PaletteApp({ onClose }: { onClose: () => void }) {
             </div>
           )}
         </div>
+        <div class="version-bar">{t('versionLabel', { version })}</div>
       </div>
     </div>
   );

@@ -140,6 +140,7 @@
           description:
             document.querySelector<HTMLMetaElement>('meta[name="description"]')?.content || '',
           domain: location.hostname,
+          lang: document.documentElement.lang || undefined,
         },
       })
       .catch(() => {});

@@ -10,6 +10,8 @@ export interface PageRecord {
   title: string;
   domain: string;
   description: string;
+  /** BCP-47 language declared by the page, when available. */
+  language?: string;
   favicon?: string;
   /** Cleaned visible text, capped at 2000 chars. Empty until committed. */
   cleanText: string;

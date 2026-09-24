@@ -1,14 +1,14 @@
 import { defineManifest } from '@crxjs/vite-plugin';
 import pkg from './package.json';
 
-// SpotRecall — Chrome MV3 manifest.
-// Zero runtime network dependency: the embedding model is bundled and loaded
-// only from packaged resources (see offscreen/embedder + CSP wasm-unsafe-eval).
+// SpotRecall — Chrome MV3 manifest. The default package downloads the public
+// embedding model on first use; `npm run download-model` can bundle it instead.
+// See PRIVACY.md for the complete network-use disclosure.
 export default defineManifest({
   manifest_version: 3,
-  name: 'SpotRecall',
-  description:
-    "Instantly find pages you've visited — private, on-device search over your history by keyword and meaning. No cloud, no tracking.",
+  default_locale: 'en',
+  name: '__MSG_extName__',
+  description: '__MSG_extDesc__',
   version: pkg.version,
   minimum_chrome_version: '116',
   icons: {

@@ -98,7 +98,7 @@ function histRow(q) {
   return `<div class="hist-row">${CLOCK_SVG}<span class="hist-q">${esc(q)}</span><button class="hist-del">×</button></div>`;
 }
 
-function palette({ value, mode, semantic, hist, sections, badge }) {
+function palette({ value, mode, semantic, hist, sections, badge, openPanel = 'Open panel', indexed = 'All indexed' }) {
   const chip = value ? `<span class="mode-chip">${mode}</span>` : '';
   const inputHtml = value
     ? `<input class="input" value="${esc(value)}" readonly/>`
@@ -113,10 +113,10 @@ function palette({ value, mode, semantic, hist, sections, badge }) {
     ${badge ? `<div class="badge-local">🔒 ${esc(badge)}</div>` : ''}
     <div class="topbar"><span class="app-name">SpotRecall</span><div class="topbar-actions">
       <div class="lang-seg"><button class="on">EN</button><button>日本語</button><button>简体</button></div>
-      <button class="panel-btn">Open panel</button></div></div>
+      <button class="panel-btn">${esc(openPanel)}</button></div></div>
     <div class="searchbar">${SEARCH_SVG}${inputHtml}${chip}</div>
     <div class="list">${histHtml}${listHtml}</div>
-    <div class="footer"><span>All indexed · 342</span></div>
+    <div class="footer"><span>${esc(indexed)} · 342</span></div>
   </div></div>`;
   void semantic;
 }
@@ -128,6 +128,114 @@ const WIRE = { l: 'W', c: '#111827', title: 'The Best Noise-Cancelling Headphone
 const AMZN = { l: 'a', c: '#ff9900', title: 'Amazon.com: Bose QuietComfort Ultra Headphones', snippet: 'Wireless noise cancelling headphones with spatial audio, immersive sound and up to 24 hours of battery life.', time: 'yesterday' };
 const CART = { l: 'a', c: '#ff9900', title: 'Amazon.com Shopping Cart', snippet: 'Subtotal (1 item) · Proceed to checkout · Saved for later', time: '2 min ago' };
 const ENG_ROWS = [VERGE, WIRE, AMZN];
+
+const SCREENSHOT_1_LOCALES = {
+  en: {
+    h: 'Recall any page,<br/>instantly',
+    p: "Blazing-fast keyword search across everything you've visited — error codes, versions, exact titles.",
+    query: 'noise cancelling headphones', mode: 'Keyword', openPanel: 'Open panel', indexed: 'All indexed',
+  },
+  ar: {
+    h: 'استعد أي صفحة<br/>فورا',
+    p: 'بحث سريع بالكلمات المفتاحية في كل ما زرته، بما في ذلك رموز الأخطاء والإصدارات والعناوين الدقيقة.',
+    query: 'سماعات عازلة للضوضاء', mode: 'كلمة مفتاحية', openPanel: 'فتح اللوحة', indexed: 'تمت الفهرسة',
+  },
+  de: {
+    h: 'Jede Seite sofort<br/>wiederfinden',
+    p: 'Rasante Stichwortsuche in allem, was du besucht hast: Fehlercodes, Versionen und exakte Titel.',
+    query: 'Kopfhörer mit Geräuschunterdrückung', mode: 'Stichwort', openPanel: 'Panel öffnen', indexed: 'Alles indexiert',
+  },
+  es: {
+    h: 'Recupera cualquier<br/>página al instante',
+    p: 'Búsqueda rápida por palabras clave en todo lo que visitaste: códigos de error, versiones y títulos exactos.',
+    query: 'auriculares con cancelación de ruido', mode: 'Palabra clave', openPanel: 'Abrir panel', indexed: 'Todo indexado',
+  },
+  fr: {
+    h: 'Retrouvez n’importe<br/>quelle page, instantanément',
+    p: 'Recherche rapide par mots-clés dans tout ce que vous avez visité : codes d’erreur, versions et titres exacts.',
+    query: 'casque à réduction de bruit', mode: 'Mot-clé', openPanel: 'Ouvrir le panneau', indexed: 'Tout indexé',
+  },
+  hi: {
+    h: 'कोई भी पेज<br/>तुरंत फिर पाएँ',
+    p: 'आपने जो कुछ देखा है उसमें तेज़ कीवर्ड खोज: त्रुटि कोड, संस्करण और सटीक शीर्षक।',
+    query: 'नॉइज़ कैंसलिंग हेडफ़ोन', mode: 'कीवर्ड', openPanel: 'पैनल खोलें', indexed: 'सब इंडेक्स किया गया',
+  },
+  id: {
+    h: 'Temukan kembali<br/>halaman apa pun',
+    p: 'Pencarian kata kunci cepat di semua halaman yang pernah Anda kunjungi: kode error, versi, dan judul tepat.',
+    query: 'headphone peredam bising', mode: 'Kata kunci', openPanel: 'Buka panel', indexed: 'Semua terindeks',
+  },
+  it: {
+    h: 'Ritrova qualsiasi<br/>pagina all’istante',
+    p: 'Ricerca veloce per parole chiave in tutto ciò che hai visitato: codici errore, versioni e titoli esatti.',
+    query: 'cuffie con cancellazione del rumore', mode: 'Parola chiave', openPanel: 'Apri pannello', indexed: 'Tutto indicizzato',
+  },
+  ja: {
+    h: '見たページを<br/>すぐに呼び出す',
+    p: 'エラーコード、バージョン、正確なタイトルまで、訪問したすべてのページをキーワードで高速検索。',
+    query: 'ノイズキャンセリング ヘッドホン', mode: 'キーワード', openPanel: 'パネルを開く', indexed: 'すべてインデックス済み',
+  },
+  ko: {
+    h: '봤던 모든 페이지를<br/>즉시 다시 찾기',
+    p: '오류 코드, 버전, 정확한 제목까지 방문한 모든 페이지를 빠른 키워드 검색으로 찾아보세요.',
+    query: '노이즈 캔슬링 헤드폰', mode: '키워드', openPanel: '패널 열기', indexed: '모두 색인됨',
+  },
+  nl: {
+    h: 'Vind elke pagina<br/>direct terug',
+    p: 'Razendsnel zoeken op trefwoord in alles wat je bezocht: foutcodes, versies en exacte titels.',
+    query: 'koptelefoon met ruisonderdrukking', mode: 'Trefwoord', openPanel: 'Paneel openen', indexed: 'Alles geïndexeerd',
+  },
+  pl: {
+    h: 'Odnajdź każdą stronę<br/>od razu',
+    p: 'Błyskawiczne wyszukiwanie słów kluczowych we wszystkich odwiedzonych stronach: kodach błędów, wersjach i tytułach.',
+    query: 'słuchawki z redukcją hałasu', mode: 'Słowo kluczowe', openPanel: 'Otwórz panel', indexed: 'Wszystko zindeksowane',
+  },
+  pt_BR: {
+    h: 'Encontre qualquer página<br/>na hora',
+    p: 'Busca rápida por palavras-chave em tudo o que você visitou: códigos de erro, versões e títulos exatos.',
+    query: 'fones com cancelamento de ruído', mode: 'Palavra-chave', openPanel: 'Abrir painel', indexed: 'Tudo indexado',
+  },
+  pt_PT: {
+    h: 'Encontre qualquer página<br/>de imediato',
+    p: 'Pesquisa rápida por palavras-chave em tudo o que visitou: códigos de erro, versões e títulos exatos.',
+    query: 'auscultadores com cancelamento de ruído', mode: 'Palavra-chave', openPanel: 'Abrir painel', indexed: 'Tudo indexado',
+  },
+  ru: {
+    h: 'Находите любую страницу<br/>мгновенно',
+    p: 'Быстрый поиск по ключевым словам во всем, что вы посещали: кодах ошибок, версиях и точных заголовках.',
+    query: 'наушники с шумоподавлением', mode: 'Ключевое слово', openPanel: 'Открыть панель', indexed: 'Все проиндексировано',
+  },
+  th: {
+    h: 'ค้นหาทุกหน้าเว็บ<br/>ได้ทันที',
+    p: 'ค้นหาด้วยคีย์เวิร์ดอย่างรวดเร็วในทุกหน้าที่เคยเข้าชม ทั้งรหัสข้อผิดพลาด เวอร์ชัน และชื่อเรื่องแบบตรงตัว',
+    query: 'หูฟังตัดเสียงรบกวน', mode: 'คีย์เวิร์ด', openPanel: 'เปิดแผง', indexed: 'จัดทำดัชนีแล้วทั้งหมด',
+  },
+  tr: {
+    h: 'Herhangi bir sayfayı<br/>anında bulun',
+    p: 'Hata kodları, sürümler ve tam başlıklar dahil ziyaret ettiğiniz her şeyde hızlı anahtar kelime araması.',
+    query: 'gürültü engelleyici kulaklık', mode: 'Anahtar kelime', openPanel: 'Paneli aç', indexed: 'Tümü dizine eklendi',
+  },
+  uk: {
+    h: 'Знаходьте будь-яку сторінку<br/>миттєво',
+    p: 'Швидкий пошук за ключовими словами в усьому, що ви відвідували: кодах помилок, версіях і точних заголовках.',
+    query: 'навушники з шумозаглушенням', mode: 'Ключове слово', openPanel: 'Відкрити панель', indexed: 'Усе проіндексовано',
+  },
+  vi: {
+    h: 'Tìm lại mọi trang<br/>ngay lập tức',
+    p: 'Tìm kiếm từ khóa siêu nhanh trong mọi trang bạn đã truy cập: mã lỗi, phiên bản và tiêu đề chính xác.',
+    query: 'tai nghe chống ồn', mode: 'Từ khóa', openPanel: 'Mở bảng', indexed: 'Đã lập chỉ mục tất cả',
+  },
+  zh_CN: {
+    h: '所有看过的网页<br/>瞬间找回',
+    p: '快速关键词搜索所有访问过的页面，包括错误代码、版本号和准确标题。',
+    query: '降噪耳机', mode: '关键词', openPanel: '打开面板', indexed: '全部已收录',
+  },
+  zh_TW: {
+    h: '所有看過的網頁<br/>瞬間找回',
+    p: '快速以關鍵字搜尋所有造訪過的頁面，包括錯誤代碼、版本與精確標題。',
+    query: '降噪耳機', mode: '關鍵字', openPanel: '開啟面板', indexed: '全部已收錄',
+  },
+};
 
 // Japanese pages — used only in the cross-lingual scene.
 const AC1 = { l: 'a', c: '#ff9900', title: "Amazon | 【標準取付工事費込み】COMFEE' エアコン 6畳 2.2kw", snippet: '大風量快適 冷暖房 静音 除湿 内部清浄 ルームエアコン 上下ルーバー 一人暮らし 保証1年', time: '7 min ago' };
@@ -199,6 +307,27 @@ const outputs = scenes.map((scene) => ({
   ),
 }));
 
+// One language-matched first screenshot per Store listing locale. These are
+// uploaded as each locale's localized asset; the five primary screenshots stay
+// English in the default listing.
+for (const [locale, copy] of Object.entries(SCREENSHOT_1_LOCALES)) {
+  outputs.push({
+    name: `localized/${locale}/screenshot-1`,
+    w: 1280,
+    h: 800,
+    html: doc(
+      SHOT_CSS,
+      `<div class="copy"><div class="brandbar"><img src="${ICON}"/><b>SpotRecall</b></div><h1>${copy.h}</h1><p>${esc(copy.p)}</p></div><div class="stage">${palette({
+        value: copy.query,
+        mode: copy.mode,
+        openPanel: copy.openPanel,
+        indexed: copy.indexed,
+        sections: [{ rows: ENG_ROWS }],
+      })}</div>`,
+    ),
+  });
+}
+
 // Marquee promo (1400x560) — real UI card, tilted.
 outputs.push({
   name: 'promo-marquee-1400x560',
@@ -237,6 +366,7 @@ try {
     await page.evaluate(() => (document.fonts ? document.fonts.ready : null));
     await new Promise((r) => setTimeout(r, 250));
     const out = join(OUT, `${o.name}.png`);
+    await mkdir(dirname(out), { recursive: true });
     await page.screenshot({ path: out });
     await pexec('sips', ['-z', String(o.h), String(o.w), out, '--out', out]); // 2x -> exact size
     console.log(`✓ ${o.name}.png (${o.w}x${o.h})`);
