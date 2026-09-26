@@ -12,7 +12,7 @@ Gardez vos onglets rangés sans perdre l'essentiel. Après activation, SpotRecal
 ## Detailed description
 Retrouvez la page dont vous vous souvenez sans fouiller l'historique. Recherchez par terme exact ou par sens avec Cmd/Ctrl+Shift+K.
 
-SpotRecall associe une recherche par mots-clés pour les codes d'erreur, URL et versions à un modèle IA multilingue exécuté sur votre appareil pour la recherche sémantique. Lorsque Chrome 138+ fournit son API Translation locale, recherchez entre l'anglais, le japonais et le chinois ; sinon, la recherche reste dans la même langue.
+SpotRecall associe une recherche par mots-clés pour les codes d'erreur, URL et versions à un modèle IA multilingue exécuté sur votre appareil pour la recherche sémantique. Lorsque le navigateur fournit son API Translation locale, recherchez entre l'anglais, le japonais et le chinois ; sinon, la recherche reste dans la même langue.
 
 Rangez les onglets avec la fermeture automatique facultative. Elle agit seulement après activation et au-delà de votre limite. Les pages indexées restent recherchables. Les onglets actifs, épinglés, groupés, audibles et ceux avec formulaire non enregistré sont protégés, et chaque fenêtre conserve au moins un onglet. Rouvrez les onglets fermés au cours des 48 dernières heures.
 

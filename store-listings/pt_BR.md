@@ -12,7 +12,7 @@ Mantenha as abas organizadas sem perder o que importa. Após ativar, o SpotRecal
 ## Detailed description
 Encontre a página de que você se lembra sem vasculhar o histórico. Pesquise por termo exato ou significado com Cmd/Ctrl+Shift+K.
 
-O SpotRecall combina busca por palavras-chave para códigos de erro, URLs e versões com um modelo de IA multilíngue no dispositivo para busca por significado. Onde o Chrome 138+ oferece a Translation API no dispositivo, você pode pesquisar entre inglês, japonês e chinês; caso contrário, a busca volta ao mesmo idioma.
+O SpotRecall combina busca por palavras-chave para códigos de erro, URLs e versões com um modelo de IA multilíngue no dispositivo para busca por significado. Onde o navegador oferece a Translation API no dispositivo, você pode pesquisar entre inglês, japonês e chinês; caso contrário, a busca volta ao mesmo idioma.
 
 Organize as abas com o fechamento automático opcional. Ele funciona apenas após ser ativado e acima do seu limite. Páginas indexadas continuam pesquisáveis. Abas ativas, fixadas, agrupadas, com áudio e com formulários não salvos são protegidas, e cada janela mantém pelo menos uma aba. Reabra abas fechadas nas últimas 48 horas.
 

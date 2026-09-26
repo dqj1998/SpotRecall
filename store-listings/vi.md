@@ -12,7 +12,7 @@ Giữ các thẻ gọn gàng mà không mất nội dung quan trọng. Sau khi b
 ## Detailed description
 Tìm lại trang bạn nhớ mà không cần đào lịch sử trình duyệt. Tìm từ chính xác hoặc theo ý nghĩa bằng Cmd/Ctrl+Shift+K.
 
-SpotRecall kết hợp tìm kiếm từ khóa cho mã lỗi, URL và phiên bản với mô hình AI đa ngôn ngữ chạy trên thiết bị để tìm theo ý nghĩa. Khi Chrome 138+ có Translation API trên thiết bị, bạn có thể tìm giữa tiếng Anh, Nhật và Trung; nếu không, ứng dụng tìm trong cùng ngôn ngữ.
+SpotRecall kết hợp tìm kiếm từ khóa cho mã lỗi, URL và phiên bản với mô hình AI đa ngôn ngữ chạy trên thiết bị để tìm theo ý nghĩa. Khi trình duyệt có Translation API trên thiết bị, bạn có thể tìm giữa tiếng Anh, Nhật và Trung; nếu không, ứng dụng tìm trong cùng ngôn ngữ.
 
 Sắp xếp thẻ bằng tự động đóng tùy chọn. Nó chỉ hoạt động sau khi bạn bật và khi vượt giới hạn. Các trang đã lập chỉ mục vẫn tìm được. Thẻ đang hoạt động, ghim, nhóm, phát âm thanh và có biểu mẫu chưa lưu được bảo vệ; mỗi cửa sổ giữ ít nhất một thẻ. Mở lại thẻ đã đóng trong 48 giờ qua.
 

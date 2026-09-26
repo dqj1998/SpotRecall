@@ -19,3 +19,7 @@ spotrecall-backup-*.zip
 
 # marketing drafts (not for the public repo)
 marketing/
+
+# local tool artifacts (agent state + browser snapshots, not for the public repo)
+.omo/
+.playwright-mcp/

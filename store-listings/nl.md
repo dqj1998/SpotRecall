@@ -12,7 +12,7 @@ Houd tabbladen netjes zonder belangrijke zaken te verliezen. Na inschakeling kan
 ## Detailed description
 Vind de pagina die je je herinnert zonder door de browsergeschiedenis te graven. Zoek met Cmd/Ctrl+Shift+K op exact woord of betekenis.
 
-SpotRecall combineert trefwoordzoekopdrachten voor foutcodes, URL's en versienummers met een meertalig AI-model op je apparaat voor semantisch zoeken. Waar Chrome 138+ de lokale Translation API biedt, kun je zoeken tussen Engels, Japans en Chinees; anders zoekt het in dezelfde taal.
+SpotRecall combineert trefwoordzoekopdrachten voor foutcodes, URL's en versienummers met een meertalig AI-model op je apparaat voor semantisch zoeken. Waar de browser de lokale Translation API biedt, kun je zoeken tussen Engels, Japans en Chinees; anders zoekt het in dezelfde taal.
 
 Houd tabbladen opgeruimd met optioneel automatisch sluiten. Het werkt alleen nadat je het hebt ingeschakeld en boven je limiet. Geïndexeerde pagina's blijven doorzoekbaar. Actieve, vastgezette, gegroepeerde, hoorbare en tabbladen met niet-opgeslagen formulieren zijn beschermd; elk venster houdt minstens één tabblad. Heropen tabbladen die in de laatste 48 uur zijn gesloten.
 

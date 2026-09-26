@@ -12,7 +12,7 @@ Mantieni in ordine le schede senza perdere ciò che conta. Dopo l'attivazione, S
 ## Detailed description
 Ritrova la pagina che ricordi senza rovistare nella cronologia. Cerca termini esatti o significato con Cmd/Ctrl+Shift+K.
 
-SpotRecall combina la ricerca per parole chiave di codici errore, URL e versioni con un modello IA multilingue sul dispositivo per la ricerca semantica. Quando Chrome 138+ offre la Translation API locale, puoi cercare tra inglese, giapponese e cinese; altrimenti la ricerca resta nella stessa lingua.
+SpotRecall combina la ricerca per parole chiave di codici errore, URL e versioni con un modello IA multilingue sul dispositivo per la ricerca semantica. Quando il browser offre la Translation API locale, puoi cercare tra inglese, giapponese e cinese; altrimenti la ricerca resta nella stessa lingua.
 
 Tieni ordinate le schede con la chiusura automatica facoltativa. Funziona solo dopo l'attivazione e oltre il limite scelto. Le pagine indicizzate restano ricercabili. Schede attive, fissate, raggruppate, con audio e con moduli non salvati sono protette, e ogni finestra conserva almeno una scheda. Riapri quelle chiuse nelle ultime 48 ore.
 
