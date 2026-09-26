@@ -218,6 +218,18 @@ model file (data, not code) is downloaded once and cached locally.
 - Screenshots: 1280×800 (same files).
 - Provide the same description, category (Productivity), and privacy policy URL.
 - Edge also asks for supported languages and an author/publisher display name.
+- **Promo tiles are per-language on Edge**, unlike the Chrome Web Store. Microsoft
+  documents the small tile (440×280) and the large tile (1400×560) as "one per
+  language", both optional. Upload the matching pair from
+  `release-screenshots/localized/<locale>/promo-{small-440x280,marquee-1400x560}.png`
+  for each language instead of reusing the English tiles.
+- Partner Center derives the store-listing languages from the `_locales` folder in
+  the uploaded package. `public/_locales/` carries the same 21 locales that
+  `release-screenshots/localized/` does, so every language gets a matching pair.
+- Partner Center offers a **Duplicate** control that copies an asset from one
+  language to all others. Do not use it for the tiles — it would overwrite the
+  localized ones. It is the right control only for the 300×300 logo.
+- Edge allows up to 6 screenshots per language (Chrome allows 5).
 - **Search terms** (≤7 terms, ≤30 chars each, ≤21 words total → this set is 18 words):
   1. `history search`
   2. `semantic search`
