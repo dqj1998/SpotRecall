@@ -12,7 +12,7 @@ Mantén las pestañas ordenadas sin perder lo importante. Tras activarlo, SpotRe
 ## Detailed description
 Encuentra la página que recuerdas sin rebuscar en el historial. Busca por palabra exacta o por significado con Cmd/Ctrl+Shift+K.
 
-SpotRecall combina la búsqueda por palabras clave para códigos de error, URL y versiones con un modelo de IA multilingüe que se ejecuta en tu dispositivo para buscar por significado. Cuando Chrome 138+ ofrece su API de traducción local, puedes buscar entre inglés, japonés y chino; de lo contrario, busca en el mismo idioma.
+SpotRecall combina la búsqueda por palabras clave para códigos de error, URL y versiones con un modelo de IA multilingüe que se ejecuta en tu dispositivo para buscar por significado. Cuando el navegador ofrece su API de traducción local, puedes buscar entre inglés, japonés y chino; de lo contrario, busca en el mismo idioma.
 
 Ordena pestañas con el cierre automático opcional. Solo funciona tras activarlo y cuando superas tu límite. Las páginas indexadas siguen siendo buscables. Protege las pestañas activas, fijadas, agrupadas, con audio y con formularios sin guardar, y conserva al menos una pestaña por ventana. Puedes reabrir las cerradas durante las últimas 48 horas.
 

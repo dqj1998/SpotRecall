@@ -12,7 +12,7 @@ Halte Tabs ordentlich, ohne Wichtiges zu verlieren. Nach deiner Aktivierung schl
 ## Detailed description
 Finde die Seite wieder, an die du dich erinnerst, ohne den Browserverlauf zu durchforsten. Suche mit Cmd/Ctrl+Shift+K nach exakten Begriffen oder Bedeutung.
 
-SpotRecall kombiniert Stichwortsuche für Fehlercodes, URLs und Versionsnummern mit einem mehrsprachigen KI-Modell auf deinem Gerät für semantische Suche. Wenn Chrome 138+ die lokale Translation API bereitstellt, kannst du über Englisch, Japanisch und Chinesisch hinweg suchen; sonst erfolgt die Suche in derselben Sprache.
+SpotRecall kombiniert Stichwortsuche für Fehlercodes, URLs und Versionsnummern mit einem mehrsprachigen KI-Modell auf deinem Gerät für semantische Suche. Wenn der Browser die lokale Translation API bereitstellt, kannst du über Englisch, Japanisch und Chinesisch hinweg suchen; sonst erfolgt die Suche in derselben Sprache.
 
 Halte Tabs mit optionalem Auto-Close aufgeräumt. Es arbeitet nur nach Aktivierung und nur oberhalb deines Limits. Indexierte Seiten bleiben durchsuchbar. Aktive, angeheftete, gruppierte, hörbare und Tabs mit nicht gespeicherten Formulareingaben sind geschützt; jedes Fenster behält mindestens einen Tab. Geschlossene Tabs der letzten 48 Stunden lassen sich erneut öffnen.
 

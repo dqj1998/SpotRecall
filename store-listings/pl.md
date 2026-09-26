@@ -12,7 +12,7 @@ Utrzymuj porządek w kartach bez utraty ważnych rzeczy. Po włączeniu SpotReca
 ## Detailed description
 Znajdź zapamiętaną stronę bez przekopywania historii przeglądarki. Szukaj dokładnego słowa lub znaczenia przez Cmd/Ctrl+Shift+K.
 
-SpotRecall łączy wyszukiwanie słów kluczowych dla kodów błędów, URL-i i wersji z wielojęzycznym modelem AI działającym na urządzeniu do wyszukiwania semantycznego. Gdy Chrome 138+ udostępnia lokalne Translation API, można szukać między angielskim, japońskim i chińskim; w przeciwnym razie wyszukiwanie odbywa się w tym samym języku.
+SpotRecall łączy wyszukiwanie słów kluczowych dla kodów błędów, URL-i i wersji z wielojęzycznym modelem AI działającym na urządzeniu do wyszukiwania semantycznego. Gdy przeglądarka udostępnia lokalne Translation API, można szukać między angielskim, japońskim i chińskim; w przeciwnym razie wyszukiwanie odbywa się w tym samym języku.
 
 Uporządkuj karty dzięki opcjonalnemu automatycznemu zamykaniu. Działa tylko po włączeniu i po przekroczeniu limitu. Zindeksowane strony nadal można wyszukiwać. Karty aktywne, przypięte, zgrupowane, odtwarzające dźwięk i z niezapisanym formularzem są chronione, a w każdym oknie pozostaje co najmniej jedna karta. Ponownie otwórz karty zamknięte w ostatnich 48 godzinach.
 

@@ -12,7 +12,7 @@ Mantenha os separadores organizados sem perder o que importa. Depois de ativar, 
 ## Detailed description
 Encontre a página de que se lembra sem procurar no histórico. Pesquise o termo exato ou o significado com Cmd/Ctrl+Shift+K.
 
-O SpotRecall combina pesquisa por palavras-chave para códigos de erro, URLs e versões com um modelo de IA multilingue no dispositivo para pesquisa por significado. Quando o Chrome 138+ disponibiliza a Translation API no dispositivo, pode pesquisar entre inglês, japonês e chinês; caso contrário, pesquisa no mesmo idioma.
+O SpotRecall combina pesquisa por palavras-chave para códigos de erro, URLs e versões com um modelo de IA multilingue no dispositivo para pesquisa por significado. Quando o navegador disponibiliza a Translation API no dispositivo, pode pesquisar entre inglês, japonês e chinês; caso contrário, pesquisa no mesmo idioma.
 
 Organize os separadores com o fecho automático opcional. Só funciona após ser ativado e acima do limite definido. As páginas indexadas permanecem pesquisáveis. Separadores ativos, afixados, agrupados, com áudio e com formulários não guardados são protegidos, e cada janela mantém pelo menos um separador. Reabra os separados fechados nas últimas 48 horas.
 

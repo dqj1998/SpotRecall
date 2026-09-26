@@ -12,7 +12,7 @@ Tarama geçmişinizi anlam veya anahtar kelimeyle arayın. Yapay zeka cihazını
 ## Detailed description
 Tarayıcı geçmişini kazımadan hatırladığınız sayfayı bulun. Cmd/Ctrl+Shift+K ile tam kelime veya anlam arayın.
 
-SpotRecall, hata kodları, URL'ler ve sürüm numaraları için anahtar kelime aramasını anlam tabanlı arama için cihazda çalışan çok dilli bir yapay zeka modeliyle birleştirir. Chrome 138+ cihaz içi Translation API sağladığında İngilizce, Japonca ve Çince arasında arama yapabilirsiniz; aksi halde aynı dilde arar.
+SpotRecall, hata kodları, URL'ler ve sürüm numaraları için anahtar kelime aramasını anlam tabanlı arama için cihazda çalışan çok dilli bir yapay zeka modeliyle birleştirir. Tarayıcı cihaz içi Translation API sağladığında İngilizce, Japonca ve Çince arasında arama yapabilirsiniz; aksi halde aynı dilde arar.
 
 İsteğe bağlı otomatik kapatmayla sekmeleri düzenleyin. Yalnızca etkinleştirdikten sonra ve sınırınızı aştığınızda çalışır. Dizine eklenen sayfalar aranabilir kalır. Etkin, sabitlenmiş, gruplandırılmış, sesli ve kaydedilmemiş formlu sekmeler korunur; her pencerede en az bir sekme kalır. Son 48 saatte kapatılan sekmeleri yeniden açın.
 

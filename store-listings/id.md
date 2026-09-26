@@ -12,7 +12,7 @@ Rapikan tab tanpa kehilangan hal penting. Setelah diaktifkan, SpotRecall dapat m
 ## Detailed description
 Temukan halaman yang Anda ingat tanpa menggali riwayat browser. Cari kata tepat atau makna dari Cmd/Ctrl+Shift+K.
 
-SpotRecall menggabungkan pencarian kata kunci untuk kode error, URL, dan versi dengan model AI multibahasa di perangkat untuk pencarian berdasarkan makna. Saat Chrome 138+ menyediakan Translation API di perangkat, Anda dapat mencari lintas Inggris, Jepang, dan Mandarin; jika tidak, pencarian kembali ke bahasa yang sama.
+SpotRecall menggabungkan pencarian kata kunci untuk kode error, URL, dan versi dengan model AI multibahasa di perangkat untuk pencarian berdasarkan makna. Saat browser menyediakan Translation API di perangkat, Anda dapat mencari lintas Inggris, Jepang, dan Mandarin; jika tidak, pencarian kembali ke bahasa yang sama.
 
 Rapikan tab dengan tutup otomatis opsional. Fitur ini hanya bekerja setelah diaktifkan dan saat melewati batas Anda. Halaman terindeks tetap dapat dicari. Tab aktif, disematkan, dikelompokkan, bersuara, dan dengan formulir belum disimpan dilindungi; setiap jendela menyisakan setidaknya satu tab. Buka lagi tab yang ditutup dalam 48 jam terakhir.
 
