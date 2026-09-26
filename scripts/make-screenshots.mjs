@@ -19,6 +19,11 @@ const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const tokens = await readFile(join(ROOT, 'src/ui/tokens.css'), 'utf8');
 const layout = await readFile(join(ROOT, 'src/ui/palette-layout.css'), 'utf8');
 
+// The brand gradient runs blue -> green left-to-right, so the copy always sits
+// on the blue end. RTL layouts mirror the copy, so mirror the angle with them.
+const HEADER_GRAD = /--sr-header-grad:\s*([^;]+);/.exec(tokens)[1].trim();
+const HEADER_GRAD_RTL = HEADER_GRAD.replace(/([\d.]+)deg/, (_, deg) => `${(360 - Number(deg)) % 360}deg`);
+
 // Shared: the palette card + brand bits, reused by screenshots and promos.
 const BASE = `
   *{box-sizing:border-box;}
@@ -33,6 +38,11 @@ const BASE = `
     box-shadow:0 6px 18px -6px rgba(20,44,90,.4);}
   .brandbar{display:inline-flex;align-items:center;gap:12px;}
   .brandbar img{width:40px;height:40px;border-radius:10px;}
+  /* Each source line is its own nowrap block so autofit can measure it. */
+  .ln{display:block;white-space:nowrap;}
+  /* The product card always renders LTR: its mock rows are Latin content. */
+  .device{direction:ltr;}
+  body.rtl{direction:rtl;}
 `;
 
 // Screenshot page (1280x800): light bg, copy on the left, upright card on the right.
@@ -48,6 +58,10 @@ const SHOT_CSS = `
   .copy p{font-size:23px;line-height:1.5;margin:0;color:#42566f;}
   .stage{flex:1;display:flex;justify-content:center;}
   .device{transform:scale(1.34);transform-origin:center;}
+  /* direction:rtl already reverses the flex row, putting the card on the left;
+     only the background's directional tints need mirroring to follow it. */
+  body.rtl{background:radial-gradient(1200px 700px at -10% -10%, rgba(52,208,122,.22), transparent),
+                      radial-gradient(1100px 700px at 110% 110%, rgba(47,128,255,.20), transparent),#eef4fb;}
 `;
 
 // Marquee promo (1400x560): bold brand gradient, white copy, real UI card tilted at the right.
@@ -64,6 +78,10 @@ const MARQUEE_CSS = `
   .stage{position:absolute;right:0;top:0;bottom:0;width:520px;}
   .device{position:absolute;right:26px;top:50%;transform:translateY(-50%) rotate(-3deg);transform-origin:center;}
   .card{box-shadow:0 50px 120px -28px rgba(3,16,43,.6),0 14px 44px -12px rgba(3,16,43,.42);}
+  body.rtl{padding:0 0 0 0;padding-right:96px;background-image:${HEADER_GRAD_RTL};}
+  body.rtl::after{background:radial-gradient(900px 520px at 0% 130%, rgba(255,255,255,.16), transparent);}
+  body.rtl .stage{left:0;right:auto;}
+  body.rtl .device{left:26px;right:auto;transform:translateY(-50%) rotate(3deg);}
 `;
 
 // Small promo tile (440x280): brand gradient, icon + name + tagline + a search-pill hint.
@@ -76,11 +94,24 @@ const SMALL_CSS = `
   .s-tag{font-size:19px;line-height:1.3;margin:0 0 16px;font-weight:550;color:rgba(255,255,255,.95);}
   .pill{display:flex;align-items:center;gap:9px;background:#fff;border-radius:13px;padding:12px 15px;box-shadow:0 10px 26px -8px rgba(3,16,43,.5);}
   .pill svg{width:17px;height:17px;color:#8a99ad;stroke:#8a99ad;}
-  .pill span{color:#8a99ad;font-size:15px;}
+  .pill span{color:#8a99ad;font-size:15px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;}
+  body.rtl{background-image:${HEADER_GRAD_RTL};}
 `;
 
 function esc(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// Locales whose listing copy reads right-to-left. Only the surrounding
+// marketing layout mirrors; the product card stays LTR (its rows are Latin).
+const RTL = new Set(['ar']);
+
+// Copy authored with explicit <br/> breaks becomes one nowrap block per line so
+// autofit() can measure and shrink it. Copy without breaks keeps normal wrapping.
+function lines(str) {
+  const parts = String(str).split(/<br\s*\/?>/);
+  if (parts.length === 1) return esc(str);
+  return parts.map((t) => `<span class="ln">${esc(t.trim())}</span>`).join('');
 }
 
 const SEARCH_SVG =
@@ -237,6 +268,138 @@ const SCREENSHOT_1_LOCALES = {
   },
 };
 
+// Promo-tile copy per Store locale. `mh`/`mp` drive the 1400x560 marquee,
+// `stag`/`pill` the 440x280 small tile. Search-card content is reused from
+// SCREENSHOT_1_LOCALES so both promos and the first screenshot say the same thing.
+const PROMO_LOCALES = {
+  en: {
+    mh: "Find any page<br/>you've visited",
+    mp: 'Private, on-device recall —<br/>by keyword & meaning.',
+    stag: "Find any page you've visited —<br/>private, on-device recall.",
+    pill: "Search where you've been…",
+  },
+  ar: {
+    mh: 'اعثر على أي صفحة<br/>زرتها',
+    mp: 'استرجاع خاص على جهازك —<br/>بالكلمات المفتاحية وبالمعنى.',
+    stag: 'اعثر على أي صفحة زرتها —<br/>استرجاع خاص على جهازك.',
+    pill: 'ابحث في ما زرته…',
+  },
+  de: {
+    mh: 'Finde jede Seite,<br/>die du besucht hast',
+    mp: 'Privates Wiederfinden auf dem Gerät —<br/>per Stichwort & Bedeutung.',
+    stag: 'Jede besuchte Seite wiederfinden —<br/>privat, direkt auf dem Gerät.',
+    pill: 'Durchsuche, wo du warst…',
+  },
+  es: {
+    mh: 'Encuentra cualquier<br/>página que visitaste',
+    mp: 'Recuperación privada en tu dispositivo —<br/>por palabra clave y por significado.',
+    stag: 'Encuentra cualquier página visitada —<br/>privado, en tu propio dispositivo.',
+    pill: 'Busca dónde has estado…',
+  },
+  fr: {
+    mh: 'Retrouvez chaque page<br/>que vous avez visitée',
+    mp: 'Recherche privée sur votre appareil —<br/>par mot-clé et par sens.',
+    stag: 'Retrouvez chaque page visitée —<br/>en privé, sur votre appareil.',
+    pill: 'Cherchez où vous êtes allé…',
+  },
+  hi: {
+    mh: 'देखा हुआ हर पेज<br/>फिर से पाएँ',
+    mp: 'निजी, डिवाइस पर ही खोज —<br/>कीवर्ड से और अर्थ से।',
+    stag: 'देखा हुआ हर पेज फिर पाएँ —<br/>निजी, डिवाइस पर ही।',
+    pill: 'जहाँ गए थे, वहाँ खोजें…',
+  },
+  id: {
+    mh: 'Temukan setiap halaman<br/>yang pernah Anda buka',
+    mp: 'Pencarian privat di perangkat —<br/>lewat kata kunci & makna.',
+    stag: 'Temukan halaman yang pernah dibuka —<br/>privat, langsung di perangkat.',
+    pill: 'Cari halaman yang pernah dibuka…',
+  },
+  it: {
+    mh: 'Ritrova ogni pagina<br/>che hai visitato',
+    mp: 'Ricerca privata sul dispositivo —<br/>per parola chiave e significato.',
+    stag: 'Ritrova ogni pagina visitata —<br/>in privato, sul tuo dispositivo.',
+    pill: 'Cerca dove sei stato…',
+  },
+  ja: {
+    mh: '見たページを<br/>すべて見つける',
+    mp: '端末内で完結するプライベート検索 —<br/>キーワードでも、意味でも。',
+    stag: '見たページをすべて見つける —<br/>端末内で完結、プライベート。',
+    pill: '訪れたページを検索…',
+  },
+  ko: {
+    mh: '방문한 모든 페이지<br/>다시 찾기',
+    mp: '기기 안에서 끝나는 비공개 검색 —<br/>키워드로도, 의미로도.',
+    stag: '방문한 모든 페이지를 다시 찾기 —<br/>기기 안에서, 비공개로.',
+    pill: '다녀온 페이지 검색…',
+  },
+  nl: {
+    mh: 'Vind elke pagina<br/>die je bezocht',
+    mp: 'Privé zoeken op je eigen apparaat —<br/>op trefwoord & betekenis.',
+    stag: 'Vind elke bezochte pagina —<br/>privé, op je eigen apparaat.',
+    pill: 'Zoek waar je geweest bent…',
+  },
+  pl: {
+    mh: 'Znajdź każdą stronę,<br/>którą odwiedziłeś',
+    mp: 'Prywatne wyszukiwanie na urządzeniu —<br/>po słowach kluczowych i znaczeniu.',
+    stag: 'Znajdź każdą odwiedzoną stronę —<br/>prywatnie, na swoim urządzeniu.',
+    pill: 'Szukaj tam, gdzie byłeś…',
+  },
+  pt_BR: {
+    mh: 'Encontre qualquer página<br/>que você visitou',
+    mp: 'Busca privada no seu dispositivo —<br/>por palavra-chave e significado.',
+    stag: 'Encontre qualquer página visitada —<br/>privado, no seu próprio dispositivo.',
+    pill: 'Busque por onde você passou…',
+  },
+  pt_PT: {
+    mh: 'Encontre qualquer página<br/>que visitou',
+    mp: 'Pesquisa privada no seu dispositivo —<br/>por palavra-chave e significado.',
+    stag: 'Encontre qualquer página visitada —<br/>privado, no seu próprio dispositivo.',
+    pill: 'Pesquise por onde passou…',
+  },
+  ru: {
+    mh: 'Находите любую<br/>посещённую страницу',
+    mp: 'Приватный поиск на устройстве —<br/>по ключевым словам и смыслу.',
+    stag: 'Находите любую посещённую страницу —<br/>приватно, прямо на устройстве.',
+    pill: 'Ищите там, где вы были…',
+  },
+  th: {
+    mh: 'ค้นเจอทุกหน้าเว็บ<br/>ที่คุณเคยเปิด',
+    mp: 'ค้นหาแบบส่วนตัวบนเครื่องคุณ —<br/>ด้วยคีเวิร์ดและความหมาย',
+    stag: 'ค้นเจอทุกหน้าที่คุณเคยเปิด —<br/>เป็นส่วนตัว บนเครื่องคุณเอง',
+    pill: 'ค้นหาหน้าที่คุณเคยเปิด…',
+  },
+  tr: {
+    mh: 'Ziyaret ettiğin her<br/>sayfayı yeniden bul',
+    mp: 'Cihazından çıkmayan özel arama —<br/>anahtar kelimeyle ve anlamla.',
+    stag: 'Ziyaret ettiğin her sayfayı bul —<br/>özel, tamamen cihazında.',
+    pill: 'Gezdiğin sayfalarda ara…',
+  },
+  uk: {
+    mh: 'Знаходьте будь-яку<br/>відвідану сторінку',
+    mp: 'Приватний пошук на пристрої —<br/>за ключовими словами та змістом.',
+    stag: 'Знаходьте будь-яку відвідану сторінку —<br/>приватно, просто на пристрої.',
+    pill: 'Шукайте там, де ви були…',
+  },
+  vi: {
+    mh: 'Tìm lại mọi trang<br/>bạn từng xem',
+    mp: 'Tìm kiếm riêng tư ngay trên máy —<br/>theo từ khóa và theo ý nghĩa.',
+    stag: 'Tìm lại mọi trang bạn từng xem —<br/>riêng tư, ngay trên máy bạn.',
+    pill: 'Tìm trang bạn từng ghé…',
+  },
+  zh_CN: {
+    mh: '找回你看过的<br/>任何网页',
+    mp: '本机私密回溯 —<br/>按关键词，也按意思。',
+    stag: '找回你看过的任何网页 —<br/>本机私密，数据不外传。',
+    pill: '搜索你去过的网页…',
+  },
+  zh_TW: {
+    mh: '找回你看過的<br/>任何網頁',
+    mp: '本機私密回溯 —<br/>依關鍵字，也依語意。',
+    stag: '找回你看過的任何網頁 —<br/>本機私密，資料不外傳。',
+    pill: '搜尋你造訪過的網頁…',
+  },
+};
+
 // Japanese pages — used only in the cross-lingual scene.
 const AC1 = { l: 'a', c: '#ff9900', title: "Amazon | 【標準取付工事費込み】COMFEE' エアコン 6畳 2.2kw", snippet: '大風量快適 冷暖房 静音 除湿 内部清浄 ルームエアコン 上下ルーバー 一人暮らし 保証1年', time: '7 min ago' };
 const AC2 = { l: 'a', c: '#ff9900', title: "Amazon.co.jp: [2026年モデル] COMFEE' エアコン 10畳", snippet: 'オンライン通販のAmazon公式サイトなら COMFEE インバーター冷暖房 省エネ 6畳〜10畳', time: '8 min ago' };
@@ -292,8 +455,9 @@ const scenes = [
 const iconB64 = (await readFile(join(ROOT, 'src/ui/assets/icon128.png'))).toString('base64');
 const ICON = `data:image/png;base64,${iconB64}`;
 
-function doc(css, bodyInner) {
-  return `<!doctype html><html><head><meta charset="utf-8"><style>${tokens}\n${layout}\n${BASE}\n${css}</style></head><body>${bodyInner}</body></html>`;
+function doc(css, bodyInner, rtl = false) {
+  const dir = rtl ? 'rtl' : 'ltr';
+  return `<!doctype html><html dir="${dir}"><head><meta charset="utf-8"><style>${tokens}\n${layout}\n${BASE}\n${css}</style></head><body dir="${dir}" class="${rtl ? 'rtl' : ''}">${bodyInner}</body></html>`;
 }
 
 // Store screenshots (1280x800).
@@ -303,7 +467,7 @@ const outputs = scenes.map((scene) => ({
   h: 800,
   html: doc(
     SHOT_CSS,
-    `<div class="copy"><div class="brandbar"><img src="${ICON}"/><b>SpotRecall</b></div><h1>${scene.h}</h1><p>${scene.p}</p></div><div class="stage">${scene.body}</div>`,
+    `<div class="copy"><div class="brandbar"><img src="${ICON}"/><b>SpotRecall</b></div><h1>${lines(scene.h)}</h1><p>${lines(scene.p)}</p></div><div class="stage">${scene.body}</div>`,
   ),
 }));
 
@@ -317,43 +481,66 @@ for (const [locale, copy] of Object.entries(SCREENSHOT_1_LOCALES)) {
     h: 800,
     html: doc(
       SHOT_CSS,
-      `<div class="copy"><div class="brandbar"><img src="${ICON}"/><b>SpotRecall</b></div><h1>${copy.h}</h1><p>${esc(copy.p)}</p></div><div class="stage">${palette({
+      `<div class="copy"><div class="brandbar"><img src="${ICON}"/><b>SpotRecall</b></div><h1>${lines(copy.h)}</h1><p>${lines(copy.p)}</p></div><div class="stage">${palette({
         value: copy.query,
         mode: copy.mode,
         openPanel: copy.openPanel,
         indexed: copy.indexed,
         sections: [{ rows: ENG_ROWS }],
       })}</div>`,
+      RTL.has(locale),
     ),
   });
 }
 
 // Marquee promo (1400x560) — real UI card, tilted.
-outputs.push({
-  name: 'promo-marquee-1400x560',
-  w: 1400,
-  h: 560,
-  html: doc(
+function marquee(promo, card, rtl) {
+  return doc(
     MARQUEE_CSS,
     `<div class="copy"><div class="brandbar"><img src="${ICON}"/><b>SpotRecall</b></div>
-     <h1>Find any page<br/>you've visited</h1>
-     <p>Private, on-device recall —<br/>by keyword & meaning.</p></div>
-     <div class="stage">${palette({ value: 'noise cancelling headphones', mode: 'Keyword', sections: [{ rows: ENG_ROWS }] })}</div>`,
-  ),
-});
+     <h1>${lines(promo.mh)}</h1>
+     <p>${lines(promo.mp)}</p></div>
+     <div class="stage">${palette(card)}</div>`,
+    rtl,
+  );
+}
 
 // Small promo tile (440x280) — icon + name + tagline + search-pill hint.
-outputs.push({
-  name: 'promo-small-440x280',
-  w: 440,
-  h: 280,
-  html: doc(
+function smallTile(promo, rtl) {
+  return doc(
     SMALL_CSS,
     `<div class="s-brand"><img src="${ICON}"/><b>SpotRecall</b></div>
-     <p class="s-tag">Find any page you've visited —<br/>private, on-device recall.</p>
-     <div class="pill">${SEARCH_SVG}<span>Search where you've been…</span></div>`,
-  ),
-});
+     <p class="s-tag">${lines(promo.stag)}</p>
+     <div class="pill">${SEARCH_SVG}<span>${esc(promo.pill)}</span></div>`,
+    rtl,
+  );
+}
+
+const EN_CARD = { value: 'noise cancelling headphones', mode: 'Keyword', sections: [{ rows: ENG_ROWS }] };
+
+outputs.push({ name: 'promo-marquee-1400x560', w: 1400, h: 560, html: marquee(PROMO_LOCALES.en, EN_CARD, false) });
+outputs.push({ name: 'promo-small-440x280', w: 440, h: 280, html: smallTile(PROMO_LOCALES.en, false) });
+
+// One language-matched promo pair per Store locale, uploaded as that locale's
+// localized graphic assets. The all-languages promos above stay English.
+for (const [locale, promo] of Object.entries(PROMO_LOCALES)) {
+  const shot = SCREENSHOT_1_LOCALES[locale];
+  if (!shot) throw new Error(`PROMO_LOCALES has ${locale} but SCREENSHOT_1_LOCALES does not`);
+  const rtl = RTL.has(locale);
+  const card = {
+    value: shot.query,
+    mode: shot.mode,
+    openPanel: shot.openPanel,
+    indexed: shot.indexed,
+    sections: [{ rows: ENG_ROWS }],
+  };
+  outputs.push({ name: `localized/${locale}/promo-marquee-1400x560`, w: 1400, h: 560, html: marquee(promo, card, rtl) });
+  outputs.push({ name: `localized/${locale}/promo-small-440x280`, w: 440, h: 280, html: smallTile(promo, rtl) });
+}
+
+for (const locale of Object.keys(SCREENSHOT_1_LOCALES)) {
+  if (!PROMO_LOCALES[locale]) throw new Error(`SCREENSHOT_1_LOCALES has ${locale} but PROMO_LOCALES does not`);
+}
 
 await mkdir(OUT, { recursive: true });
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, args: ['--force-color-profile=srgb'] });
@@ -364,6 +551,26 @@ try {
     await page.setViewport({ width: o.w, height: o.h, deviceScaleFactor: 2 });
     await page.setContent(o.html, { waitUntil: 'domcontentloaded' });
     await page.evaluate(() => (document.fonts ? document.fonts.ready : null));
+    // Shrink authored copy until every line fits its box. Translations run much
+    // longer than the English original, so fixed sizes would clip or re-wrap.
+    await page.evaluate(() => {
+      const fit = (selector, min) => {
+        for (const el of document.querySelectorAll(selector)) {
+          const spans = [...el.querySelectorAll('.ln')];
+          const probes = spans.length ? spans : [el];
+          const overflows = () => probes.some((n) => n.scrollWidth > el.clientWidth + 0.5);
+          let size = parseFloat(getComputedStyle(el).fontSize);
+          while (size > min && overflows()) {
+            size -= 0.5;
+            el.style.fontSize = `${size}px`;
+          }
+        }
+      };
+      fit('.copy h1', 30);
+      fit('.copy p', 16);
+      fit('.s-tag', 12);
+      fit('.pill span', 10);
+    });
     await new Promise((r) => setTimeout(r, 250));
     const out = join(OUT, `${o.name}.png`);
     await mkdir(dirname(out), { recursive: true });
