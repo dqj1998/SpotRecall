@@ -108,9 +108,13 @@ export function selectTabsToClose(
   if (ctx.withinGrace) return empty;
 
   const normal = tabs.filter((t) => !t.incognito);
-  const total = normal.length;
+  // Pinned and grouped tabs are excluded from the keep count: users accumulate
+  // many of them intentionally and closing regular tabs to compensate is surprising.
+  const total = normal.filter((t) => !t.pinned && !t.grouped).length;
   if (total <= s.keep) return empty;
 
+  // winRemaining uses the full normal set so the "never empty a window" guard
+  // accounts for every tab in the window, including pinned/grouped ones.
   const winRemaining = new Map<number, number>();
   for (const t of normal) winRemaining.set(t.windowId, (winRemaining.get(t.windowId) ?? 0) + 1);
 

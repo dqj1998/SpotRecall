@@ -68,10 +68,37 @@ describe('selectTabsToClose (autoclose-plan v2, R6 contracts)', () => {
     const internal = tab({ internal: true });
     const closable = tab();
     const tabs = [active, pinned, audible, grouped, internal, closable];
-    // keep=1 wants 5 closed, but only `closable` is eligible.
+    // countable (non-pinned, non-grouped) = [active, audible, internal, closable] = 4; keep=1 → overflow=3
+    // but only `closable` is eligible.
     const out = selectTabsToClose(tabs, settings(1), { now: NOW, withinGrace: false });
     expect(out.close).toEqual([closable.tabId]);
     expect(out.capture).toEqual([]);
+  });
+
+  it('pinned and grouped tabs do not count toward the keep threshold', () => {
+    const pinned1 = tab({ pinned: true });
+    const pinned2 = tab({ pinned: true });
+    const grouped1 = tab({ grouped: true });
+    const closable1 = tab();
+    const closable2 = tab();
+    // countable (non-pinned, non-grouped) = [closable1, closable2] = 2 == keep=2 → no action,
+    // even though the raw tab count is 5.
+    const tabs = [pinned1, pinned2, grouped1, closable1, closable2];
+    expect(selectTabsToClose(tabs, settings(2), { now: NOW, withinGrace: false })).toEqual({
+      close: [],
+      capture: [],
+    });
+  });
+
+  it('closes only the overflow of non-pinned/grouped tabs when mixed', () => {
+    const pinned = tab({ pinned: true });
+    const grouped = tab({ grouped: true });
+    const closable = Array.from({ length: 4 }, () => tab());
+    // countable = 4, keep=3 → overflow=1; only 1 regular tab is closed.
+    const tabs = [pinned, grouped, ...closable];
+    const out = selectTabsToClose(tabs, settings(3), { now: NOW, withinGrace: false });
+    expect(out.close.length + out.capture.length).toBe(1);
+    expect([...closable.map((t) => t.tabId)]).toContain(out.close[0] ?? out.capture[0]);
   });
 
   it('never closes a window\'s only tab', () => {

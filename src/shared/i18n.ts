@@ -110,7 +110,7 @@ const en: Dict = {
   autoCloseNote:
     'Off until you turn it on. A window is never emptied, and recently-restored tabs get a grace period.',
   autoCloseKeepLabel: 'Tabs to keep open',
-  autoCloseKeepDesc: 'Target number of open tabs across all normal windows (default 12).',
+  autoCloseKeepDesc: 'Target number of regular tabs to keep open across all windows (default 12). Pinned and grouped tabs are not counted.',
   autoCloseLogTitle: 'Closed in the last 48h ({n})',
   autoCloseLogEmpty: 'Nothing closed yet.',
   autoCloseIndexed: 'Indexed — searchable in SpotRecall.',
@@ -214,7 +214,7 @@ const ja: Dict = {
   autoCloseNote:
     'オンにするまで動作しません。ウィンドウ最後の1枚は閉じず、復元直後のタブには猶予期間があります。',
   autoCloseKeepLabel: '開いたままにするタブ数',
-  autoCloseKeepDesc: '通常ウィンドウ全体で開いておく目標タブ数（既定 12）。',
+  autoCloseKeepDesc: '全ウィンドウで開いておく通常タブの目標数（既定 12）。固定・グループタブはカウントされません。',
   autoCloseLogTitle: '直近48時間で閉じたタブ（{n}）',
   autoCloseLogEmpty: 'まだ閉じたタブはありません。',
   autoCloseIndexed: 'インデックス済み — SpotRecall で検索できます。',
@@ -314,7 +314,7 @@ const zh: Dict = {
   autoCloseLabel: '启用自动关闭',
   autoCloseNote: '开启前不会动作。绝不关闭窗口最后一个标签页；刚恢复的标签页有宽限期。',
   autoCloseKeepLabel: '保持打开的标签页数',
-  autoCloseKeepDesc: '所有普通窗口合计要保留的目标标签页数（默认 12）。',
+  autoCloseKeepDesc: '所有窗口中普通标签页的保留目标数（默认 12）。固定和分组标签页不计入此数。',
   autoCloseLogTitle: '最近 48 小时关闭的标签页（{n}）',
   autoCloseLogEmpty: '暂无自动关闭的标签页。',
   autoCloseIndexed: '已收录——可在 SpotRecall 中搜到。',

@@ -400,6 +400,254 @@ const PROMO_LOCALES = {
   },
 };
 
+// Per-locale copy for screenshots 2–5.
+// screenshot-2: semantic / cross-lingual search demo.
+const SCREENSHOT_2_LOCALES = {
+  en: {
+    h: 'Search by meaning —<br/>across languages',
+    p: 'Type in English, find that Japanese page. An on-device model understands intent and bridges languages.',
+    query: 'air conditioner installation', mode: 'Semantic',
+  },
+  ar: {
+    h: 'ابحث بالمعنى —<br/>عبر اللغات',
+    p: 'اكتب بالعربية وابحث في الصفحات اليابانية. نموذج على جهازك يفهم القصد ويعبر الحواجز اللغوية.',
+    query: 'تركيب مكيف هواء', mode: 'دلالي',
+  },
+  de: {
+    h: 'Suche nach Bedeutung —<br/>sprachübergreifend',
+    p: 'Auf Deutsch suchen, japanische Seite finden. Ein lokales Modell versteht die Absicht und überbrückt Sprachen.',
+    query: 'Klimaanlage Installation', mode: 'Semantisch',
+  },
+  es: {
+    h: 'Busca por significado —<br/>entre idiomas',
+    p: 'Escribe en español, encuentra esa página en japonés. Un modelo en tu dispositivo entiende la intención y cruza idiomas.',
+    query: 'instalación de aire acondicionado', mode: 'Semántico',
+  },
+  fr: {
+    h: 'Cherchez par sens —<br/>entre les langues',
+    p: 'Tapez en français, retrouvez cette page japonaise. Un modèle sur votre appareil comprend l’intention et franchit les barrières linguistiques.',
+    query: 'installation de climatiseur', mode: 'Sémantique',
+  },
+  hi: {
+    h: 'अर्थ से खोजें —<br/>सभी भाषाओं में',
+    p: 'हिंदी में टाइप करें, जापानी पेज खोजें। डिवाइस पर एक मॉडल इरादा समझता है और भाषाओं के बीच सेतु बनाता है।',
+    query: 'एयर कंडीशनर इंस्टॉलेशन', mode: 'सिमेंटिक',
+  },
+  id: {
+    h: 'Cari berdasarkan makna —<br/>lintas bahasa',
+    p: 'Ketik dalam Bahasa Indonesia, temukan halaman Jepang itu. Model di perangkat memahami maksud dan menjembatani bahasa.',
+    query: 'instalasi AC', mode: 'Semantik',
+  },
+  it: {
+    h: 'Cerca per significato —<br/>tra le lingue',
+    p: 'Scrivi in italiano, trova quella pagina giapponese. Un modello sul tuo dispositivo capisce l’intento e supera le barriere linguistiche.',
+    query: 'installazione condizionatore d’aria', mode: 'Semantico',
+  },
+  ja: {
+    h: '意味で検索 —<br/>言語をまたいで',
+    p: '英語で入力して、あの日本語ページを見つける。端末内モデルが意図を理解し、言語の壁を越えます。',
+    query: 'air conditioner installation', mode: 'セマンティック',
+  },
+  ko: {
+    h: '의미로 검색 —<br/>언어를 넘어',
+    p: '한국어로 입력하고 일본어 페이지를 찾으세요. 기기 내 모델이 의도를 이해하고 언어 장벽을 넘습니다.',
+    query: '에어컨 설치', mode: '시맨틱',
+  },
+  nl: {
+    h: 'Zoek op betekenis —<br/>over talen heen',
+    p: 'Typ in het Nederlands, vind die Japanse pagina. Een lokaal model begrijpt de intentie en overbrugt talen.',
+    query: 'airconditioning installatie', mode: 'Semantisch',
+  },
+  pl: {
+    h: 'Szukaj po znaczeniu —<br/>przez języki',
+    p: 'Wpisz po polsku, znajdź tę japońską stronę. Model na urządzeniu rozumie intencję i łączy języki.',
+    query: 'instalacja klimatyzacji', mode: 'Semantyczny',
+  },
+  pt_BR: {
+    h: 'Pesquise por significado —<br/>entre idiomas',
+    p: 'Digite em português, encontre aquela página em japonês. Um modelo no dispositivo entende a intenção e cruza idiomas.',
+    query: 'instalação de ar-condicionado', mode: 'Semântico',
+  },
+  pt_PT: {
+    h: 'Pesquise por significado —<br/>entre línguas',
+    p: 'Escreva em português, encontre essa página em japonês. Um modelo no dispositivo compreende a intenção e cruza idiomas.',
+    query: 'instalação de ar condicionado', mode: 'Semântico',
+  },
+  ru: {
+    h: 'Ищите по смыслу —<br/>между языками',
+    p: 'Введите на русском, найдите ту японскую страницу. Локальная модель понимает намерение и преодолевает языковые барьеры.',
+    query: 'установка кондиционера', mode: 'Семантический',
+  },
+  th: {
+    h: 'ค้นหาตามความหมาย —<br/>ข้ามภาษา',
+    p: 'พิมพ์เป็นภาษาไทย ค้นพบหน้าญี่ปุ่นนั้น โมเดลบนเครื่องเข้าใจเจตนาและเชื่อมต่อข้ามภาษา',
+    query: 'ติดตั้งเครื่องปรับอากาศ', mode: 'ความหมาย',
+  },
+  tr: {
+    h: 'Anlama göre ara —<br/>diller arasında',
+    p: 'Türkçe yaz, o Japonca sayfayı bul. Cihazındaki model niyeti anlayıp diller arasında köprü kurar.',
+    query: 'klima kurulumu', mode: 'Anlamsal',
+  },
+  uk: {
+    h: 'Шукайте за змістом —<br/>між мовами',
+    p: 'Введіть українською, знайдіть ту японську сторінку. Локальна модель розуміє намір і долає мовні бар’єри.',
+    query: 'встановлення кондиціонера', mode: 'Семантичний',
+  },
+  vi: {
+    h: 'Tìm theo nghĩa —<br/>vượt rào ngôn ngữ',
+    p: 'Nhập tiếng Việt, tìm ra trang tiếng Nhật đó. Mô hình ngay trên máy hiểu ý định và vượt rào ngôn ngữ.',
+    query: 'lắp đặt điều hòa không khí', mode: 'Ngữ nghĩa',
+  },
+  zh_CN: {
+    h: '语义搜索 —<br/>跨越语言障碍',
+    p: '用中文输入，找到那个日文页面。设备上的模型理解意图，跨越语言边界。',
+    query: '空调安装', mode: '语义',
+  },
+  zh_TW: {
+    h: '語義搜尋 —<br/>跨越語言障礙',
+    p: '用中文輸入，找到那個日文頁面。裝置上的模型理解意圖，跨越語言界限。',
+    query: '冷氣安裝', mode: '語義',
+  },
+};
+
+// screenshot-3: recent searches / history.
+const SCREENSHOT_3_LOCALES = {
+  en: {
+    h: 'Pick up where<br/>you left off',
+    p: 'Recent searches are one click away — run again, or remove any with a tap.',
+  },
+  ar: {
+    h: 'استأنف من حيث<br/>توقفت',
+    p: 'عمليات البحث الأخيرة على بُعد نقرة واحدة — أعد تشغيلها أو احذف أيًا منها بنقرة.',
+  },
+  de: {
+    h: 'Dort weitermachen,<br/>wo du aufgehört hast',
+    p: 'Letzte Suchanfragen sind einen Klick entfernt — erneut ausführen oder jede per Tipp entfernen.',
+  },
+  es: {
+    h: 'Continúa donde<br/>lo dejaste',
+    p: 'Las búsquedas recientes están a un clic: repítelas o elimina cualquiera con un toque.',
+  },
+  fr: {
+    h: 'Reprenez là<br/>où vous en étiez',
+    p: 'Les recherches récentes sont à un clic — relancez-les ou supprimez-en une d’un tap.',
+  },
+  hi: {
+    h: 'वहीं से शुरू करें<br/>जहाँ छोड़ा था',
+    p: 'हालिया खोजें एक क्लिक दूर हैं — फिर से चलाएँ, या किसी को भी एक टैप में हटाएँ।',
+  },
+  id: {
+    h: 'Lanjutkan dari<br/>tempat Anda berhenti',
+    p: 'Pencarian terbaru hanya satu klik — jalankan lagi, atau hapus salah satunya dengan sentuhan.',
+  },
+  it: {
+    h: 'Riprendi da dove<br/>avevi lasciato',
+    p: 'Le ricerche recenti sono a un clic — ripetile o eliminane una con un tocco.',
+  },
+  ja: {
+    h: '続きから<br/>再開する',
+    p: '最近の検索履歴はワンクリックで — もう一度実行するか、タップで削除できます。',
+  },
+  ko: {
+    h: '멈췄던 곳에서<br/>다시 시작하기',
+    p: '최근 검색은 한 번의 클릭으로 — 다시 실행하거나 탭 하나로 삭제하세요.',
+  },
+  nl: {
+    h: 'Ga verder waar<br/>je gebleven was',
+    p: 'Recente zoekopdrachten zijn één klik weg — voer ze opnieuw uit of verwijder ze met een tik.',
+  },
+  pl: {
+    h: 'Wróć tam,<br/>gdzie skończyłeś',
+    p: 'Ostatnie wyszukiwania są o jedno kliknięcie — uruchom ponownie lub usuń dowolne jednym stuknięciem.',
+  },
+  pt_BR: {
+    h: 'Continue de onde<br/>você parou',
+    p: 'Pesquisas recentes estão a um clique — execute novamente ou remova qualquer uma com um toque.',
+  },
+  pt_PT: {
+    h: 'Continue a partir<br/>de onde ficou',
+    p: 'As pesquisas recentes estão a um clique — execute novamente ou remova qualquer uma com um toque.',
+  },
+  ru: {
+    h: 'Продолжите там,<br/>где остановились',
+    p: 'Последние запросы в одном клике — повторите поиск или удалите любой одним нажатием.',
+  },
+  th: {
+    h: 'ต่อจากที่<br/>คุณค้างไว้',
+    p: 'การค้นหาล่าสุดอยู่แค่คลิกเดียว — ค้นหาอีกครั้งหรือลบออกได้ด้วยการแตะ',
+  },
+  tr: {
+    h: 'Kaldığın yerden<br/>devam et',
+    p: 'Son aramalar tek tıkla — yeniden çalıştır veya herhangi birini bir dokunuşla kaldır.',
+  },
+  uk: {
+    h: 'Продовжте з того<br/>місця, де зупинились',
+    p: 'Останні запити за один клік — повторіть пошук або видаліть будь-який одним дотиком.',
+  },
+  vi: {
+    h: 'Tiếp tục từ nơi<br/>bạn đã dừng',
+    p: 'Tìm kiếm gần đây chỉ một cú nhấp — chạy lại hoặc xóa bất kỳ tìm kiếm nào bằng một chạm.',
+  },
+  zh_CN: {
+    h: '从上次离开<br/>的地方继续',
+    p: '最近搜索一键即达 — 重新运行，或轻触删除任意一条。',
+  },
+  zh_TW: {
+    h: '從上次離開<br/>的地方繼續',
+    p: '最近搜尋一鍵即達 — 重新執行，或輕觸刪除任意一條。',
+  },
+};
+
+// screenshot-4: time-grouped recent pages.
+const SCREENSHOT_4_LOCALES = {
+  en:    { h: 'Your recent pages,<br/>grouped by time',        p: 'Reopen anything from today, yesterday, or earlier — with a content preview, not a cryptic URL.', today: 'Today',    yesterday: 'Yesterday' },
+  ar:    { h: 'صفحاتك الأخيرة<br/>مجمّعة حسب الوقت',          p: 'أعد فتح أي شيء من اليوم أو الأمس أو قبل ذلك — مع معاينة للمحتوى، لا رابط مشفّر.',              today: 'اليوم',    yesterday: 'أمس' },
+  de:    { h: 'Deine letzten Seiten,<br/>nach Zeit gruppiert',  p: 'Öffne alles von heute, gestern oder früher wieder — mit einer Inhaltsvorschau, nicht einer kryptischen URL.',   today: 'Heute',    yesterday: 'Gestern' },
+  es:    { h: 'Tus páginas recientes,<br/>agrupadas por tiempo', p: 'Vuelve a abrir cualquier cosa de hoy, ayer o antes — con vista previa del contenido, no una URL críptica.',    today: 'Hoy',      yesterday: 'Ayer' },
+  fr:    { h: 'Vos pages récentes,<br/>groupées par temps',     p: 'Rouvrez n’importe quoi d’aujourd’hui, d’hier ou d’avant — avec un aperçu du contenu, pas une URL cryptique.',  today: 'Aujourd’hui', yesterday: 'Hier' },
+  hi:    { h: 'आपके हालिया पेज,<br/>समय के अनुसार',            p: 'आज, कल या उससे पहले का कुछ भी फिर खोलें — सामग्री पूर्वावलोकन के साथ, न कि किसी अस्पष्ट URL से।',       today: 'आज',      yesterday: 'कल' },
+  id:    { h: 'Halaman terbaru Anda,<br/>dikelompokkan berdasarkan waktu', p: 'Buka kembali apa pun dari hari ini, kemarin, atau sebelumnya — dengan pratinjau konten, bukan URL yang membingungkan.', today: 'Hari Ini', yesterday: 'Kemarin' },
+  it:    { h: 'Le tue pagine recenti,<br/>raggruppate per tempo', p: 'Riapri qualsiasi cosa di oggi, ieri o prima — con un’anteprima del contenuto, non un URL criptico.',        today: 'Oggi',     yesterday: 'Ieri' },
+  ja:    { h: '最近のページを<br/>時間別に整理',                  p: '今日、昨日、それ以前のページをいつでも再表示 — 謎めいたURLではなく、コンテンツのプレビューで。',               today: '今日',    yesterday: '昨日' },
+  ko:    { h: '최근 페이지를<br/>시간별로 묶어보기',              p: '오늘, 어제, 또는 그 이전 것을 언제든 다시 열기 — 알 수 없는 URL이 아니라 콘텐츠 미리보기로.',              today: '오늘',    yesterday: '어제' },
+  nl:    { h: 'Je recente pagina\'s,<br/>gegroepeerd op tijd',  p: 'Heropen alles van vandaag, gisteren of eerder — met een inhoudsvoorbeeld, niet een cryptische URL.',          today: 'Vandaag',  yesterday: 'Gisteren' },
+  pl:    { h: 'Twoje ostatnie strony,<br/>pogrupowane czasowo', p: 'Otwórz ponownie cokolwiek z dzisiaj, wczoraj lub wcześniej — z podglądem treści, nie tajemniczym adresem URL.', today: 'Dzisiaj', yesterday: 'Wczoraj' },
+  pt_BR: { h: 'Suas páginas recentes,<br/>agrupadas por tempo', p: 'Reabra qualquer coisa de hoje, ontem ou antes — com uma prévia do conteúdo, não uma URL enigmática.',         today: 'Hoje',     yesterday: 'Ontem' },
+  pt_PT: { h: 'As suas páginas recentes,<br/>agrupadas por tempo', p: 'Reabra qualquer coisa de hoje, ontem ou antes — com uma pré-visualização do conteúdo, não um URL enigmático.', today: 'Hoje',  yesterday: 'Ontem' },
+  ru:    { h: 'Ваши последние страницы,<br/>сгруппированные по времени', p: 'Откройте заново что угодно: сегодня, вчера или раньше — с предпросмотром содержимого, не загадочным URL.', today: 'Сегодня', yesterday: 'Вчера' },
+  th:    { h: 'หน้าเว็บล่าสุดของคุณ<br/>จัดกลุ่มตามเวลา',       p: 'เปิดอีกครั้งสิ่งใดก็ตามจากวันนี้ เมื่อวาน หรือก่อนหน้า — พร้อมตัวอย่างเนื้อหา ไม่ใช่ URL ที่อ่านยาก',  today: 'วันนี้',  yesterday: 'เมื่อวาน' },
+  tr:    { h: 'Son sayfaların,<br/>zamana göre gruplandı',      p: 'Bugün, dün veya öncesinden herhangi bir şeyi yeniden aç — gizemli bir URL değil, içerik önizlemesiyle.',      today: 'Bugün',    yesterday: 'Dün' },
+  uk:    { h: 'Ваші останні сторінки,<br/>згруповані за часом', p: 'Відкрийте знову будь-що: сьогодні, вчора або раніше — із переглядом вмісту, а не загадковим URL.',           today: 'Сьогодні', yesterday: 'Вчора' },
+  vi:    { h: 'Các trang gần đây của bạn,<br/>nhóm theo thời gian', p: 'Mở lại bất kỳ thứ gì từ hôm nay, hôm qua hoặc trước đó — với bản xem trước nội dung, không phải URL khó hiểu.', today: 'Hôm nay', yesterday: 'Hôm qua' },
+  zh_CN: { h: '最近访问的页面，<br/>按时间分组',                   p: '重新打开今天、昨天或更早的任何内容 — 有内容预览，而非晦涩的 URL。',                                          today: '今天',    yesterday: '昨天' },
+  zh_TW: { h: '最近造訪的頁面，<br/>依時間分組',                   p: '重新開啟今天、昨天或更早的任何內容 — 有內容預覽，而非難解的 URL。',                                          today: '今天',    yesterday: '昨天' },
+};
+
+// screenshot-5: privacy / on-device.
+const SCREENSHOT_5_LOCALES = {
+  en:    { h: 'Private by design.<br/>Nothing leaves<br/>your device.',          p: 'No cloud, no account, no tracking. Fully offline after a one-time setup. Open source.',                                              badge: '100% on-device' },
+  ar:    { h: 'خصوصية بالتصميم.<br/>لا شيء يغادر<br/>جهازك.',                   p: 'لا سحابة، لا حساب، لا تتبع. يعمل بالكامل دون اتصال بعد إعداد لمرة واحدة. مفتوح المصدر.',                                         badge: '100% على الجهاز' },
+  de:    { h: 'Privat by Design.<br/>Nichts verlässt<br/>dein Gerät.',           p: 'Keine Cloud, kein Konto, kein Tracking. Vollständig offline nach einmaliger Einrichtung. Open Source.',                              badge: '100% auf dem Gerät' },
+  es:    { h: 'Privado por diseño.<br/>Nada sale<br/>de tu dispositivo.',        p: 'Sin nube, sin cuenta, sin rastreo. Totalmente sin conexión tras una configuración inicial. Código abierto.',                         badge: '100% en el dispositivo' },
+  fr:    { h: 'Privé par conception.<br/>Rien ne quitte<br/>votre appareil.',   p: 'Pas de cloud, pas de compte, pas de suivi. Entièrement hors ligne après une configuration unique. Open source.',                    badge: '100 % sur l’appareil' },
+  hi:    { h: 'डिज़ाइन से निजी।<br/>कुछ भी आपका<br/>डिवाइस नहीं छोड़ता।',      p: 'न क्लाउड, न अकाउंट, न ट्रैकिंग। एक बार सेटअप के बाद पूरी तरह ऑफ़लाइन। ओपन सोर्स।',                                          badge: '100% डिवाइस पर' },
+  id:    { h: 'Privat berdasarkan desain.<br/>Tidak ada yang<br/>meninggalkan perangkat.', p: 'Tanpa cloud, tanpa akun, tanpa pelacakan. Sepenuhnya offline setelah pengaturan satu kali. Open source.',                  badge: '100% di perangkat' },
+  it:    { h: 'Privato per design.<br/>Nulla lascia<br/>il tuo dispositivo.',   p: 'Nessun cloud, nessun account, nessun tracciamento. Completamente offline dopo una configurazione una tantum. Open source.',           badge: '100% sul dispositivo' },
+  ja:    { h: '設計からプライベート。<br/>何もあなたの<br/>デバイスを離れない。', p: 'クラウドなし、アカウントなし、追跡なし。一度の設定後は完全オフライン。オープンソース。',                                           badge: '100% オンデバイス' },
+  ko:    { h: '설계부터 비공개.<br/>아무것도 기기를<br/>떠나지 않습니다.',       p: '클라우드 없음, 계정 없음, 추적 없음. 한 번 설정 후 완전 오프라인. 오픈 소스.',                                                   badge: '100% 기기 내' },
+  nl:    { h: 'Privé by design.<br/>Niets verlaat<br/>je apparaat.',            p: 'Geen cloud, geen account, geen tracking. Volledig offline na eenmalige instelling. Open source.',                                      badge: '100% op het apparaat' },
+  pl:    { h: 'Prywatny z założenia.<br/>Nic nie opuszcza<br/>Twojego urządzenia.', p: 'Bez chmury, bez konta, bez śledzenia. W pełni offline po jednorazowej konfiguracji. Open source.',                              badge: '100% na urządzeniu' },
+  pt_BR: { h: 'Privado por design.<br/>Nada sai<br/>do seu dispositivo.',       p: 'Sem nuvem, sem conta, sem rastreamento. Totalmente offline após uma configuração única. Código aberto.',                              badge: '100% no dispositivo' },
+  pt_PT: { h: 'Privado por design.<br/>Nada sai<br/>do seu dispositivo.',       p: 'Sem cloud, sem conta, sem rastreamento. Totalmente offline após uma configuração única. Open source.',                                 badge: '100% no dispositivo' },
+  ru:    { h: 'Приватный по замыслу.<br/>Ничто не покидает<br/>ваше устройство.', p: 'Без облака, без аккаунта, без слежки. Полностью офлайн после единоразовой настройки. Открытый исходный код.',                    badge: '100% на устройстве' },
+  th:    { h: 'ออกแบบมาเพื่อความเป็นส่วนตัว<br/>ไม่มีข้อมูลใด<br/>ออกจากเครื่องคุณ', p: 'ไม่มีคลาวด์ ไม่มีบัญชี ไม่มีการติดตาม ออฟไลน์สมบูรณ์หลังตั้งค่าครั้งเดียว โอเพ่นซอร์ส',                            badge: '100% บนเครื่อง' },
+  tr:    { h: 'Tasarımdan gelen gizlilik.<br/>Hiçbir şey<br/>cihazını terk etmez.', p: 'Bulut yok, hesap yok, takip yok. Tek seferlik kurulumdan sonra tamamen çevrimdışı. Açık kaynak.',                              badge: '100% cihazda' },
+  uk:    { h: 'Приватний за задумом.<br/>Ніщо не покидає<br/>ваш пристрій.',    p: 'Без хмари, без облікового запису, без стеження. Повністю офлайн після одноразового налаштування. Відкритий код.',                   badge: '100% на пристрої' },
+  vi:    { h: 'Riêng tư theo thiết kế.<br/>Không có gì rời<br/>khỏi thiết bị của bạn.', p: 'Không cloud, không tài khoản, không theo dõi. Hoàn toàn ngoại tuyến sau một lần thiết lập. Mã nguồn mở.',               badge: '100% trên thiết bị' },
+  zh_CN: { h: '隐私优先设计。<br/>任何数据都不<br/>离开你的设备。',               p: '无云端，无账号，无追踪。一次设置后完全离线运行。开放源代码。',                                                                     badge: '100% 本地运行' },
+  zh_TW: { h: '隱私優先設計。<br/>任何資料都不<br/>離開你的裝置。',               p: '無雲端，無帳號，無追蹤。一次設定後完全離線執行。開放原始碼。',                                                                      badge: '100% 本機運行' },
+};
+
 // Japanese pages — used only in the cross-lingual scene.
 const AC1 = { l: 'a', c: '#ff9900', title: "Amazon | 【標準取付工事費込み】COMFEE' エアコン 6畳 2.2kw", snippet: '大風量快適 冷暖房 静音 除湿 内部清浄 ルームエアコン 上下ルーバー 一人暮らし 保証1年', time: '7 min ago' };
 const AC2 = { l: 'a', c: '#ff9900', title: "Amazon.co.jp: [2026年モデル] COMFEE' エアコン 10畳", snippet: 'オンライン通販のAmazon公式サイトなら COMFEE インバーター冷暖房 省エネ 6畳〜10畳', time: '8 min ago' };
@@ -486,6 +734,94 @@ for (const [locale, copy] of Object.entries(SCREENSHOT_1_LOCALES)) {
         mode: copy.mode,
         openPanel: copy.openPanel,
         indexed: copy.indexed,
+        sections: [{ rows: ENG_ROWS }],
+      })}</div>`,
+      RTL.has(locale),
+    ),
+  });
+}
+
+// Language-matched screenshots 2–5 per locale.
+for (const [locale, copy] of Object.entries(SCREENSHOT_2_LOCALES)) {
+  const s1 = SCREENSHOT_1_LOCALES[locale];
+  outputs.push({
+    name: `localized/${locale}/screenshot-2`,
+    w: 1280,
+    h: 800,
+    html: doc(
+      SHOT_CSS,
+      `<div class="copy"><div class="brandbar"><img src="${ICON}"/><b>SpotRecall</b></div><h1>${lines(copy.h)}</h1><p>${lines(copy.p)}</p></div><div class="stage">${palette({
+        value: copy.query,
+        mode: copy.mode,
+        openPanel: s1.openPanel,
+        indexed: s1.indexed,
+        sections: [{ rows: [AC1, AC2, KAK] }],
+      })}</div>`,
+      RTL.has(locale),
+    ),
+  });
+}
+
+for (const [locale, copy] of Object.entries(SCREENSHOT_3_LOCALES)) {
+  const s1 = SCREENSHOT_1_LOCALES[locale];
+  outputs.push({
+    name: `localized/${locale}/screenshot-3`,
+    w: 1280,
+    h: 800,
+    html: doc(
+      SHOT_CSS,
+      `<div class="copy"><div class="brandbar"><img src="${ICON}"/><b>SpotRecall</b></div><h1>${lines(copy.h)}</h1><p>${lines(copy.p)}</p></div><div class="stage">${palette({
+        openPanel: s1.openPanel,
+        indexed: s1.indexed,
+        hist: [
+          'noise cancelling headphones',
+          'flexbox center a div',
+          'chrome web store review time',
+          'typescript satisfies operator',
+          'best ramen near me',
+        ],
+        sections: [],
+      })}</div>`,
+      RTL.has(locale),
+    ),
+  });
+}
+
+for (const [locale, copy] of Object.entries(SCREENSHOT_4_LOCALES)) {
+  const s1 = SCREENSHOT_1_LOCALES[locale];
+  outputs.push({
+    name: `localized/${locale}/screenshot-4`,
+    w: 1280,
+    h: 800,
+    html: doc(
+      SHOT_CSS,
+      `<div class="copy"><div class="brandbar"><img src="${ICON}"/><b>SpotRecall</b></div><h1>${lines(copy.h)}</h1><p>${lines(copy.p)}</p></div><div class="stage">${palette({
+        openPanel: s1.openPanel,
+        indexed: s1.indexed,
+        sections: [
+          { label: copy.today, rows: [CART, VERGE] },
+          { label: copy.yesterday, rows: [WIRE] },
+        ],
+      })}</div>`,
+      RTL.has(locale),
+    ),
+  });
+}
+
+for (const [locale, copy] of Object.entries(SCREENSHOT_5_LOCALES)) {
+  const s1 = SCREENSHOT_1_LOCALES[locale];
+  outputs.push({
+    name: `localized/${locale}/screenshot-5`,
+    w: 1280,
+    h: 800,
+    html: doc(
+      SHOT_CSS,
+      `<div class="copy"><div class="brandbar"><img src="${ICON}"/><b>SpotRecall</b></div><h1>${lines(copy.h)}</h1><p>${lines(copy.p)}</p></div><div class="stage">${palette({
+        value: s1.query,
+        mode: s1.mode,
+        openPanel: s1.openPanel,
+        indexed: s1.indexed,
+        badge: copy.badge,
         sections: [{ rows: ENG_ROWS }],
       })}</div>`,
       RTL.has(locale),
