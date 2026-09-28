@@ -96,6 +96,7 @@ function computeMetrics(events: EventRecord[]): Metrics {
 
 function App() {
   const { lang, setLang, t } = useI18n();
+  const version = chrome.runtime.getManifest().version;
   const [s, setS] = useState<Settings | null>(null);
   const [blacklistText, setBlacklistText] = useState('');
   const [keepInput, setKeepInput] = useState('');
@@ -386,6 +387,7 @@ function App() {
       </div>
 
       {busy && <p class="note" style="text-align:center">{busy}</p>}
+      <div class="version-bar">{t('versionLabel', { version })}</div>
     </div>
   );
 }
