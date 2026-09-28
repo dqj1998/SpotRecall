@@ -141,7 +141,10 @@ function App() {
       const st = await send<ModelStatus | null>({ type: 'GET_MODEL_STATUS' });
       if (st) setModel(st);
     }, 1000);
-    return () => clearInterval(iv);
+    // Chrome reuses the options tab on openOptionsPage(); reload data when tab regains focus.
+    const onVisible = () => { if (document.visibilityState === 'visible') void load(); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => { clearInterval(iv); document.removeEventListener('visibilitychange', onVisible); };
   }, []);
 
   useEffect(() => {
