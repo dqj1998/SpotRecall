@@ -38,6 +38,7 @@ export const AC_DEFAULTS = {
   signalQueryCap: 5,
   signalTitleCap: 5,
   captureCap: 15, // max never-committed tabs to force-capture per tick
+  captureMaxAttempts: 3, // give up forcing capture after this many ticks, then close
 } as const;
 
 // ---- pure decision layer (no chrome.*) ----
@@ -53,6 +54,18 @@ export interface TabInfo {
   internal: boolean; // chrome://, extension pages, newtab, etc.
   /** Page has unsaved form input (user typed but didn't submit) — never close. */
   hasFormInput: boolean;
+  /**
+   * Chrome discarded the renderer (low-memory eviction). The content script is
+   * dead so FORCE_CAPTURE will always silently fail. Treat as thin/closeable
+   * directly rather than looping capture indefinitely.
+   */
+  discarded: boolean;
+  /**
+   * How many ticks we have already sent FORCE_CAPTURE to this tab without it
+   * committing. Bounds the retry so a permanently uncapturable tab (CSP, no
+   * content script, opened before install) cannot block the overflow forever.
+   */
+  captureAttempts: number;
   recordId: string;
   committed: boolean; // record committed with non-empty cleanText
   cleanTextLen: number;
@@ -68,6 +81,7 @@ export interface AutoCloseSettings {
   tauMs: number;
   wRelevance: number;
   wFreshness: number;
+  captureMaxAttempts: number;
 }
 
 export interface AutoCloseContext {
@@ -142,8 +156,17 @@ export function selectTabsToClose(
       const keepScore =
         rel === undefined ? fresh : s.wRelevance * ((rel + 1) / 2) + s.wFreshness * fresh;
       cands.push({ tabId: t.tabId, windowId: t.windowId, thin, capturable: false, keepScore });
-    } else if (now - t.lastActive > s.overAgeMs) {
-      // Uncapturable-so-far & very old: treat as empty, close directly.
+    } else if (now - t.lastActive > s.overAgeMs || t.discarded) {
+      // Close directly when: (a) never captured & very old, OR (b) Chrome
+      // discarded the renderer — the content script is dead so FORCE_CAPTURE
+      // would loop silently forever; closing is safe because a discarded tab
+      // has no live renderer state to lose.
+      cands.push({ tabId: t.tabId, windowId: t.windowId, thin: true, capturable: false, keepScore: fresh });
+    } else if (t.captureAttempts >= s.captureMaxAttempts) {
+      // FORCE_CAPTURE has been sent this many ticks with no commit: the content
+      // script is absent or blocked (CSP, pre-install tab). Stop retrying and
+      // close. Safe because the provisional record (url + title) outlives the
+      // tab — handleTabRemoved no longer GCs it — so the page stays searchable.
       cands.push({ tabId: t.tabId, windowId: t.windowId, thin: true, capturable: false, keepScore: fresh });
     } else {
       // Never committed but inactive: index it first, then close on a later tick.
@@ -190,6 +213,7 @@ const SS = {
   recentOpened: 'ac_recentOpened',
   sessionStart: 'ac_sessionStart',
   formDirty: 'ac_formDirty',
+  captureAttempts: 'ac_captureAttempts',
 } as const;
 
 async function ssGet<T>(key: string, fallback: T): Promise<T> {
@@ -237,6 +261,11 @@ export async function forgetTab(tabId: number): Promise<void> {
   if (tabId in m) {
     delete m[tabId];
     await ssSet(SS.lastActive, m);
+  }
+  const att = await ssGet<Record<string, number>>(SS.captureAttempts, {});
+  if (tabId in att) {
+    delete att[tabId];
+    await ssSet(SS.captureAttempts, att);
   }
   await clearFormDirty(tabId);
 }
@@ -313,6 +342,7 @@ export async function runAutoClose(): Promise<void> {
     tauMs: AC_DEFAULTS.tauMs,
     wRelevance: AC_DEFAULTS.wRelevance,
     wFreshness: AC_DEFAULTS.wFreshness,
+    captureMaxAttempts: AC_DEFAULTS.captureMaxAttempts,
   };
 
   const liveTabs = await chrome.tabs.query({});
@@ -320,6 +350,7 @@ export async function runAutoClose(): Promise<void> {
   const recMap = new Map(records.map((r) => [r.id, r]));
   const lastActive = await ssGet<Record<string, number>>(SS.lastActive, {});
   const formDirty = await ssGet<Record<string, true>>(SS.formDirty, {});
+  const captureAttempts = await ssGet<Record<string, number>>(SS.captureAttempts, {});
 
   const tabInfos: TabInfo[] = [];
   const tabById = new Map<number, chrome.tabs.Tab>();
@@ -344,6 +375,8 @@ export async function runAutoClose(): Promise<void> {
       incognito: !!tab.incognito,
       internal,
       hasFormInput: !!formDirty[tab.id],
+      discarded: !!(tab as chrome.tabs.Tab & { discarded?: boolean }).discarded,
+      captureAttempts: captureAttempts[tab.id] ?? 0,
       recordId,
       committed: !!rec && rec.status === 'committed' && rec.cleanText.length > 0,
       cleanTextLen: rec?.cleanText.length ?? 0,
@@ -382,10 +415,15 @@ export async function runAutoClose(): Promise<void> {
 
   // Force-capture never-committed inactive tabs so they become indexed (and thus
   // closable on a later tick), rather than waiting for the 24h over-age fallback.
-  // Best-effort: needs a live content script; discarded/uncapturable tabs simply
-  // stay until they age out. Capped per tick to smooth CPU.
-  for (const id of decision.capture.slice(0, AC_DEFAULTS.captureCap)) {
-    chrome.tabs.sendMessage(id, { type: 'FORCE_CAPTURE' }).catch(() => {});
+  // Each attempt is counted: after captureMaxAttempts the tab is reclassified as
+  // closeable, so an uncapturable tab can no longer occupy the overflow forever.
+  const attempted = decision.capture.slice(0, AC_DEFAULTS.captureCap);
+  if (attempted.length) {
+    for (const id of attempted) {
+      chrome.tabs.sendMessage(id, { type: 'FORCE_CAPTURE' }).catch(() => {});
+    }
+    for (const id of attempted) captureAttempts[id] = (captureAttempts[id] ?? 0) + 1;
+    await ssSet(SS.captureAttempts, captureAttempts);
   }
 
   if (!decision.close.length) return;

@@ -19,6 +19,7 @@ function settings(keep: number): AutoCloseSettings {
     tauMs: AC_DEFAULTS.tauMs,
     wRelevance: AC_DEFAULTS.wRelevance,
     wFreshness: AC_DEFAULTS.wFreshness,
+    captureMaxAttempts: AC_DEFAULTS.captureMaxAttempts,
   };
 }
 
@@ -35,6 +36,8 @@ function tab(over: Partial<TabInfo> = {}): TabInfo {
     incognito: false,
     internal: false,
     hasFormInput: false,
+    discarded: false,
+    captureAttempts: 0,
     recordId: `r${seq}`,
     committed: true,
     cleanTextLen: 500,
@@ -157,6 +160,74 @@ describe('selectTabsToClose (autoclose-plan v2, R6 contracts)', () => {
     const out = selectTabsToClose([anchor, young, old], settings(1), { now: NOW, withinGrace: false });
     expect(out.close).toEqual([old.tabId]); // thin (over-age) first
     expect(out.capture).toEqual([young.tabId]); // indexed before closing later
+  });
+
+  it('closes discarded uncommitted tabs directly (FORCE_CAPTURE would loop forever on dead renderer)', () => {
+    const anchor = tab({ active: true });
+    // discarded: content script dead, FORCE_CAPTURE cannot succeed
+    const discarded = tab({ committed: false, cleanTextLen: 0, lastActive: OLD, discarded: true });
+    const live = tab({ committed: false, cleanTextLen: 0, lastActive: OLD, discarded: false });
+    // keep=1, total=3 -> overflow 2
+    const out = selectTabsToClose([anchor, discarded, live], settings(1), { now: NOW, withinGrace: false });
+    // discarded tab treated as thin -> goes to close, not capture
+    expect(out.close).toContain(discarded.tabId);
+    expect(out.capture).toContain(live.tabId);
+    expect(out.capture).not.toContain(discarded.tabId);
+  });
+
+  it('retries capture while under the attempt budget (preserves full-text indexing)', () => {
+    // A capturable-but-not-yet-committed tab must be indexed before it is closed,
+    // otherwise auto-close would silently degrade the index to url+title only.
+    const anchor = tab({ active: true });
+    const liveCapturable = Array.from({ length: 13 }, () =>
+      tab({ committed: false, cleanTextLen: 0, lastActive: OLD, captureAttempts: 0 }),
+    );
+    const out = selectTabsToClose([anchor, ...liveCapturable], settings(12), {
+      now: NOW,
+      withinGrace: false,
+    });
+    expect(out.capture.length).toBe(2); // overflow=2, both get a capture attempt
+    expect(out.close.length).toBe(0); // nothing closed yet — capture comes first
+  });
+
+  it('closes uncommitted tabs once the capture-attempt budget is exhausted', () => {
+    // Contract: FORCE_CAPTURE failing forever (CSP / no content script / tab opened
+    // before install) must NOT wedge auto-close. After captureMaxAttempts ticks the
+    // tab is reclassified as closeable so the keep limit is actually enforced.
+    const anchor = tab({ active: true });
+    const exhausted = Array.from({ length: 13 }, () =>
+      tab({
+        committed: false,
+        cleanTextLen: 0,
+        lastActive: OLD,
+        captureAttempts: AC_DEFAULTS.captureMaxAttempts,
+      }),
+    );
+    const out = selectTabsToClose([anchor, ...exhausted], settings(12), {
+      now: NOW,
+      withinGrace: false,
+    });
+    expect(out.close.length).toBe(2); // overflow=2 actually closed
+    expect(out.capture.length).toBe(0); // no more pointless capture attempts
+  });
+
+  it('does not close an uncommitted tab one attempt short of the budget', () => {
+    // Boundary: the budget is a >= comparison, so attempts = max-1 must still capture.
+    const anchor = tab({ active: true });
+    const almost = Array.from({ length: 13 }, () =>
+      tab({
+        committed: false,
+        cleanTextLen: 0,
+        lastActive: OLD,
+        captureAttempts: AC_DEFAULTS.captureMaxAttempts - 1,
+      }),
+    );
+    const out = selectTabsToClose([anchor, ...almost], settings(12), {
+      now: NOW,
+      withinGrace: false,
+    });
+    expect(out.capture.length).toBe(2);
+    expect(out.close.length).toBe(0);
   });
 
   it('among substantive tabs, closes the least relevant first', () => {

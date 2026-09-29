@@ -52,6 +52,13 @@ import type { SearchResponse } from '@shared/protocol';
 
 // ---------- startup ----------
 async function bootstrap(): Promise<void> {
+  // Register the heartbeat FIRST, before anything that can throw. Everything
+  // below touches IndexedDB, and a single failure there (corruption, quota,
+  // version mismatch) would otherwise abort bootstrap before the alarm exists —
+  // leaving no periodic tick, hence no maintenance and no auto-close, with no
+  // path to self-heal until reinstall. create() is idempotent per name.
+  chrome.alarms.create('maintenance', { periodInMinutes: 1 });
+
   // Ask for persistent storage; record the REAL result (false is not a failure).
   try {
     const granted = await navigator.storage?.persist?.();
@@ -79,7 +86,6 @@ async function bootstrap(): Promise<void> {
     await setMeta('backfillMetaV1', true);
   }
 
-  chrome.alarms.create('maintenance', { periodInMinutes: 1 });
   // Returning users with semantic enabled: warm the model (from cache, offline).
   if (await isSemanticEnabled()) {
     void ensureOffscreen().then(() => ensureModel()).catch(() => {});

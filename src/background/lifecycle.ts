@@ -156,7 +156,10 @@ export async function purgeBuiltinJunk(): Promise<string[]> {
 }
 
 export async function handleTabRemoved(tabId: number): Promise<void> {
-  await gcAll(releaseTab(tabId));
+  releaseTab(tabId);
+  // Intentionally do NOT gcAll here: provisional records (url + title +
+  // description) survive tab close so they remain keyword-searchable.
+  // enforceRetention (LRU, runs every maintenance tick) handles the purge.
 }
 
 export async function handleFrameGone(tabId: number, frameId: number): Promise<void> {
