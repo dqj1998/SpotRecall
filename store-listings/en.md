@@ -6,9 +6,6 @@ SpotRecall - AI Search for Your Browsing History
 ## Short description
 Search your browsing history by meaning or keyword. The AI runs on your device; your pages and queries never leave it.
 
-## What's new in 1.1.0
-Keep tabs tidy without losing what matters. After you opt in, SpotRecall can close inactive tabs over your chosen limit while keeping indexed pages searchable. It never closes active, pinned, grouped, audible, or form-filled tabs, and never empties a window. Review and reopen tabs closed in the last 48 hours. Bookmark ranking, duplicate-result cleanup, and model-download recovery are also improved.
-
 ## Detailed description
 Find the page you remember without digging through browser history. Search by exact keyword or meaning from Cmd/Ctrl+Shift+K.
 

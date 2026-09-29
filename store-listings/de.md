@@ -6,9 +6,6 @@ SpotRecall - KI-Suche in deinem Browserverlauf
 ## Short description
 Durchsuche deinen Browserverlauf nach Bedeutung oder Stichwort. Die KI läuft auf deinem Gerät; Seiten und Suchanfragen verlassen es nicht.
 
-## What's new in 1.1.0
-Halte Tabs ordentlich, ohne Wichtiges zu verlieren. Nach deiner Aktivierung schließt SpotRecall inaktive Tabs über deinem Grenzwert, während indexierte Seiten durchsuchbar bleiben. Aktive, angeheftete, gruppierte, hörbare oder noch ausgefüllte Tabs werden nie geschlossen; ein Fenster wird nie geleert. Prüfe und öffne Tabs der letzten 48 Stunden erneut. Lesezeichen-Ranking, Dublettenbereinigung und Modell-Download-Wiederherstellung wurden ebenfalls verbessert.
-
 ## Detailed description
 Finde die Seite wieder, an die du dich erinnerst, ohne den Browserverlauf zu durchforsten. Suche mit Cmd/Ctrl+Shift+K nach exakten Begriffen oder Bedeutung.
 

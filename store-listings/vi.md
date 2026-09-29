@@ -6,9 +6,6 @@ SpotRecall - Tìm kiếm lịch sử duyệt web bằng AI
 ## Short description
 Tìm lịch sử duyệt web theo ý nghĩa hoặc từ khóa. AI chạy trên thiết bị; trang và truy vấn của bạn không rời khỏi thiết bị.
 
-## What's new in 1.1.0
-Giữ các thẻ gọn gàng mà không mất nội dung quan trọng. Sau khi bật, SpotRecall có thể đóng các thẻ không hoạt động vượt quá giới hạn bạn chọn trong khi các trang đã lập chỉ mục vẫn tìm được. Không bao giờ đóng thẻ đang hoạt động, ghim, nhóm, phát âm thanh hoặc có biểu mẫu chưa lưu, và không bao giờ làm trống cửa sổ. Xem lại và mở lại thẻ đã đóng trong 48 giờ qua. Xếp hạng dấu trang, dọn kết quả trùng lặp và khôi phục tải mô hình cũng được cải thiện.
-
 ## Detailed description
 Tìm lại trang bạn nhớ mà không cần đào lịch sử trình duyệt. Tìm từ chính xác hoặc theo ý nghĩa bằng Cmd/Ctrl+Shift+K.
 

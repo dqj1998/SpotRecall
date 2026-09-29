@@ -6,9 +6,6 @@ SpotRecall - Tarama geçmişinde yapay zeka ile arama
 ## Short description
 Tarama geçmişinizi anlam veya anahtar kelimeyle arayın. Yapay zeka cihazınızda çalışır; sayfalarınız ve sorgularınız cihazdan çıkmaz.
 
-## What's new in 1.1.0
-Önemli şeyleri kaybetmeden sekmeleri düzenli tutun. Etkinleştirdikten sonra SpotRecall, belirlediğiniz sınırın üzerindeki etkin olmayan sekmeleri kapatabilir ve dizine eklenmiş sayfaları aranabilir tutar. Etkin, sabitlenmiş, gruplandırılmış, sesli veya kaydedilmemiş form içeren sekmeleri asla kapatmaz ve bir pencereyi boşaltmaz. Son 48 saatte kapatılan sekmeleri inceleyip yeniden açın. Yer imi sıralaması, yinelenen sonuç temizliği ve model indirme kurtarması da iyileştirildi.
-
 ## Detailed description
 Tarayıcı geçmişini kazımadan hatırladığınız sayfayı bulun. Cmd/Ctrl+Shift+K ile tam kelime veya anlam arayın.
 

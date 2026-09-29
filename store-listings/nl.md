@@ -6,9 +6,6 @@ SpotRecall - AI-zoekfunctie voor je browsegeschiedenis
 ## Short description
 Doorzoek je browsegeschiedenis op betekenis of trefwoord. De AI draait op je apparaat; pagina's en zoekopdrachten verlaten het niet.
 
-## What's new in 1.1.0
-Houd tabbladen netjes zonder belangrijke zaken te verliezen. Na inschakeling kan SpotRecall inactieve tabbladen boven je limiet sluiten terwijl geïndexeerde pagina's doorzoekbaar blijven. Actieve, vastgezette, gegroepeerde, hoorbare of niet-opgeslagen formulier-tabbladen worden nooit gesloten en een venster wordt nooit leeggemaakt. Bekijk en heropen tabbladen die in de afgelopen 48 uur zijn gesloten. Ook de bladwijzerrangschikking, dubbele resultaten en het herstel van modeldownloads zijn verbeterd.
-
 ## Detailed description
 Vind de pagina die je je herinnert zonder door de browsergeschiedenis te graven. Zoek met Cmd/Ctrl+Shift+K op exact woord of betekenis.
 

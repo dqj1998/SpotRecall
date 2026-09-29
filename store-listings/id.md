@@ -6,9 +6,6 @@ SpotRecall - Pencarian AI untuk Riwayat Penjelajahan
 ## Short description
 Cari riwayat penjelajahan berdasarkan makna atau kata kunci. AI berjalan di perangkat Anda; halaman dan kueri Anda tidak keluar dari perangkat.
 
-## What's new in 1.1.0
-Rapikan tab tanpa kehilangan hal penting. Setelah diaktifkan, SpotRecall dapat menutup tab tidak aktif di atas batas pilihan Anda sambil menjaga halaman terindeks tetap dapat dicari. Tab aktif, disematkan, dikelompokkan, bersuara, atau berisi formulir belum disimpan tidak pernah ditutup, dan jendela tidak pernah dikosongkan. Tinjau dan buka lagi tab yang ditutup dalam 48 jam terakhir. Peringkat bookmark, pembersihan hasil duplikat, dan pemulihan unduhan model juga ditingkatkan.
-
 ## Detailed description
 Temukan halaman yang Anda ingat tanpa menggali riwayat browser. Cari kata tepat atau makna dari Cmd/Ctrl+Shift+K.
 

@@ -1,11 +1,18 @@
 # Chrome Web Store Localized Listings
 
-Each locale file contains the name, short description, latest What's New text,
-and detailed description to paste into the matching Chrome Web Store dashboard
-listing. The locale code matches the directory under `public/_locales/`.
+Each locale file contains the name, short description, and detailed description
+to paste into the matching Chrome Web Store dashboard listing. The locale code
+matches the directory under `public/_locales/`.
 
-Per-release What's New copy for all locales is collected in
-`whats-new-<version>.md` files (e.g. `whats-new-1.2.0.md`).
+**What's New lives only in `whats-new-<version>.md`** (e.g. `whats-new-1.2.1.md`),
+one file per release covering all 21 locales. The locale files above deliberately
+do not repeat it — release notes change every release and the listing copy does
+not, so keeping them apart means nothing goes stale.
+
+The Chrome Web Store has no release-notes field; Edge Add-ons does. On Chrome the
+What's New text is appended as the **last paragraph of each locale's
+description**, replacing the previous release's paragraph so descriptions do not
+accumulate old notes.
 
 Supported release locales: `ar`, `de`, `en`, `es`, `fr`, `hi`, `id`, `it`, `ja`,
 `ko`, `nl`, `pl`, `pt_BR`, `pt_PT`, `ru`, `th`, `tr`, `uk`, `vi`, `zh_CN`, and

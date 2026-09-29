@@ -6,9 +6,6 @@ SpotRecall - Busca tu historial con IA
 ## Short description
 Busca en tu historial por significado o palabra clave. La IA funciona en tu dispositivo; tus páginas y consultas no salen de él.
 
-## What's new in 1.1.0
-Mantén las pestañas ordenadas sin perder lo importante. Tras activarlo, SpotRecall puede cerrar pestañas inactivas que superen tu límite y mantener las páginas indexadas disponibles para buscar. Nunca cierra pestañas activas, fijadas, agrupadas, con audio o con formularios sin guardar, y no deja vacía ninguna ventana. Revisa y vuelve a abrir las pestañas cerradas en las últimas 48 horas. También mejoran el orden de marcadores, la eliminación de duplicados y la recuperación de descargas del modelo.
-
 ## Detailed description
 Encuentra la página que recuerdas sin rebuscar en el historial. Busca por palabra exacta o por significado con Cmd/Ctrl+Shift+K.
 

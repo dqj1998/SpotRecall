@@ -3,12 +3,12 @@
 Everything needed to fill both stores' forms. The **same package** works for both.
 
 ## Package
-- Upload file: `spotrecall-store-1.2.0.zip` (built from `dist/`; `manifest.json` at
+- Upload file: `spotrecall-store-1.2.1.zip` (built from `dist/`; `manifest.json` at
   the zip root). Regenerate with:
   ```bash
-  npm run build && (cd dist && zip -rq ../spotrecall-store-1.2.0.zip . -x '*.DS_Store')
+  npm run build && (cd dist && zip -rq ../spotrecall-store-1.2.1.zip . -x '*.DS_Store')
   ```
-- Version: `1.2.0` · Package size: ~5.2 MB (the semantic model is **not** bundled;
+- Version: `1.2.1` · Package size: ~5.2 MB (the semantic model is **not** bundled;
   it downloads once at runtime and is cached locally).
 - Manifest V3 · minimum Chrome/Chromium 116.
 
@@ -26,34 +26,25 @@ Everything needed to fill both stores' forms. The **same package** works for bot
 ## Listing copy
 
 ### Localized Chrome Web Store listings
-Full name, short description, What's New, and detailed-description copy for each
-release locale lives in [`store-listings/`](store-listings/README.md). Paste the
-matching file into the corresponding Chrome Web Store dashboard localization.
+Full name, short description, and detailed-description copy for each release
+locale lives in [`store-listings/`](store-listings/README.md). Paste the matching
+file into the corresponding Chrome Web Store dashboard localization.
+
+### What's New
+Per-release, per-locale. Lives **only** in
+`store-listings/whats-new-<version>.md` — one file per release, all 21 locales.
+It is deliberately not duplicated here or in the per-locale files, so there is a
+single copy to write and nothing to keep in sync.
+
+The Chrome Web Store has no release-notes field (Edge Add-ons does), so on Chrome
+this copy goes in as the **last paragraph of each locale's description**,
+*replacing* the previous release's paragraph rather than stacking onto it.
 
 ### Name
 `SpotRecall — AI Search for Your Browsing History`
 
 ### Summary / short description (≤132 chars)
 `Search your browsing history by meaning or keyword. The AI runs on your device — your pages and queries never leave it.`
-
-### What's new in 1.2.0
-```
-Smarter tab limit: the "Tabs to keep open" count no longer includes pinned or
-grouped tabs. Your always-open pinned tabs and project-grouped tabs no longer
-eat into the limit — only regular browsing tabs are counted.
-```
-
-### What's new in 1.1.0
-```
-Keep your tabs tidy without losing what matters. SpotRecall can now automatically
-close inactive tabs after you opt in, while keeping indexed pages searchable.
-It never closes active, pinned, grouped, audible, or form-filled tabs, and it
-never empties a window. Set the number of tabs to keep and reopen a recently
-closed tab from the 48-hour activity log.
-
-Also improved: bookmark and page metadata improve ranking, duplicate results are
-collapsed, and semantic-model downloads are validated and retried more reliably.
-```
 
 ### Detailed description
 ```
@@ -112,18 +103,6 @@ command palette (Cmd/Ctrl+Shift+K, or click the icon):
   ### Summary / short description
   `閲覧履歴を意味やキーワードで検索。AIは端末内で動作し、ページ内容や検索語を外部に送信しません。`
 
-  ### What's new in 1.2.0
-  ```
-  タブ上限をより賢く：「開いたままにするタブ数」に固定タブとグループタブがカウントされなくなりました。常時固定のタブやプロジェクト別グループタブが上限を消費しなくなり、通常の閲覧タブだけが管理対象になります。
-  ```
-
-  ### What's new in 1.1.0
-  ```
-  タブをすっきり保てる「タブ自動クローズ」を追加しました。オンにすると、設定した保持数を超えた非アクティブなタブを自動で閉じます。インデックス済みのページは SpotRecall で引き続き検索可能です。
-
-  アクティブ、固定、グループ、音声再生中、入力途中のフォームがあるタブは閉じません。ウィンドウ最後の1枚も残し、直近48時間に閉じたタブは確認・再表示できます。検索順位、重複結果の整理、モデルのダウンロード復旧も改善しました。
-  ```
-
   ### Detailed description
   ```
   「さっき見たページ」を、覚えている言葉や意味から探せるローカル優先の検索です。Cmd/Ctrl+Shift+K で開けます。
@@ -148,18 +127,6 @@ command palette (Cmd/Ctrl+Shift+K, or click the icon):
 
   ### Summary / short description
   `按意思或关键词搜索浏览历史。AI 在本机运行，页面内容与搜索词都不离开你的电脑。`
-
-  ### What's new in 1.2.0
-  ```
-  保留上限更智能：「保持打开的标签页数」不再统计固定标签页和分组标签页。常驻固定标签或按项目分组的标签不再占用保留名额，上限仅对普通浏览标签生效。
-  ```
-
-  ### What's new in 1.1.0
-  ```
-  新增”自动关闭标签页”：开启后，当标签页超过你设定的保留数量，SpotRecall 会自动关闭不活跃标签页；已收录的页面依然可以搜索。
-
-  当前标签、固定标签、分组标签、正在播放音频的标签、含未提交表单输入的标签均不会被关闭，也绝不会关闭窗口最后一个标签。可查看并重新打开最近48小时自动关闭的标签页。本版还优化了书签和页面元数据排序、重复结果合并，以及模型下载的校验与重试。
-  ```
 
   ### Detailed description
   ```
@@ -230,7 +197,7 @@ model file (data, not code) is downloaded once and cached locally.
 ---
 
 ## Edge Add-ons notes
-- Upload the **same** `spotrecall-store-1.2.0.zip`.
+- Upload the **same** `spotrecall-store-1.2.1.zip`.
 - Store logo: **300×300** (`release-screenshots/edge-logo-300.png`).
 - Screenshots: 1280×800 (same files).
 - Provide the same description, category (Productivity), and privacy policy URL.

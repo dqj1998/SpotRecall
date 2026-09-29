@@ -6,9 +6,6 @@ SpotRecall - Ricerca AI nella cronologia di navigazione
 ## Short description
 Cerca nella cronologia per significato o parola chiave. L'IA funziona sul tuo dispositivo; pagine e query non lo lasciano.
 
-## What's new in 1.1.0
-Mantieni in ordine le schede senza perdere ciò che conta. Dopo l'attivazione, SpotRecall può chiudere le schede inattive oltre il limite scelto mantenendo ricercabili le pagine indicizzate. Non chiude mai schede attive, fissate, raggruppate, con audio o con moduli non salvati e non svuota mai una finestra. Controlla e riapri le schede chiuse nelle ultime 48 ore. Sono migliorati anche il ranking dei segnalibri, la rimozione dei duplicati e il recupero del download del modello.
-
 ## Detailed description
 Ritrova la pagina che ricordi senza rovistare nella cronologia. Cerca termini esatti o significato con Cmd/Ctrl+Shift+K.
 

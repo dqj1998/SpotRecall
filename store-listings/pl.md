@@ -6,9 +6,6 @@ SpotRecall - Wyszukiwanie AI w historii przeglądania
 ## Short description
 Przeszukuj historię według znaczenia lub słów kluczowych. AI działa na urządzeniu; strony i zapytania go nie opuszczają.
 
-## What's new in 1.1.0
-Utrzymuj porządek w kartach bez utraty ważnych rzeczy. Po włączeniu SpotRecall może zamykać nieaktywne karty ponad wybrany limit, pozostawiając zindeksowane strony wyszukiwalne. Nigdy nie zamyka aktywnych, przypiętych, zgrupowanych, odtwarzających dźwięk ani kart z niezapisanym formularzem i nie opróżnia okna. Sprawdź i otwórz ponownie karty zamknięte w ostatnich 48 godzinach. Ulepszono też ranking zakładek, usuwanie duplikatów i odzyskiwanie pobierania modelu.
-
 ## Detailed description
 Znajdź zapamiętaną stronę bez przekopywania historii przeglądarki. Szukaj dokładnego słowa lub znaczenia przez Cmd/Ctrl+Shift+K.
 

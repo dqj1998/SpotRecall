@@ -6,9 +6,6 @@ SpotRecall - Busca por IA no seu histórico
 ## Short description
 Pesquise seu histórico por significado ou palavra-chave. A IA funciona no seu dispositivo; suas páginas e buscas não saem dele.
 
-## What's new in 1.1.0
-Mantenha as abas organizadas sem perder o que importa. Após ativar, o SpotRecall pode fechar abas inativas acima do seu limite e manter páginas indexadas pesquisáveis. Nunca fecha abas ativas, fixadas, agrupadas, com áudio ou com formulário não salvo, e nunca esvazia uma janela. Revise e reabra abas fechadas nas últimas 48 horas. Também melhoramos a classificação de favoritos, a remoção de resultados duplicados e a recuperação de downloads do modelo.
-
 ## Detailed description
 Encontre a página de que você se lembra sem vasculhar o histórico. Pesquise por termo exato ou significado com Cmd/Ctrl+Shift+K.
 

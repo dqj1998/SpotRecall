@@ -6,9 +6,6 @@ SpotRecall - Pesquisa com IA no histórico de navegação
 ## Short description
 Pesquise o histórico por significado ou palavra-chave. A IA funciona no dispositivo; as páginas e pesquisas não saem dele.
 
-## What's new in 1.1.0
-Mantenha os separadores organizados sem perder o que importa. Depois de ativar, o SpotRecall pode fechar separadores inativos acima do limite escolhido, mantendo as páginas indexadas pesquisáveis. Nunca fecha separadores ativos, afixados, agrupados, com áudio ou com formulários não guardados e nunca esvazia uma janela. Reveja e reabra separadores fechados nas últimas 48 horas. Também foram melhorados o posicionamento dos favoritos, a remoção de duplicados e a recuperação de transferências do modelo.
-
 ## Detailed description
 Encontre a página de que se lembra sem procurar no histórico. Pesquise o termo exato ou o significado com Cmd/Ctrl+Shift+K.
 
