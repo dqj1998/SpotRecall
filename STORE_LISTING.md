@@ -36,8 +36,8 @@ Per-release, per-locale. Lives **only** in
 It is deliberately not duplicated here or in the per-locale files, so there is a
 single copy to write and nothing to keep in sync.
 
-The Chrome Web Store has no release-notes field (Edge Add-ons does), so on Chrome
-this copy goes in as the **last paragraph of each locale's description**,
+Neither the Chrome Web Store nor Edge Add-ons has a public release-notes field,
+so on both stores this copy goes in as the **last paragraph of each locale's description**,
 *replacing* the previous release's paragraph rather than stacking onto it.
 
 ### Name

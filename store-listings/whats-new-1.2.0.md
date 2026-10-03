@@ -1,7 +1,8 @@
 # What's New — 1.2.0 (all locales)
 
-Paste the matching block into the Chrome Web Store / Edge Add-ons dashboard
-"What's new" field for each locale.
+Neither the Chrome Web Store nor Edge Add-ons has a "What's new" field. Append
+the matching block as the last paragraph of each locale's description, replacing
+the previous release's paragraph.
 
 ---
 

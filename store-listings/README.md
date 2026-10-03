@@ -9,8 +9,8 @@ one file per release covering all 21 locales. The locale files above deliberatel
 do not repeat it — release notes change every release and the listing copy does
 not, so keeping them apart means nothing goes stale.
 
-The Chrome Web Store has no release-notes field; Edge Add-ons does. On Chrome the
-What's New text is appended as the **last paragraph of each locale's
+Neither the Chrome Web Store nor Edge Add-ons has a public release-notes field.
+On both stores the What's New text is appended as the **last paragraph of each locale's
 description**, replacing the previous release's paragraph so descriptions do not
 accumulate old notes.
 
