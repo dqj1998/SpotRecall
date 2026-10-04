@@ -18,6 +18,46 @@ const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 
 const tokens = await readFile(join(ROOT, 'src/ui/tokens.css'), 'utf8');
 const layout = await readFile(join(ROOT, 'src/ui/palette-layout.css'), 'utf8');
+const optionsCss = await readFile(join(ROOT, 'src/ui/options.css'), 'utf8');
+
+// The options page and the palette both define .card, so the shipped
+// options.css is re-scoped under .opt before it joins the same document. The
+// file is flat (no nested at-rules), so a selector-prefix pass is enough.
+const OPTIONS_CSS =
+  optionsCss
+    .replace(/@import[^;]+;/g, '')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/(^|\})\s*([^{}]+)\{/g, (_m, close, sel) =>
+      close +
+      sel
+        .split(',')
+        .map((one) => one.trim())
+        .filter(Boolean)
+        .map((one) => (one === 'body' || one === 'html' ? '.opt' : '.opt ' + one))
+        .join(',') +
+      '{',
+    ) +
+  `
+  /* Present the settings card as a floating product shot, not a full page. */
+  .opt{width:470px;min-height:0;padding:24px;border-radius:20px;overflow:hidden;
+       box-shadow:0 40px 90px -30px rgba(20,44,90,.5),0 10px 30px -12px rgba(20,44,90,.35);}
+  .opt .card{width:auto;height:auto;margin:0;}
+  .opt .ac-log{max-height:none;}
+  /* The real settings page is 732px wide, so its controls never shrink. At this
+     crop width the flex row would squash the toggle into an oval. */
+  .opt .switch,.opt .row > input{flex:0 0 auto;}
+  /* Unlike the palette card, this card's content is real localized UI copy, so
+     it must mirror with the page. Left LTR, Arabic sentence-final punctuation
+     wraps to the start of the next line. */
+  body.rtl .device.wide{direction:rtl;}
+  /* .card > .desc has no rule of its own in options.css, so it falls back to the
+     page default and reads as an oversized lead when cropped this close. */
+  .opt .card > .desc{font-size:12px;color:var(--sr-fg-dim);line-height:1.55;margin:0 0 6px;}
+  .opt .ac-log-fav{font-size:8px;}
+  /* The settings card is wider than the palette card, so it scales down less. */
+  .device.wide{transform:scale(1.12);}
+`;
+
 
 // The brand gradient runs blue -> green left-to-right, so the copy always sits
 // on the blue end. RTL layouts mirror the copy, so mirror the angle with them.
@@ -157,7 +197,6 @@ function palette({ value, mode, semantic, hist, sections, badge, openPanel = 'Op
 const VERGE = { l: 'V', c: '#e2136e', title: 'Sony WH-1000XM5 Review: the new king of noise cancelling — The Verge', snippet: 'Class-leading ANC, refined design and 30-hour battery. Here is how it stacks up against the XM4 and the competition.', time: '6 min ago' };
 const WIRE = { l: 'W', c: '#111827', title: 'The Best Noise-Cancelling Headphones for 2026 — Wirecutter', snippet: 'After 60+ hours of testing we picked the best for commuting, flights and the open office. Top pick, upgrade pick and budget pick.', time: '22 min ago' };
 const AMZN = { l: 'a', c: '#ff9900', title: 'Amazon.com: Bose QuietComfort Ultra Headphones', snippet: 'Wireless noise cancelling headphones with spatial audio, immersive sound and up to 24 hours of battery life.', time: 'yesterday' };
-const CART = { l: 'a', c: '#ff9900', title: 'Amazon.com Shopping Cart', snippet: 'Subtotal (1 item) · Proceed to checkout · Saved for later', time: '2 min ago' };
 const ENG_ROWS = [VERGE, WIRE, AMZN];
 
 const SCREENSHOT_1_LOCALES = {
@@ -598,30 +637,320 @@ const SCREENSHOT_3_LOCALES = {
   },
 };
 
-// screenshot-4: time-grouped recent pages.
+// screenshot-4: the real Options -> "Auto-close tabs" card. `loc` is the BCP-47
+// tag used for the relative-time labels in the closed-tab log, so the mock
+// timestamps read exactly the way relTime() formats them in the shipped UI.
 const SCREENSHOT_4_LOCALES = {
-  en:    { h: 'Your recent pages,<br/>grouped by time',        p: 'Reopen anything from today, yesterday, or earlier — with a content preview, not a cryptic URL.', today: 'Today',    yesterday: 'Yesterday' },
-  ar:    { h: 'صفحاتك الأخيرة<br/>مجمّعة حسب الوقت',          p: 'أعد فتح أي شيء من اليوم أو الأمس أو قبل ذلك — مع معاينة للمحتوى، لا رابط مشفّر.',              today: 'اليوم',    yesterday: 'أمس' },
-  de:    { h: 'Deine letzten Seiten,<br/>nach Zeit gruppiert',  p: 'Öffne alles von heute, gestern oder früher wieder — mit einer Inhaltsvorschau, nicht einer kryptischen URL.',   today: 'Heute',    yesterday: 'Gestern' },
-  es:    { h: 'Tus páginas recientes,<br/>agrupadas por tiempo', p: 'Vuelve a abrir cualquier cosa de hoy, ayer o antes — con vista previa del contenido, no una URL críptica.',    today: 'Hoy',      yesterday: 'Ayer' },
-  fr:    { h: 'Vos pages récentes,<br/>groupées par temps',     p: 'Rouvrez n’importe quoi d’aujourd’hui, d’hier ou d’avant — avec un aperçu du contenu, pas une URL cryptique.',  today: 'Aujourd’hui', yesterday: 'Hier' },
-  hi:    { h: 'आपके हालिया पेज,<br/>समय के अनुसार',            p: 'आज, कल या उससे पहले का कुछ भी फिर खोलें — सामग्री पूर्वावलोकन के साथ, न कि किसी अस्पष्ट URL से।',       today: 'आज',      yesterday: 'कल' },
-  id:    { h: 'Halaman terbaru Anda,<br/>dikelompokkan berdasarkan waktu', p: 'Buka kembali apa pun dari hari ini, kemarin, atau sebelumnya — dengan pratinjau konten, bukan URL yang membingungkan.', today: 'Hari Ini', yesterday: 'Kemarin' },
-  it:    { h: 'Le tue pagine recenti,<br/>raggruppate per tempo', p: 'Riapri qualsiasi cosa di oggi, ieri o prima — con un’anteprima del contenuto, non un URL criptico.',        today: 'Oggi',     yesterday: 'Ieri' },
-  ja:    { h: '最近のページを<br/>時間別に整理',                  p: '今日、昨日、それ以前のページをいつでも再表示 — 謎めいたURLではなく、コンテンツのプレビューで。',               today: '今日',    yesterday: '昨日' },
-  ko:    { h: '최근 페이지를<br/>시간별로 묶어보기',              p: '오늘, 어제, 또는 그 이전 것을 언제든 다시 열기 — 알 수 없는 URL이 아니라 콘텐츠 미리보기로.',              today: '오늘',    yesterday: '어제' },
-  nl:    { h: 'Je recente pagina\'s,<br/>gegroepeerd op tijd',  p: 'Heropen alles van vandaag, gisteren of eerder — met een inhoudsvoorbeeld, niet een cryptische URL.',          today: 'Vandaag',  yesterday: 'Gisteren' },
-  pl:    { h: 'Twoje ostatnie strony,<br/>pogrupowane czasowo', p: 'Otwórz ponownie cokolwiek z dzisiaj, wczoraj lub wcześniej — z podglądem treści, nie tajemniczym adresem URL.', today: 'Dzisiaj', yesterday: 'Wczoraj' },
-  pt_BR: { h: 'Suas páginas recentes,<br/>agrupadas por tempo', p: 'Reabra qualquer coisa de hoje, ontem ou antes — com uma prévia do conteúdo, não uma URL enigmática.',         today: 'Hoje',     yesterday: 'Ontem' },
-  pt_PT: { h: 'As suas páginas recentes,<br/>agrupadas por tempo', p: 'Reabra qualquer coisa de hoje, ontem ou antes — com uma pré-visualização do conteúdo, não um URL enigmático.', today: 'Hoje',  yesterday: 'Ontem' },
-  ru:    { h: 'Ваши последние страницы,<br/>сгруппированные по времени', p: 'Откройте заново что угодно: сегодня, вчера или раньше — с предпросмотром содержимого, не загадочным URL.', today: 'Сегодня', yesterday: 'Вчера' },
-  th:    { h: 'หน้าเว็บล่าสุดของคุณ<br/>จัดกลุ่มตามเวลา',       p: 'เปิดอีกครั้งสิ่งใดก็ตามจากวันนี้ เมื่อวาน หรือก่อนหน้า — พร้อมตัวอย่างเนื้อหา ไม่ใช่ URL ที่อ่านยาก',  today: 'วันนี้',  yesterday: 'เมื่อวาน' },
-  tr:    { h: 'Son sayfaların,<br/>zamana göre gruplandı',      p: 'Bugün, dün veya öncesinden herhangi bir şeyi yeniden aç — gizemli bir URL değil, içerik önizlemesiyle.',      today: 'Bugün',    yesterday: 'Dün' },
-  uk:    { h: 'Ваші останні сторінки,<br/>згруповані за часом', p: 'Відкрийте знову будь-що: сьогодні, вчора або раніше — із переглядом вмісту, а не загадковим URL.',           today: 'Сьогодні', yesterday: 'Вчора' },
-  vi:    { h: 'Các trang gần đây của bạn,<br/>nhóm theo thời gian', p: 'Mở lại bất kỳ thứ gì từ hôm nay, hôm qua hoặc trước đó — với bản xem trước nội dung, không phải URL khó hiểu.', today: 'Hôm nay', yesterday: 'Hôm qua' },
-  zh_CN: { h: '最近访问的页面，<br/>按时间分组',                   p: '重新打开今天、昨天或更早的任何内容 — 有内容预览，而非晦涩的 URL。',                                          today: '今天',    yesterday: '昨天' },
-  zh_TW: { h: '最近造訪的頁面，<br/>依時間分組',                   p: '重新開啟今天、昨天或更早的任何內容 — 有內容預覽，而非難解的 URL。',                                          today: '今天',    yesterday: '昨天' },
+  en: {
+    loc: 'en',
+    h: 'Too many tabs?<br/>Let them close',
+    p: 'Auto-close quietly retires inactive tabs once you pass your limit — and every closed page stays searchable in SpotRecall.',
+    title: 'Auto-close tabs',
+    desc: 'Quietly closes inactive tabs when you have too many open. Closed pages stay searchable in SpotRecall (except empty ones). Pinned, grouped, audible, and active tabs are never touched.',
+    label: 'Enable auto-close',
+    note: 'Off until you turn it on. A window is never emptied, and recently-restored tabs get a grace period.',
+    keepLabel: 'Tabs to keep open',
+    keepDesc: 'Target number of regular tabs to keep open across all windows (default 12). Pinned and grouped tabs are not counted.',
+    logTitle: 'Closed in the last 48h (4)',
+    tag: 'not indexed',
+  },
+  ar: {
+    loc: 'ar',
+    h: 'علامات تبويب كثيرة؟<br/>دعها تُغلق',
+    p: 'يغلق الإغلاق التلقائي علامات التبويب غير النشطة بهدوء عند تجاوز حدك — وتبقى كل صفحة مغلقة قابلة للبحث في SpotRecall.',
+    title: 'إغلاق علامات التبويب تلقائيًا',
+    desc: 'يغلق بهدوء علامات التبويب غير النشطة عندما يكون لديك عدد كبير منها مفتوحًا. تبقى الصفحات المغلقة قابلة للبحث في SpotRecall (عدا الفارغة). لا تُمَس أبدًا علامات التبويب المثبّتة والمجمّعة والتي تصدر صوتًا والنشطة.',
+    label: 'تفعيل الإغلاق التلقائي',
+    note: 'معطّل حتى تفعّله. لا تُفرَّغ أي نافذة أبدًا، وتحصل علامات التبويب المستعادة حديثًا على مهلة.',
+    keepLabel: 'علامات التبويب المفتوحة للاحتفاظ بها',
+    keepDesc: 'العدد المستهدف لعلامات التبويب العادية التي تبقى مفتوحة في كل النوافذ (افتراضيًا 12). لا تُحتسب المثبّتة والمجمّعة.',
+    logTitle: 'أُغلقت خلال آخر 48 ساعة (4)',
+    tag: 'غير مفهرسة',
+  },
+  de: {
+    loc: 'de',
+    h: 'Zu viele Tabs?<br/>Lass sie schließen',
+    p: 'Automatisches Schließen räumt inaktive Tabs auf, sobald du dein Limit überschreitest — und jede geschlossene Seite bleibt in SpotRecall durchsuchbar.',
+    title: 'Tabs automatisch schließen',
+    desc: 'Schließt unauffällig inaktive Tabs, wenn du zu viele offen hast. Geschlossene Seiten bleiben in SpotRecall durchsuchbar (außer leeren). Angeheftete, gruppierte, tönende und aktive Tabs werden nie angetastet.',
+    label: 'Automatisches Schließen aktivieren',
+    note: 'Aus, bis du es einschaltest. Ein Fenster wird nie geleert, und gerade wiederhergestellte Tabs bekommen eine Schonfrist.',
+    keepLabel: 'Geöffnete Tabs behalten',
+    keepDesc: 'Zielanzahl normaler Tabs, die über alle Fenster hinweg offen bleiben (Standard 12). Angeheftete und gruppierte Tabs zählen nicht mit.',
+    logTitle: 'In den letzten 48 h geschlossen (4)',
+    tag: 'nicht indexiert',
+  },
+  es: {
+    loc: 'es',
+    h: '¿Demasiadas pestañas?<br/>Deja que se cierren',
+    p: 'El cierre automático retira en silencio las pestañas inactivas cuando superas tu límite, y cada página cerrada sigue siendo buscable en SpotRecall.',
+    title: 'Cierre automático de pestañas',
+    desc: 'Cierra discretamente las pestañas inactivas cuando tienes demasiadas abiertas. Las páginas cerradas siguen siendo buscables en SpotRecall (salvo las vacías). Las pestañas fijadas, agrupadas, con sonido y activas nunca se tocan.',
+    label: 'Activar el cierre automático',
+    note: 'Desactivado hasta que lo actives. Nunca se vacía una ventana, y las pestañas restauradas hace poco tienen un periodo de gracia.',
+    keepLabel: 'Pestañas abiertas a conservar',
+    keepDesc: 'Número objetivo de pestañas normales que permanecen abiertas en todas las ventanas (12 por defecto). Las fijadas y agrupadas no se cuentan.',
+    logTitle: 'Cerradas en las últimas 48 h (4)',
+    tag: 'sin indexar',
+  },
+  fr: {
+    loc: 'fr',
+    h: 'Trop d’onglets ?<br/>Laissez-les se fermer',
+    p: 'La fermeture automatique retire discrètement les onglets inactifs dès que vous dépassez votre limite — et chaque page fermée reste consultable dans SpotRecall.',
+    title: 'Fermeture automatique des onglets',
+    desc: 'Ferme discrètement les onglets inactifs quand vous en avez trop d’ouverts. Les pages fermées restent consultables dans SpotRecall (sauf les pages vides). Les onglets épinglés, groupés, sonores et actifs ne sont jamais touchés.',
+    label: 'Activer la fermeture automatique',
+    note: 'Désactivée tant que vous ne l’activez pas. Une fenêtre n’est jamais vidée, et les onglets récemment restaurés bénéficient d’un délai de grâce.',
+    keepLabel: 'Onglets à garder ouverts',
+    keepDesc: 'Nombre cible d’onglets ordinaires à garder ouverts dans toutes les fenêtres (12 par défaut). Les onglets épinglés et groupés ne sont pas comptés.',
+    logTitle: 'Fermés ces dernières 48 h (4)',
+    tag: 'non indexé',
+  },
+  hi: {
+    loc: 'hi',
+    h: 'बहुत सारे टैब?<br/>उन्हें बंद होने दें',
+    p: 'सीमा पार होते ही ऑटो-क्लोज़ निष्क्रिय टैब चुपचाप बंद कर देता है — और हर बंद पेज SpotRecall में खोजा जा सकता है।',
+    title: 'टैब अपने आप बंद करें',
+    desc: 'जब बहुत सारे टैब खुले हों तो निष्क्रिय टैब चुपचाप बंद कर देता है। बंद किए गए पेज SpotRecall में खोजे जा सकते हैं (खाली पेजों को छोड़कर)। पिन किए, समूहित, आवाज़ वाले और सक्रिय टैब कभी नहीं छुए जाते।',
+    label: 'ऑटो-क्लोज़ चालू करें',
+    note: 'जब तक आप चालू न करें, बंद रहता है। कोई विंडो कभी खाली नहीं की जाती, और हाल ही में बहाल किए गए टैब को छूट अवधि मिलती है।',
+    keepLabel: 'खुले रखे जाने वाले टैब',
+    keepDesc: 'सभी विंडो में खुले रखने के लिए सामान्य टैब की लक्षित संख्या (डिफ़ॉल्ट 12)। पिन किए और समूहित टैब नहीं गिने जाते।',
+    logTitle: 'पिछले 48 घंटे में बंद (4)',
+    tag: 'इंडेक्स नहीं',
+  },
+  id: {
+    loc: 'id',
+    h: 'Terlalu banyak tab?<br/>Biarkan tertutup',
+    p: 'Penutupan otomatis menutup tab tak aktif begitu Anda melewati batas — dan setiap halaman yang ditutup tetap dapat dicari di SpotRecall.',
+    title: 'Tutup tab otomatis',
+    desc: 'Menutup tab tak aktif secara diam-diam saat terlalu banyak tab terbuka. Halaman yang ditutup tetap dapat dicari di SpotRecall (kecuali yang kosong). Tab yang disematkan, dikelompokkan, bersuara, dan aktif tidak pernah disentuh.',
+    label: 'Aktifkan penutupan otomatis',
+    note: 'Nonaktif sampai Anda menyalakannya. Jendela tidak pernah dikosongkan, dan tab yang baru dipulihkan mendapat masa tenggang.',
+    keepLabel: 'Tab yang tetap terbuka',
+    keepDesc: 'Jumlah target tab biasa yang tetap terbuka di semua jendela (bawaan 12). Tab yang disematkan dan dikelompokkan tidak dihitung.',
+    logTitle: 'Ditutup dalam 48 jam terakhir (4)',
+    tag: 'belum terindeks',
+  },
+  it: {
+    loc: 'it',
+    h: 'Troppe schede?<br/>Lascia che si chiudano',
+    p: 'La chiusura automatica ritira in silenzio le schede inattive quando superi il tuo limite — e ogni pagina chiusa resta ricercabile in SpotRecall.',
+    title: 'Chiusura automatica delle schede',
+    desc: 'Chiude discretamente le schede inattive quando ne hai troppe aperte. Le pagine chiuse restano ricercabili in SpotRecall (tranne quelle vuote). Le schede fissate, raggruppate, con audio e attive non vengono mai toccate.',
+    label: 'Attiva la chiusura automatica',
+    note: 'Disattivata finché non la attivi. Una finestra non viene mai svuotata e le schede ripristinate di recente hanno un periodo di grazia.',
+    keepLabel: 'Schede da tenere aperte',
+    keepDesc: 'Numero obiettivo di schede normali da tenere aperte in tutte le finestre (predefinito 12). Le schede fissate e raggruppate non vengono conteggiate.',
+    logTitle: 'Chiuse nelle ultime 48 h (4)',
+    tag: 'non indicizzata',
+  },
+  ja: {
+    loc: 'ja',
+    h: 'タブが多すぎる？<br/>自動で閉じよう',
+    p: '上限を超えると、使っていないタブを静かに閉じます。閉じたページは SpotRecall でそのまま検索できます。',
+    title: 'タブ自動クローズ',
+    desc: '開きすぎた非アクティブなタブを静かに閉じます。閉じたページは SpotRecall で検索可能なまま（中身が空のものを除く）。固定・グループ・音声再生中・アクティブなタブは対象外です。',
+    label: '自動クローズを有効化',
+    note: 'オンにするまで動作しません。ウィンドウ最後の1枚は閉じず、復元直後のタブには猶予期間があります。',
+    keepLabel: '開いたままにするタブ数',
+    keepDesc: '全ウィンドウで開いておく通常タブの目標数（既定 12）。固定・グループタブはカウントされません。',
+    logTitle: '直近48時間で閉じたタブ（4）',
+    tag: '未インデックス',
+  },
+  ko: {
+    loc: 'ko',
+    h: '탭이 너무 많나요?<br/>알아서 닫게 하세요',
+    p: '한도를 넘으면 자동 닫기가 사용하지 않는 탭을 조용히 정리합니다. 닫힌 페이지는 SpotRecall에서 그대로 검색됩니다.',
+    title: '탭 자동 닫기',
+    desc: '탭을 너무 많이 열어 두면 사용하지 않는 탭을 조용히 닫습니다. 닫힌 페이지는 SpotRecall에서 계속 검색할 수 있습니다(내용이 빈 페이지 제외). 고정·그룹·소리 재생 중·현재 탭은 절대 건드리지 않습니다.',
+    label: '자동 닫기 사용',
+    note: '켜기 전에는 동작하지 않습니다. 창의 마지막 탭은 닫지 않으며, 방금 복원된 탭에는 유예 시간이 주어집니다.',
+    keepLabel: '열어 둘 탭 수',
+    keepDesc: '모든 창에서 열어 둘 일반 탭의 목표 개수(기본값 12). 고정 탭과 그룹 탭은 포함되지 않습니다.',
+    logTitle: '최근 48시간 동안 닫은 탭 (4)',
+    tag: '미색인',
+  },
+  nl: {
+    loc: 'nl',
+    h: 'Te veel tabbladen?<br/>Laat ze sluiten',
+    p: 'Automatisch sluiten ruimt inactieve tabbladen op zodra je je limiet passeert — en elke gesloten pagina blijft doorzoekbaar in SpotRecall.',
+    title: 'Tabbladen automatisch sluiten',
+    desc: 'Sluit ongemerkt inactieve tabbladen wanneer je er te veel open hebt. Gesloten pagina’s blijven doorzoekbaar in SpotRecall (behalve lege). Vastgezette, gegroepeerde, geluid makende en actieve tabbladen worden nooit aangeraakt.',
+    label: 'Automatisch sluiten inschakelen',
+    note: 'Uit tot je het aanzet. Een venster wordt nooit leeggemaakt, en net herstelde tabbladen krijgen een respijtperiode.',
+    keepLabel: 'Tabbladen open houden',
+    keepDesc: 'Streefaantal gewone tabbladen dat over alle vensters open blijft (standaard 12). Vastgezette en gegroepeerde tabbladen tellen niet mee.',
+    logTitle: 'Gesloten in de laatste 48 uur (4)',
+    tag: 'niet geïndexeerd',
+  },
+  pl: {
+    loc: 'pl',
+    h: 'Za dużo kart?<br/>Niech się zamkną',
+    p: 'Automatyczne zamykanie po cichu usuwa nieaktywne karty po przekroczeniu limitu — a każda zamknięta strona pozostaje wyszukiwalna w SpotRecall.',
+    title: 'Automatyczne zamykanie kart',
+    desc: 'Po cichu zamyka nieaktywne karty, gdy masz ich otwartych zbyt wiele. Zamknięte strony pozostają wyszukiwalne w SpotRecall (poza pustymi). Karty przypięte, zgrupowane, odtwarzające dźwięk i aktywne nigdy nie są ruszane.',
+    label: 'Włącz automatyczne zamykanie',
+    note: 'Wyłączone, dopóki tego nie włączysz. Okno nigdy nie zostaje opróżnione, a niedawno przywrócone karty mają okres karencji.',
+    keepLabel: 'Karty do zachowania otwartych',
+    keepDesc: 'Docelowa liczba zwykłych kart pozostających otwartymi we wszystkich oknach (domyślnie 12). Karty przypięte i zgrupowane nie są liczone.',
+    logTitle: 'Zamknięte w ciągu ostatnich 48 godz. (4)',
+    tag: 'niezindeksowana',
+  },
+  pt_BR: {
+    loc: 'pt-BR',
+    h: 'Abas demais?<br/>Deixe que se fechem',
+    p: 'O fechamento automático recolhe as abas inativas quando você passa do seu limite — e toda página fechada continua pesquisável no SpotRecall.',
+    title: 'Fechar abas automaticamente',
+    desc: 'Fecha discretamente as abas inativas quando você tem abas demais abertas. As páginas fechadas continuam pesquisáveis no SpotRecall (exceto as vazias). Abas fixadas, agrupadas, com áudio e ativas nunca são tocadas.',
+    label: 'Ativar fechamento automático',
+    note: 'Desligado até você ativar. Uma janela nunca fica vazia, e abas restauradas há pouco têm um período de carência.',
+    keepLabel: 'Abas a manter abertas',
+    keepDesc: 'Número alvo de abas comuns a manter abertas em todas as janelas (padrão 12). Abas fixadas e agrupadas não são contadas.',
+    logTitle: 'Fechadas nas últimas 48 h (4)',
+    tag: 'não indexada',
+  },
+  pt_PT: {
+    loc: 'pt-PT',
+    h: 'Separadores a mais?<br/>Deixe-os fechar',
+    p: 'O fecho automático recolhe os separadores inativos quando passa do seu limite — e todas as páginas fechadas continuam pesquisáveis no SpotRecall.',
+    title: 'Fechar separadores automaticamente',
+    desc: 'Fecha discretamente os separadores inativos quando tem demasiados abertos. As páginas fechadas continuam pesquisáveis no SpotRecall (exceto as vazias). Separadores afixados, agrupados, com som e ativos nunca são tocados.',
+    label: 'Ativar o fecho automático',
+    note: 'Desligado até o ativar. Uma janela nunca é esvaziada e os separadores restaurados há pouco têm um período de tolerância.',
+    keepLabel: 'Separadores a manter abertos',
+    keepDesc: 'Número-alvo de separadores normais a manter abertos em todas as janelas (predefinição 12). Separadores afixados e agrupados não são contados.',
+    logTitle: 'Fechados nas últimas 48 h (4)',
+    tag: 'não indexada',
+  },
+  ru: {
+    loc: 'ru',
+    h: 'Слишком много вкладок?<br/>Пусть закроются сами',
+    p: 'Автозакрытие тихо убирает неактивные вкладки, когда вы превышаете лимит, — и каждая закрытая страница остаётся доступной для поиска в SpotRecall.',
+    title: 'Автозакрытие вкладок',
+    desc: 'Незаметно закрывает неактивные вкладки, когда их открыто слишком много. Закрытые страницы остаются доступными для поиска в SpotRecall (кроме пустых). Закреплённые, сгруппированные, звучащие и активные вкладки никогда не трогаются.',
+    label: 'Включить автозакрытие',
+    note: 'Выключено, пока вы не включите. Окно никогда не опустошается, а недавно восстановленные вкладки получают отсрочку.',
+    keepLabel: 'Открытых вкладок для хранения',
+    keepDesc: 'Целевое число обычных вкладок, остающихся открытыми во всех окнах (по умолчанию 12). Закреплённые и сгруппированные не учитываются.',
+    logTitle: 'Закрыто за последние 48 ч (4)',
+    tag: 'без индекса',
+  },
+  th: {
+    loc: 'th',
+    h: 'แท็บเยอะเกินไป?<br/>ให้มันปิดเอง',
+    p: 'เมื่อเกินขีดจำกัด ระบบจะปิดแท็บที่ไม่ได้ใช้อย่างเงียบ ๆ — และทุกหน้าที่ปิดไปยังค้นหาได้ใน SpotRecall',
+    title: 'ปิดแท็บอัตโนมัติ',
+    desc: 'ปิดแท็บที่ไม่ได้ใช้อย่างเงียบ ๆ เมื่อคุณเปิดแท็บมากเกินไป หน้าที่ปิดไปยังค้นหาได้ใน SpotRecall (ยกเว้นหน้าว่าง) แท็บที่ปักหมุด จัดกลุ่ม มีเสียง และแท็บที่ใช้งานอยู่จะไม่ถูกแตะต้อง',
+    label: 'เปิดใช้การปิดอัตโนมัติ',
+    note: 'ปิดอยู่จนกว่าคุณจะเปิดใช้ หน้าต่างจะไม่ถูกทำให้ว่าง และแท็บที่เพิ่งกู้คืนจะมีช่วงผ่อนผัน',
+    keepLabel: 'แท็บที่เปิดค้างไว้',
+    keepDesc: 'จำนวนเป้าหมายของแท็บปกติที่เปิดค้างไว้ในทุกหน้าต่าง (ค่าเริ่มต้น 12) ไม่นับแท็บที่ปักหมุดและจัดกลุ่ม',
+    logTitle: 'ปิดไปใน 48 ชม. ที่ผ่านมา (4)',
+    tag: 'ยังไม่ทำดัชนี',
+  },
+  tr: {
+    loc: 'tr',
+    h: 'Çok fazla sekme mi?<br/>Kapanmalarına izin ver',
+    p: 'Otomatik kapatma, sınırını aştığında etkin olmayan sekmeleri sessizce toplar — ve kapatılan her sayfa SpotRecall’da aranabilir kalır.',
+    title: 'Sekmeleri otomatik kapat',
+    desc: 'Çok fazla sekme açıkken etkin olmayanları sessizce kapatır. Kapatılan sayfalar SpotRecall’da aranabilir kalır (boş olanlar hariç). Sabitlenmiş, gruplanmış, ses çıkaran ve etkin sekmelere asla dokunulmaz.',
+    label: 'Otomatik kapatmayı etkinleştir',
+    note: 'Siz açana kadar kapalıdır. Bir pencere asla boşaltılmaz ve yeni geri yüklenen sekmelere ek süre tanınır.',
+    keepLabel: 'Açık tutulacak sekmeler',
+    keepDesc: 'Tüm pencerelerde açık tutulacak normal sekme hedefi (varsayılan 12). Sabitlenmiş ve gruplanmış sekmeler sayılmaz.',
+    logTitle: 'Son 48 saatte kapatılanlar (4)',
+    tag: 'dizine eklenmedi',
+  },
+  uk: {
+    loc: 'uk',
+    h: 'Забагато вкладок?<br/>Хай закриються самі',
+    p: 'Автозакриття тихо прибирає неактивні вкладки, щойно ви перевищуєте ліміт, — і кожна закрита сторінка лишається доступною для пошуку в SpotRecall.',
+    title: 'Автозакриття вкладок',
+    desc: 'Непомітно закриває неактивні вкладки, коли їх відкрито забагато. Закриті сторінки залишаються доступними для пошуку в SpotRecall (окрім порожніх). Закріплені, згруповані, озвучені та активні вкладки ніколи не чіпаються.',
+    label: 'Увімкнути автозакриття',
+    note: 'Вимкнено, доки ви не ввімкнете. Вікно ніколи не спорожняється, а щойно відновлені вкладки отримують відтермінування.',
+    keepLabel: 'Відкритих вкладок для збереження',
+    keepDesc: 'Цільова кількість звичайних вкладок, що лишаються відкритими в усіх вікнах (типово 12). Закріплені та згруповані не враховуються.',
+    logTitle: 'Закрито за останні 48 год (4)',
+    tag: 'без індексу',
+  },
+  vi: {
+    loc: 'vi',
+    h: 'Quá nhiều thẻ?<br/>Hãy để chúng tự đóng',
+    p: 'Tự động đóng lặng lẽ dọn các thẻ không dùng khi bạn vượt giới hạn — và mọi trang đã đóng vẫn tìm được trong SpotRecall.',
+    title: 'Tự động đóng thẻ',
+    desc: 'Lặng lẽ đóng các thẻ không hoạt động khi bạn mở quá nhiều. Những trang đã đóng vẫn tìm được trong SpotRecall (trừ trang rỗng). Thẻ đã ghim, đã nhóm, đang phát âm thanh và thẻ hiện hành không bao giờ bị động đến.',
+    label: 'Bật tự động đóng',
+    note: 'Tắt cho đến khi bạn bật. Một cửa sổ không bao giờ bị dọn sạch, và các thẻ vừa khôi phục được một khoảng thời gian ân hạn.',
+    keepLabel: 'Thẻ mở cần giữ',
+    keepDesc: 'Số thẻ thường mục tiêu cần giữ mở trên mọi cửa sổ (mặc định 12). Thẻ đã ghim và đã nhóm không được tính.',
+    logTitle: 'Đã đóng trong 48 giờ qua (4)',
+    tag: 'chưa lập chỉ mục',
+  },
+  zh_CN: {
+    loc: 'zh-CN',
+    h: '标签页太多？<br/>让它们自动关闭',
+    p: '超过上限时，自动关闭会静默收起不活跃的标签页 —— 关闭后的页面仍可在 SpotRecall 中搜到。',
+    title: '自动关闭标签页',
+    desc: '当打开的标签页过多时，静默关闭不活跃的标签页。被关闭的页面仍可在 SpotRecall 中搜到（内容为空的除外）。固定、分组、正在播放音频、当前活动的标签页永不处理。',
+    label: '启用自动关闭',
+    note: '开启前不会动作。绝不关闭窗口最后一个标签页；刚恢复的标签页有宽限期。',
+    keepLabel: '保持打开的标签页数',
+    keepDesc: '所有窗口中普通标签页的保留目标数（默认 12）。固定和分组标签页不计入此数。',
+    logTitle: '最近 48 小时关闭的标签页（4）',
+    tag: '未收录',
+  },
+  zh_TW: {
+    loc: 'zh-TW',
+    h: '分頁太多？<br/>讓它們自動關閉',
+    p: '超過上限時，自動關閉會靜默收起不活躍的分頁 —— 關閉後的頁面仍可在 SpotRecall 中搜到。',
+    title: '自動關閉分頁',
+    desc: '當開啟的分頁過多時，靜默關閉不活躍的分頁。被關閉的頁面仍可在 SpotRecall 中搜到（內容為空的除外）。釘選、分組、正在播放音訊、目前使用中的分頁永不處理。',
+    label: '啟用自動關閉',
+    note: '開啟前不會動作。絕不關閉視窗最後一個分頁；剛復原的分頁有寬限期。',
+    keepLabel: '保持開啟的分頁數',
+    keepDesc: '所有視窗中一般分頁的保留目標數（預設 12）。釘選和分組分頁不計入此數。',
+    logTitle: '最近 48 小時關閉的分頁（4）',
+    tag: '未收錄',
+  },
 };
+
+// Mock rows for the closed-tab log. `mins` is minutes ago; the label is produced
+// with the same Intl.RelativeTimeFormat thresholds relTime() uses in the UI.
+const AC_LOG = [
+  { l: 'V', c: '#e2136e', title: 'Sony WH-1000XM5 Review: the new king of noise cancelling', domain: 'theverge.com', mins: 12 },
+  { l: 'W', c: '#111827', title: 'The Best Noise-Cancelling Headphones for 2026', domain: 'nytimes.com', mins: 47 },
+  { l: 'a', c: '#ff9900', title: 'Amazon.com: Bose QuietComfort Ultra Headphones', domain: 'amazon.com', mins: 180 },
+  { l: 'G', c: '#4285f4', title: 'Sign in – Google Accounts', domain: 'google.com', mins: 1200, notIndexed: true },
+];
+
+// Mirrors relTime() in src/ui/options.tsx: minutes under an hour, hours above.
+function rel(loc, mins) {
+  const rtf = new Intl.RelativeTimeFormat(loc, { numeric: 'auto' });
+  return mins < 60 ? rtf.format(-mins, 'minute') : rtf.format(-Math.round(mins / 60), 'hour');
+}
+
+// The real Options -> "Auto-close tabs" card, rendered with the shipped
+// options.css (scoped under .opt) so the art cannot drift from the settings page.
+function autoCloseCard(copy) {
+  const rows = AC_LOG.map(
+    (r) => `<div class="ac-log-row"><div class="ac-log-fav favicon" style="background:${r.c}">${esc(r.l)}</div>
+      <div class="ac-log-main"><div class="ac-log-title">${esc(r.title)}</div>
+      <div class="ac-log-sub">${esc(r.domain)}${r.notIndexed ? `<span class="ac-log-tag">${esc(copy.tag)}</span>` : ''}</div></div>
+      <div class="ac-log-time">${esc(rel(copy.loc, r.mins))}</div></div>`,
+  ).join('');
+  return `<div class="device wide"><div class="opt"><div class="card">
+    <h2>${esc(copy.title)}</h2>
+    <p class="desc">${esc(copy.desc)}</p>
+    <div class="row"><div><div class="label">${esc(copy.label)}</div><div class="desc">${esc(copy.note)}</div></div>
+      <label class="switch"><input type="checkbox" checked/><span class="slider"></span></label></div>
+    <div class="row"><div><div class="label">${esc(copy.keepLabel)}</div><div class="desc">${esc(copy.keepDesc)}</div></div>
+      <input type="number" style="width:80px" value="12" readonly/></div>
+    <div class="row" style="display:block"><div class="label" style="margin-bottom:8px">${esc(copy.logTitle)}</div>
+      <div class="ac-log">${rows}</div></div>
+  </div></div></div>`;
+}
 
 // screenshot-5: privacy / on-device.
 const SCREENSHOT_5_LOCALES = {
@@ -683,14 +1012,9 @@ const scenes = [
   },
   {
     name: 'screenshot-4',
-    h: 'Your recent pages,<br/>grouped by time',
-    p: 'Reopen anything from today, yesterday, or earlier — with a content preview, not a cryptic URL.',
-    body: palette({
-      sections: [
-        { label: 'Today', rows: [CART, VERGE] },
-        { label: 'Yesterday', rows: [WIRE] },
-      ],
-    }),
+    h: SCREENSHOT_4_LOCALES.en.h,
+    p: SCREENSHOT_4_LOCALES.en.p,
+    body: autoCloseCard(SCREENSHOT_4_LOCALES.en),
   },
   {
     name: 'screenshot-5',
@@ -705,7 +1029,7 @@ const ICON = `data:image/png;base64,${iconB64}`;
 
 function doc(css, bodyInner, rtl = false) {
   const dir = rtl ? 'rtl' : 'ltr';
-  return `<!doctype html><html dir="${dir}"><head><meta charset="utf-8"><style>${tokens}\n${layout}\n${BASE}\n${css}</style></head><body dir="${dir}" class="${rtl ? 'rtl' : ''}">${bodyInner}</body></html>`;
+  return `<!doctype html><html dir="${dir}"><head><meta charset="utf-8"><style>${tokens}\n${layout}\n${BASE}\n${OPTIONS_CSS}\n${css}</style></head><body dir="${dir}" class="${rtl ? 'rtl' : ''}">${bodyInner}</body></html>`;
 }
 
 // Store screenshots (1280x800).
@@ -788,21 +1112,13 @@ for (const [locale, copy] of Object.entries(SCREENSHOT_3_LOCALES)) {
 }
 
 for (const [locale, copy] of Object.entries(SCREENSHOT_4_LOCALES)) {
-  const s1 = SCREENSHOT_1_LOCALES[locale];
   outputs.push({
     name: `localized/${locale}/screenshot-4`,
     w: 1280,
     h: 800,
     html: doc(
       SHOT_CSS,
-      `<div class="copy"><div class="brandbar"><img src="${ICON}"/><b>SpotRecall</b></div><h1>${lines(copy.h)}</h1><p>${lines(copy.p)}</p></div><div class="stage">${palette({
-        openPanel: s1.openPanel,
-        indexed: s1.indexed,
-        sections: [
-          { label: copy.today, rows: [CART, VERGE] },
-          { label: copy.yesterday, rows: [WIRE] },
-        ],
-      })}</div>`,
+      `<div class="copy"><div class="brandbar"><img src="${ICON}"/><b>SpotRecall</b></div><h1>${lines(copy.h)}</h1><p>${lines(copy.p)}</p></div><div class="stage">${autoCloseCard(copy)}</div>`,
       RTL.has(locale),
     ),
   });
