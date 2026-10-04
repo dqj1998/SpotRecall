@@ -151,13 +151,14 @@ function App() {
     document.title = t('panelTitle');
   }, [lang]);
 
-  // Deep-link from the popup footer: scroll to the auto-close section once.
+  // Deep-link from the popup: scroll to the target section once (#autoclose, #backup, …).
   useEffect(() => {
-    if (!s || scrolledRef.current || location.hash !== '#autoclose') return;
+    if (!s || scrolledRef.current) return;
+    const id = location.hash.slice(1);
+    const target = id ? document.getElementById(id) : null;
+    if (!target) return;
     scrolledRef.current = true;
-    requestAnimationFrame(() =>
-      document.getElementById('autoclose')?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
-    );
+    requestAnimationFrame(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }));
   }, [s]);
 
   if (!s) return <div class="page">{t('loading')}</div>;
@@ -194,6 +195,8 @@ function App() {
     a.download = `spotrecall-backup-${Date.now()}.zip`;
     a.click();
     URL.revokeObjectURL(url);
+    // Record the indexed count at export time so the popup can remind when new pages accumulate.
+    void chrome.storage.local.set({ sr_last_export_count: s?.total ?? 0 });
     setBusy('');
   };
   const doImport = async (file: File) => {
@@ -366,7 +369,7 @@ function App() {
         </div>
       </div>
 
-      <div class="card">
+      <div class="card" id="backup">
         <h2>{t('backupTitle')}</h2>
         <p class="note">{t('backupNote')}</p>
         <div class="actions">

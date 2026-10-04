@@ -11,6 +11,9 @@ interface FlatItem {
 const PANEL_URL = 'src/ui/options.html';
 const HISTORY_KEY = 'sr_history';
 const HISTORY_MAX = 68;
+const EXPORT_LAST_KEY = 'sr_last_export_count';
+const EXPORT_DISMISSED_KEY = 'sr_export_dismissed_count';
+const EXPORT_REMINDER_THRESHOLD = 50;
 
 function flatten(buckets: TimelineBucket[]): FlatItem[] {
   const out: FlatItem[] = [];
@@ -61,6 +64,8 @@ export function PaletteApp({ onClose }: { onClose: () => void }) {
   const [history, setHistory] = useState<string[]>([]);
   const [status, setStatus] = useState<IndexStatus | null>(null);
   const [ac, setAc] = useState<{ enabled: boolean; consented: boolean; count: number } | null>(null);
+  const [lastExportCount, setLastExportCount] = useState(0);
+  const [exportDismissedCount, setExportDismissedCount] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const queryIdRef = useRef('');
   const queryRef = useRef('');
@@ -77,7 +82,11 @@ export function PaletteApp({ onClose }: { onClose: () => void }) {
   useEffect(() => {
     inputRef.current?.focus();
     chrome.runtime.sendMessage({ type: 'TELEMETRY', event: { type: 'palette_open' } }).catch(() => {});
-    chrome.storage.local.get(HISTORY_KEY).then((r) => setHistory((r[HISTORY_KEY] as string[]) ?? []));
+    chrome.storage.local.get([HISTORY_KEY, EXPORT_LAST_KEY, EXPORT_DISMISSED_KEY]).then((r) => {
+      setHistory((r[HISTORY_KEY] as string[]) ?? []);
+      setLastExportCount((r[EXPORT_LAST_KEY] as number | undefined) ?? 0);
+      setExportDismissedCount((r[EXPORT_DISMISSED_KEY] as number | undefined) ?? 0);
+    });
     chrome.runtime
       .sendMessage({ type: 'GET_RECENT' })
       .then((r: { buckets: TimelineBucket[] }) => {
@@ -151,6 +160,20 @@ export function PaletteApp({ onClose }: { onClose: () => void }) {
       .catch(() => {});
   }, []);
 
+  const clearQuery = () => {
+    setQuery('');
+    queryRef.current = '';
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    inputRef.current?.focus();
+    runSearch('');
+  };
+
+  const dismissExportReminder = useCallback(() => {
+    const count = status?.total ?? 0;
+    setExportDismissedCount(count);
+    void chrome.storage.local.set({ [EXPORT_DISMISSED_KEY]: count });
+  }, [status]);
+
   const onInput = (e: Event) => {
     const text = (e.target as HTMLInputElement).value;
     setQuery(text);
@@ -218,6 +241,11 @@ export function PaletteApp({ onClose }: { onClose: () => void }) {
   };
 
   const semanticOff = status ? !status.semanticEnabled : false;
+  const showExportReminder = !!(
+    status &&
+    status.total - lastExportCount >= EXPORT_REMINDER_THRESHOLD &&
+    status.total - exportDismissedCount >= EXPORT_REMINDER_THRESHOLD
+  );
   const statusText = !status
     ? ''
     : status.paused
@@ -256,6 +284,24 @@ export function PaletteApp({ onClose }: { onClose: () => void }) {
           </div>
         </div>
 
+        {showExportReminder && status && (
+          <div class="export-reminder" onClick={() => openPanel('#backup')}>
+            <svg class="export-reminder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            <span class="export-reminder-msg">
+              {t('exportReminderMsg', { n: status.total - lastExportCount })}
+            </span>
+            <button
+              class="export-reminder-dismiss"
+              title={t('exportReminderDismiss')}
+              onClick={(e) => { e.stopPropagation(); dismissExportReminder(); }}
+            >×</button>
+          </div>
+        )}
+
         <div class="searchbar">
           <svg class="s-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="7" />
@@ -268,6 +314,14 @@ export function PaletteApp({ onClose }: { onClose: () => void }) {
             value={query}
             onInput={onInput}
           />
+          {query && (
+            <button class="clear-btn" onClick={clearQuery} aria-label="Clear search">
+              <svg viewBox="0 0 20 20" fill="currentColor">
+                <circle cx="10" cy="10" r="9" />
+                <path d="M7 7l6 6M13 7l-6 6" stroke="white" stroke-width="1.8" stroke-linecap="round" fill="none" />
+              </svg>
+            </button>
+          )}
           <span class="mode-chip" title={stage === 2 ? t('modeSemanticTip') : t('modeKeywordTip')}>
             {stage === 2 ? t('modeSemantic') : t('modeKeyword')}
           </span>

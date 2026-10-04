@@ -122,6 +122,8 @@ const en: Dict = {
   autoCloseCountTip: 'View the tabs closed in the last 48h',
   autoCloseReopen: 'Click to reopen',
   versionLabel: 'Version {version}',
+  exportReminderMsg: '{n} new pages since last backup',
+  exportReminderDismiss: 'Dismiss',
 };
 
 const ja: Dict = {
@@ -226,6 +228,8 @@ const ja: Dict = {
   autoCloseCountTip: '直近48時間で閉じたタブを表示',
   autoCloseReopen: 'クリックで再度開く',
   versionLabel: 'バージョン {version}',
+  exportReminderMsg: '前回バックアップから {n} ページ追加されました',
+  exportReminderDismiss: '閉じる',
 };
 
 const zh: Dict = {
@@ -326,6 +330,8 @@ const zh: Dict = {
   autoCloseCountTip: '查看最近 48 小时自动关闭的标签页',
   autoCloseReopen: '点击重新打开',
   versionLabel: '版本 {version}',
+  exportReminderMsg: '距上次备份已新增 {n} 个页面',
+  exportReminderDismiss: '忽略',
 };
 
 const dicts: Record<Lang, Dict> = { en, ja, zh };

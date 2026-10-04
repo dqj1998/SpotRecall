@@ -100,6 +100,29 @@
 .input::placeholder {
   color: var(--sr-fg-faint);
 }
+/* Clear button inside the search row */
+.clear-btn {
+  flex: 0 0 auto;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--sr-fg-faint);
+  border-radius: 50%;
+  line-height: 0;
+  transition: color 0.15s;
+}
+.clear-btn svg {
+  width: 17px;
+  height: 17px;
+}
+.clear-btn:hover {
+  color: var(--sr-fg-dim);
+}
+
 .mode-chip {
   font-size: 11px;
   font-weight: 550;
@@ -109,6 +132,54 @@
   background: var(--sr-grad-soft);
   cursor: default;
   white-space: nowrap;
+}
+
+/* Export backup reminder banner (above search bar) */
+.export-reminder {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 8px 14px;
+  font-size: 12px;
+  color: var(--sr-fg-dim);
+  background: var(--sr-grad-soft);
+  cursor: pointer;
+  border-bottom: 1px solid var(--sr-border);
+}
+.export-reminder:hover .export-reminder-msg {
+  color: var(--sr-blue);
+}
+.export-reminder-icon {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  color: var(--sr-blue);
+  opacity: 0.75;
+}
+.export-reminder-msg {
+  flex: 1;
+  transition: color 0.15s;
+}
+.export-reminder-dismiss {
+  flex: 0 0 auto;
+  border: none;
+  background: transparent;
+  color: var(--sr-fg-faint);
+  font-size: 16px;
+  line-height: 1;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.export-reminder-dismiss:hover {
+  background: var(--sr-border-strong);
+  color: var(--sr-fg);
 }
 
 .hint {
