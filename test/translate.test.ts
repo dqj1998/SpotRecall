@@ -100,4 +100,38 @@ describe('expandQuery', () => {
     expect(create).toHaveBeenCalledTimes(1);
     expect(availability).toHaveBeenCalledTimes(1);
   });
+
+  it('falls back to script/character hints when LanguageDetector is unavailable', async () => {
+    const translate = vi.fn().mockResolvedValue('ガーデニングの日本語翻訳');
+    vi.stubGlobal('Translator', {
+      availability: vi.fn().mockResolvedValue('available'),
+      create: vi.fn().mockResolvedValue({ translate }),
+    });
+
+    const expandQuery = await loadExpandQuery();
+
+    await expect(expandQuery('Gardening的日语翻译', ['zh', 'ja'])).resolves.toEqual([
+      'Gardening的日语翻译',
+      'ガーデニングの日本語翻訳',
+    ]);
+  });
+});
+
+describe('expandQuery (ambiguous Han)', () => {
+  it('translates an ambiguous Han-only query from both zh and ja', async () => {
+    const create = vi.fn().mockImplementation(async ({ sourceLanguage, targetLanguage }) => ({
+      translate: async (t: string) => `${sourceLanguage}>${targetLanguage}:${t}`,
+    }));
+    vi.stubGlobal('Translator', { availability: vi.fn().mockResolvedValue('available'), create });
+
+    const expandQuery = await loadExpandQuery();
+
+    await expect(expandQuery('名片管理', ['en', 'ja', 'zh'])).resolves.toEqual([
+      '名片管理',
+      'zh>en:名片管理',
+      'zh>ja:名片管理',
+      'ja>en:名片管理',
+      'ja>zh:名片管理',
+    ]);
+  });
 });

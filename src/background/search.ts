@@ -3,17 +3,16 @@
 // from an old query can be ignored by the palette.
 
 import { getBm25 } from './bm25-manager';
+import { queryTerms } from '@search/bm25';
 import { vectorSearch, expandQuery } from './offscreen-manager';
 import { getBookmarkedIds } from './bookmarks';
 import { getRecord, allRecords } from '@storage/dao';
-import { fuseRanked } from '@search/rrf';
+import { fuseVariants, recordPrior, dedupeByContent, snippetOf, displayKey as keyOf } from '@search/fusion';
 import { bucketByTime } from '@search/timeline';
 import type { PageRecord, SearchHit, TimelineBucket } from '@shared/types';
 import { type SearchResultsUpdateMsg, TRANSLATE_TARGETS } from '@shared/protocol';
 
 const TOP_K = 50;
-const BM25_WEIGHT = 1.2;
-const VEC_WEIGHT = 1.0;
 const BOOKMARK_BOOST = 1.5;
 
 /**
@@ -43,7 +42,7 @@ function relevanceBuckets(hits: SearchHit[]): TimelineBucket[] {
 }
 
 function toHit(r: PageRecord, score: number): SearchHit {
-  const snippet = (r.description || r.cleanText || '').replace(/\s+/g, ' ').trim().slice(0, 300);
+  const snippet = snippetOf(r);
   return {
     id: r.id,
     url: r.url,
@@ -57,30 +56,18 @@ function toHit(r: PageRecord, score: number): SearchHit {
   };
 }
 
-/**
- * Collapse entries that share a non-empty contentHash, keeping the first (i.e.
- * the best-ranked / most-recent, since callers pass ordered lists). This hides
- * URL-distinct but content-identical pages — typically login/OAuth pages whose
- * URLs differ only by per-visit auth params. Empty hashes never collapse.
- */
-export function dedupeByContent<T>(items: T[], hashOf: (t: T) => string): T[] {
-  const seen = new Set<string>();
-  return items.filter((it) => {
-    const h = hashOf(it);
-    if (!h) return true;
-    if (seen.has(h)) return false;
-    seen.add(h);
-    return true;
-  });
-}
+const displayKey = (h: SearchHit) => keyOf(h.title, h.snippet);
 
-async function hitsFor(ids: { id: string; score: number }[]): Promise<SearchHit[]> {
+async function hitsFor(ids: { id: string; score: number }[], variants: string[]): Promise<SearchHit[]> {
+  const variantTerms = variants.map(queryTerms);
   const scored: { rec: PageRecord; score: number }[] = [];
   for (const { id, score } of ids) {
     const r = await getRecord(id);
-    if (r) scored.push({ rec: r, score });
+    if (r) scored.push({ rec: r, score: score * recordPrior(r, variantTerms) });
   }
-  return dedupeByContent(scored, (x) => x.rec.contentHash).map((x) => toHit(x.rec, x.score));
+  scored.sort((a, b) => b.score - a.score); // stable: no-op while priors are neutral
+  const hits = dedupeByContent(scored, (x) => x.rec.contentHash).map((x) => toHit(x.rec, x.score));
+  return dedupeByContent(hits, displayKey);
 }
 
 /** Empty-query browse mode: most-recently-visited pages, grouped by time. */
@@ -88,9 +75,10 @@ export async function recentBuckets(limit = 50): Promise<TimelineBucket[]> {
   const ordered = (await allRecords())
     .filter((r) => r.status === 'committed' || r.title)
     .sort((a, b) => b.lastVisited - a.lastVisited);
-  const hits = dedupeByContent(ordered, (r) => r.contentHash)
-    .slice(0, limit)
-    .map((r) => toHit(r, 0));
+  const hits = dedupeByContent(
+    dedupeByContent(ordered, (r) => r.contentHash).map((r) => toHit(r, 0)),
+    displayKey,
+  ).slice(0, limit);
   return bucketByTime(decorateBookmarks(hits, await getBookmarkedIds(), false));
 }
 
@@ -99,7 +87,7 @@ export async function bm25Stage(text: string): Promise<TimelineBucket[]> {
   const bm25 = await getBm25();
   const ranked = bm25.search(text, TOP_K);
   const scored = ranked.map((r, i) => ({ id: r.id, score: 1 / (i + 1) }));
-  const hits = decorateBookmarks(await hitsFor(scored), await getBookmarkedIds(), true);
+  const hits = decorateBookmarks(await hitsFor(scored, [text]), await getBookmarkedIds(), true);
   return relevanceBuckets(hits);
 }
 
@@ -115,24 +103,17 @@ export async function vectorStage(queryId: string, text: string): Promise<void> 
     .variants;
 
   const bm25 = await getBm25();
-  const lists: { ids: string[]; weight: number }[] = [];
-  for (const v of variants) {
-    lists.push({ ids: bm25.search(v, TOP_K).map((r) => r.id), weight: BM25_WEIGHT });
-  }
-
-  let anyVector = false;
+  const bm25Lists = variants.map((v) => bm25.search(v, TOP_K).map((r) => r.id));
+  const vecLists: ({ id: string; score: number }[] | null)[] = [];
   for (const v of variants) {
     const res = await vectorSearch(v, TOP_K);
-    if (res.ok) {
-      anyVector = true;
-      lists.push({ ids: res.results.map((r) => r.id), weight: VEC_WEIGHT });
-    }
+    vecLists.push(res.ok ? res.results : null);
   }
   // Nothing beyond the instant stage-1 (no translation, no vector) — skip.
-  if (!anyVector && variants.length === 1) return;
+  if (variants.length === 1 && !vecLists[0]) return;
 
-  const fused = fuseRanked(lists);
-  const hits = decorateBookmarks(await hitsFor(fused.slice(0, TOP_K)), await getBookmarkedIds(), true);
+  const fused = fuseVariants(bm25Lists, vecLists);
+  const hits = decorateBookmarks(await hitsFor(fused.slice(0, TOP_K), variants), await getBookmarkedIds(), true);
   const buckets = relevanceBuckets(hits);
   const msg: SearchResultsUpdateMsg = {
     type: 'SEARCH_RESULTS_UPDATE',

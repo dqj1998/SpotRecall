@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { Bm25Index } from '@search/bm25';
+import { Bm25Index, queryTerms } from '@search/bm25';
 import type { PageRecord } from '@shared/types';
 
 function rec(id: string, title: string, cleanText: string, url = `https://x/${id}`): PageRecord {
@@ -44,5 +44,26 @@ describe('BM25 CJK tokenization (dev plan §5; ja/zh keyword search)', () => {
   it('does not require every term (OR semantics)', () => {
     // "10G" + an absent term should still return the 10G docs.
     expect(idx.search('10G 不存在的词').map((h) => h.id)).toContain('docomo');
+  });
+});
+
+describe('BM25 query noise (stopwords / short-prefix)', () => {
+  const idx = Bm25Index.fromRecords([
+    rec('particle', '我的日记', '今天的天气很好，我的心情也很好'),
+    rec('office', 'Office 365', 'Microsoft office offers productivity tools'),
+    rec('gt', 'Google 翻訳', '単語、フレーズを日本語から翻訳できる'),
+  ]);
+
+  it('drops particles like 的 so they do not match unrelated pages', () => {
+    expect(queryTerms('Gardening的日语翻译')).toEqual(['Gardening', '日语', '翻译']);
+    expect(idx.search('Gardening的日语翻译').map((h) => h.id)).not.toContain('particle');
+  });
+
+  it('does not prefix-match short stopwords ("of" ≠ "office")', () => {
+    expect(idx.search('Japanese translation of Gardening').map((h) => h.id)).not.toContain('office');
+  });
+
+  it('keeps stopwords when the query is nothing but stopwords', () => {
+    expect(queryTerms('the')).toEqual(['the']);
   });
 });

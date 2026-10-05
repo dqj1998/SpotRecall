@@ -1,0 +1,7 @@
+[
+  {"query": "Gardening的日语翻译", "match": ["url:translate\\.google\\.com.*text=Gardening"], "tag": "xling"},
+  {"query": "咖啡豆", "match": ["title:コーヒー豆", "title:coffee beans"], "tag": "xling"},
+  {"query": "Microsoft partner center", "match": ["url:partner\\.microsoft\\.com"], "tag": "same"},
+  {"query": "表札 二世帯", "match": ["title:表札.*[2二]世帯"], "tag": "kanji"},
+  {"query": "Japan patent office", "match": ["url:jpo\\.go\\.jp"], "tag": "bookmark"}
+]

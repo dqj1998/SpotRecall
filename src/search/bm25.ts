@@ -39,14 +39,59 @@ function getSegmenter(): Intl.Segmenter | null {
   }
   return segmenter;
 }
+// ICU builds disagree on punctuation inside words ("Amazon.co.jp" is one segment
+// in Node's ICU, three in Chrome's), so word-like segments are split again on
+// punctuation/symbols. Tokens then no longer depend on the ICU version — an index
+// snapshot stays consistent across Chrome updates, and eval/ (Node) builds the
+// same index as the extension.
+const SPLIT = /[\s\p{P}\p{S}]+/u;
 function tokenize(text: string): string[] {
   const seg = getSegmenter();
-  if (!seg) return text.split(/[\s\p{P}]+/u).filter(Boolean);
+  if (!seg) return text.split(SPLIT).filter(Boolean);
   const out: string[] = [];
   for (const part of seg.segment(text)) {
-    if (part.isWordLike) out.push(part.segment);
+    if (!part.isWordLike) continue;
+    for (const t of part.segment.split(SPLIT)) if (t) out.push(t);
   }
   return out;
+}
+
+// Query-side noise terms. With OR semantics + prefix matching, a lone particle
+// like 的/の or "of" matches (or prefix-matches) a large share of the corpus and
+// floods the candidate list with irrelevant pages.
+const STOPWORDS = new Set([
+  'a', 'an', 'the', 'of', 'to', 'in', 'on', 'for', 'and', 'or', 'is', 'are', 'was',
+  'be', 'by', 'at', 'as', 'with', 'from', 'it', 'this', 'that', 'what', 'how',
+  '的', '了', '和', '与', '是', '在', '把', '吗', '呢', '个',
+  'の', 'は', 'が', 'を', 'に', 'で', 'と', 'も', 'へ', 'や', 'か', 'な',
+]);
+const CJK = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u;
+
+/** Drop stopwords from a query (unless that would leave nothing). Exported for tests. */
+export function queryTerms(query: string): string[] {
+  const terms = tokenize(query);
+  const kept = terms.filter((t) => !STOPWORDS.has(t.toLowerCase()));
+  return kept.length > 0 ? kept : terms;
+}
+
+// Prefix-match only terms long enough to be specific: "gar" → "gardening" is
+// useful, but "訳" or "of" as a prefix matches far too much.
+function usePrefix(term: string): boolean {
+  return CJK.test(term) ? term.length >= 2 : term.length >= 3;
+}
+
+/**
+ * True when every query term occurs in `text` (with the same prefix rule as
+ * search). Used to tell a title-only record that genuinely matches the query from
+ * one that only shares a stray term with it.
+ */
+export function coversAllTerms(text: string, terms: string[]): boolean {
+  if (terms.length === 0) return false;
+  const tokens = tokenize(text).map((t) => t.toLowerCase());
+  return terms.every((term) => {
+    const q = term.toLowerCase();
+    return tokens.some((d) => d === q || (usePrefix(q) && d.startsWith(q)));
+  });
 }
 
 const OPTIONS = {
@@ -55,7 +100,7 @@ const OPTIONS = {
   tokenize,
   searchOptions: {
     boost: { title: 3, url: 2, domain: 2, description: 1.5, cleanText: 1 },
-    prefix: true,
+    prefix: usePrefix,
     // OR so long natural-language queries don't require every term to be present;
     // BM25 still ranks docs with more/rarer term matches higher.
     combineWith: 'OR' as const,
@@ -82,7 +127,10 @@ export class Bm25Index {
 
   search(query: string, limit = 50): { id: string }[] {
     if (!query.trim()) return [];
-    return this.ms.search(query).slice(0, limit).map((r) => ({ id: r.id as string }));
+    return this.ms
+      .search(queryTerms(query).join(' '))
+      .slice(0, limit)
+      .map((r) => ({ id: r.id as string }));
   }
 
   get size(): number {

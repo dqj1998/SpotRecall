@@ -13,6 +13,8 @@
     "test:watch": "vitest",
     "eval:recall": "tsx eval/recall-eval.ts",
     "eval:bench": "tsx eval/bench.ts",
+    "eval:fusion-dump": "node eval/fusion-dump.mjs",
+    "eval:fusion": "tsx eval/fusion-eval.ts",
     "download-model": "node scripts/download-model.mjs",
     "make-screenshots": "node scripts/make-screenshots.mjs"
   },

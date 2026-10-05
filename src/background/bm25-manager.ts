@@ -5,13 +5,19 @@ import { Bm25Index } from '@search/bm25';
 import { allRecords, getMeta, setMeta, getRecord } from '@storage/dao';
 import type { PageRecord } from '@shared/types';
 
-const SNAPSHOT_KEY = 'minisearch_snapshot';
+// Bump the suffix whenever tokenization changes: an old snapshot holds tokens the
+// new query tokenizer would never produce. v2: punctuation split (bm25.ts tokenize).
+const SNAPSHOT_KEY = 'minisearch_snapshot_v2';
+const STALE_SNAPSHOT_KEYS = ['minisearch_snapshot'];
 let index: Bm25Index | null = null;
 let ready: Promise<Bm25Index> | null = null;
 let dirtyCount = 0;
 let snapshotTimer: ReturnType<typeof setTimeout> | null = null;
 
 async function build(): Promise<Bm25Index> {
+  for (const key of STALE_SNAPSHOT_KEYS) {
+    if (await getMeta<string | null>(key, null)) await setMeta(key, null); // free the space
+  }
   const snap = await getMeta<string | null>(SNAPSHOT_KEY, null);
   if (snap) {
     try {

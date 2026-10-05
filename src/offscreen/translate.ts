@@ -3,12 +3,16 @@
 // relying on the embedding model's cross-lingual alignment (see eval). Fully
 // feature-detected; silently returns just the original query when unavailable.
 
+import { sourceLanguages, translationPlan, assembleVariants } from '@shared/query-lang';
+
 const hasTranslator = typeof Translator !== 'undefined';
 const hasDetector = typeof LanguageDetector !== 'undefined';
 
 let detectorPromise: Promise<SRLanguageDetector> | null = null;
 const translators = new Map<string, Promise<SRTranslator>>();
 
+/** Confident LanguageDetector result; undefined when that model is unavailable
+ *  (it is a separate on-device download, often missing even when Translator works). */
 async function detectLang(text: string): Promise<string | undefined> {
   if (!hasDetector || !LanguageDetector) return undefined;
   try {
@@ -17,6 +21,7 @@ async function detectLang(text: string): Promise<string | undefined> {
     const top = results[0];
     return top && top.confidence > 0.3 ? top.detectedLanguage : undefined;
   } catch {
+    detectorPromise = null; // model unavailable — retry next time
     return undefined;
   }
 }
@@ -46,16 +51,12 @@ async function translate(text: string, source: string, target: string): Promise<
 /**
  * Return the original query plus translations into `targets` (the UI languages),
  * deduped. Cross-lingual queries thus also match same-language docs via BM25 and
- * a same-language vector comparison. Best-effort: falls back to [text].
+ * a same-language vector comparison. Ambiguous Han-only queries are translated
+ * from both zh and ja (see sourceLanguages). Best-effort: falls back to [text].
  */
 export async function expandQuery(text: string, targets: string[]): Promise<string[]> {
-  const variants = [text];
-  const src = await detectLang(text);
-  if (!src) return variants;
-  const uniqueTargets = [...new Set(targets)].filter((target) => target !== src);
-  const translations = await Promise.all(uniqueTargets.map((target) => translate(text, src, target)));
-  for (const t of translations) {
-    if (t && t.trim() && t !== text) variants.push(t);
-  }
-  return [...new Set(variants)];
+  const sources = sourceLanguages(text, { detected: await detectLang(text) });
+  const plan = translationPlan(sources, targets);
+  const translations = await Promise.all(plan.map(([src, tgt]) => translate(text, src, tgt)));
+  return assembleVariants(text, translations);
 }

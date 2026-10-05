@@ -6,6 +6,7 @@ public/models/
 public/ort/
 eval/labels*.json
 !eval/labels.example.json
+!eval/labels-fusion.example.json
 .cache/
 
 # local planning docs (kept local, not for the public repo)

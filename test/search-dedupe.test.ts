@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { dedupeByContent } from '../src/background/search';
+import { dedupeByContent, trimVectorHits } from '@search/fusion';
 
 describe('dedupeByContent (query-time content dedup)', () => {
   it('collapses entries sharing a non-empty contentHash, keeping the first', () => {
@@ -29,5 +29,20 @@ describe('dedupeByContent (query-time content dedup)', () => {
       { id: 'low', contentHash: 'DUP' },
     ];
     expect(dedupeByContent(ranked, (x) => x.contentHash).map((x) => x.id)).toEqual(['top', 'mid']);
+  });
+});
+
+describe('trimVectorHits (drop weak vector matches)', () => {
+  it('keeps only hits within the margin of the top score', () => {
+    const res = [
+      { id: 'a', score: 0.9 },
+      { id: 'b', score: 0.87 },
+      { id: 'c', score: 0.8 },
+    ];
+    expect(trimVectorHits(res).map((r) => r.id)).toEqual(['a', 'b']);
+  });
+
+  it('handles an empty list', () => {
+    expect(trimVectorHits([])).toEqual([]);
   });
 });
