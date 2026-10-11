@@ -93,7 +93,7 @@ export interface AutoClosedEntry {
   domain: string;
   favicon?: string;
   closedAt: number;
-  /** Committed & searchable in SpotRecall (false = thin page, not recoverable). */
+  /** Full text committed (false = title/URL only — still keyword-searchable and reopenable). */
   indexed: boolean;
 }
 
@@ -111,4 +111,5 @@ export const META_KEYS = {
   autoCloseKeep: 'autoCloseKeep',
   autoCloseConsented: 'autoCloseConsented',
   autoCloseLog: 'autoCloseLog',
+  installTidyPending: 'installTidyPending',
 } as const;

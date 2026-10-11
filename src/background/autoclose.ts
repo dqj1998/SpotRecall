@@ -19,10 +19,12 @@ import {
   isAutoCloseConsented,
   getAutoCloseKeep,
   appendAutoCloseLog,
+  getRecord,
 } from '@storage/dao';
 import type { AutoClosedEntry, PageRecord } from '@shared/types';
 import { domainOf } from '@shared/url';
 import { offscreenState, scoreAgainst } from './offscreen-manager';
+import { currentRecordId } from './instances';
 
 // ---- tunables (confirmed 2026-09-23) ----
 export const AC_DEFAULTS = {
@@ -326,23 +328,29 @@ async function buildSignals(
 
 // ---- orchestration ----
 
-export async function runAutoClose(): Promise<void> {
-  if (!(await isAutoCloseEnabled()) || !(await isAutoCloseConsented())) return;
+/**
+ * `install`: the first-run tidy, run in front of the user on the welcome panel.
+ * It skips the post-restart grace and the idle minimum (ranking still keeps the
+ * freshest tabs), and closes never-committed tabs directly because
+ * `captureExistingTabs` has already made its one capture attempt.
+ */
+export async function runAutoClose(opts: { install?: boolean } = {}): Promise<AutoClosedEntry[]> {
+  if (!(await isAutoCloseEnabled()) || !(await isAutoCloseConsented())) return [];
 
   const now = Date.now();
   const sessionStart = await ensureSessionStart(now);
-  if (now - sessionStart < AC_DEFAULTS.graceMs) return; // post-restart grace
+  if (!opts.install && now - sessionStart < AC_DEFAULTS.graceMs) return []; // post-restart grace
 
   const keep = await getAutoCloseKeep();
   const settings: AutoCloseSettings = {
     keep,
     thinCharLimit: AC_DEFAULTS.thinChars,
-    minInactiveMs: AC_DEFAULTS.minInactiveMs,
+    minInactiveMs: opts.install ? 0 : AC_DEFAULTS.minInactiveMs,
     overAgeMs: AC_DEFAULTS.overAgeMs,
     tauMs: AC_DEFAULTS.tauMs,
     wRelevance: AC_DEFAULTS.wRelevance,
     wFreshness: AC_DEFAULTS.wFreshness,
-    captureMaxAttempts: AC_DEFAULTS.captureMaxAttempts,
+    captureMaxAttempts: opts.install ? 0 : AC_DEFAULTS.captureMaxAttempts,
   };
 
   const liveTabs = await chrome.tabs.query({});
@@ -426,7 +434,7 @@ export async function runAutoClose(): Promise<void> {
     await ssSet(SS.captureAttempts, captureAttempts);
   }
 
-  if (!decision.close.length) return;
+  if (!decision.close.length) return [];
 
   // Re-verify against a fresh snapshot right before removing: the async scan may
   // have raced with the user closing tabs (never empty a window).
@@ -443,7 +451,7 @@ export async function runAutoClose(): Promise<void> {
     finalClose.push(id);
     winCount.set(info.windowId, (winCount.get(info.windowId) ?? 0) - 1);
   }
-  if (!finalClose.length) return;
+  if (!finalClose.length) return [];
 
   const closedAt = Date.now();
   const entries: AutoClosedEntry[] = finalClose.map((id) => {
@@ -460,4 +468,65 @@ export async function runAutoClose(): Promise<void> {
   });
   await chrome.tabs.remove(finalClose).catch(() => {});
   await appendAutoCloseLog(entries);
+  return entries;
+}
+
+// ---- first-run capture of pre-install tabs ----
+
+async function waitUntil(cond: () => Promise<boolean>, timeoutMs: number): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (!(await cond()) && Date.now() < deadline) {
+    await new Promise((r) => setTimeout(r, 250));
+  }
+}
+
+/**
+ * Tabs open before install have no content script (Chrome injects declared
+ * scripts only into pages loaded afterwards), so FORCE_CAPTURE would reach
+ * nothing and they would close with only the backfilled title + URL. Inject the
+ * capture script, wait for each tab's INIT to register, then force a commit so
+ * the full text is indexed before the first-run tidy. Discarded, restricted
+ * (store / chrome://) and blocklisted tabs stay title + URL only.
+ */
+export async function captureExistingTabs(
+  onProgress: (done: number, total: number) => void,
+): Promise<void> {
+  const file = chrome.runtime.getManifest().content_scripts?.[0]?.js?.[0];
+  if (!file) return;
+  const tabs = (await chrome.tabs.query({})).filter(
+    (t) =>
+      t.id !== undefined &&
+      !t.incognito &&
+      !(t as chrome.tabs.Tab & { discarded?: boolean }).discarded &&
+      /^(https?|file):/.test(t.url || ''),
+  );
+  const injected: { tabId: number; recordId: string }[] = [];
+  await Promise.all(
+    tabs.map(async (t) => {
+      try {
+        await chrome.scripting.executeScript({ target: { tabId: t.id! }, files: [file] });
+        injected.push({ tabId: t.id!, recordId: await recordIdFor(normalizeUrl(t.url!)) });
+      } catch {
+        /* restricted page or tab went away */
+      }
+    }),
+  );
+  const total = injected.length;
+  onProgress(0, total);
+  if (!total) return;
+
+  // A commit is accepted only for the instance INIT registered; committing
+  // before that is dropped as a stale document.
+  await waitUntil(async () => injected.every((x) => currentRecordId(x.tabId, 0) !== undefined), 3000);
+  for (const x of injected) {
+    chrome.tabs.sendMessage(x.tabId, { type: 'FORCE_CAPTURE' }).catch(() => {});
+  }
+  await waitUntil(async () => {
+    let done = 0;
+    for (const x of injected) {
+      if ((await getRecord(x.recordId))?.status === 'committed') done++;
+    }
+    onProgress(done, total);
+    return done === total;
+  }, 6000);
 }

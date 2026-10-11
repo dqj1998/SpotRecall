@@ -15,6 +15,7 @@ import {
   forgetTab,
   markFormDirty,
   clearFormDirty,
+  captureExistingTabs,
 } from './autoclose';
 import { runBackfill, backfillOneBookmark } from './backfill';
 import { invalidateBookmarks } from './bookmarks';
@@ -105,10 +106,36 @@ async function maintenance(): Promise<void> {
 
 chrome.runtime.onInstalled.addListener((details) => {
   void bootstrap();
-  // First install: open the panel so the user sees (and can enable) auto-close.
-  // Updates never auto-open a page — the panel toggle is the consent path.
-  if (details.reason === 'install') chrome.runtime.openOptionsPage?.();
+  // First install: auto-close is on by default, and the panel opens to run the
+  // first tidy in front of the user (INSTALL_TIDY); closures land in the 48h list.
+  // Updates never auto-open a page or grant consent — existing users who never
+  // turned auto-close on keep it off; the panel toggle stays their consent path.
+  if (details.reason === 'install') {
+    void (async () => {
+      await setMeta(META_KEYS.autoCloseConsented, true);
+      await setMeta(META_KEYS.installTidyPending, true);
+      chrome.runtime.openOptionsPage?.();
+    })();
+  }
 });
+
+// ---------- first-run tidy ----------
+let installTidyRun: Promise<void> | null = null;
+
+/** Runs once per install; a panel reload mid-run joins the same run. */
+function runInstallTidy(): Promise<void> {
+  installTidyRun ??= (async () => {
+    if (!(await getMeta<boolean>(META_KEYS.installTidyPending, false))) return;
+    await setMeta(META_KEYS.installTidyPending, false);
+    await captureExistingTabs((done, total) => {
+      chrome.runtime.sendMessage({ type: 'INSTALL_TIDY_PROGRESS', done, total }).catch(() => {});
+    });
+    await runAutoClose({ install: true });
+  })().finally(() => {
+    installTidyRun = null;
+  });
+  return installTidyRun;
+}
 chrome.runtime.onStartup.addListener(() => void bootstrap());
 chrome.alarms.onAlarm.addListener((a) => {
   if (a.name === 'maintenance') {
@@ -282,6 +309,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse): boolean => {
             autoCloseKeep: await getAutoCloseKeep(),
             autoCloseConsented: await isAutoCloseConsented(),
             autoCloseLog: await getAutoCloseLog(),
+            installTidyPending: await getMeta<boolean>(META_KEYS.installTidyPending, false),
             offscreen: await offscreenState(),
             total: await recordCount(),
             pending: await queueDepth(),
@@ -324,6 +352,11 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse): boolean => {
             consented: await isAutoCloseConsented(),
             count: log.length,
           });
+          return;
+        }
+        case 'INSTALL_TIDY': {
+          await runInstallTidy();
+          sendResponse({ ok: true });
           return;
         }
         case 'SET_AUTOCLOSE': {

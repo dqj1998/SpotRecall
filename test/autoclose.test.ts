@@ -275,3 +275,40 @@ describe('isInternalUrl', () => {
     expect(isInternalUrl('http://localhost:3000/')).toBe(false);
   });
 });
+
+describe('selectTabsToClose — first-run tidy settings', () => {
+  // runAutoClose({ install: true }): no idle minimum, capture already attempted.
+  const install = (keep: number): AutoCloseSettings => ({
+    ...settings(keep),
+    minInactiveMs: 0,
+    captureMaxAttempts: 0,
+  });
+
+  it('closes never-committed tabs instead of deferring them to a capture tick', () => {
+    const tabs = Array.from({ length: 5 }, () => tab({ committed: false, cleanTextLen: 0 }));
+    const d = selectTabsToClose(tabs, install(2), { now: NOW, withinGrace: false });
+    expect(d.capture).toEqual([]);
+    expect(d.close).toHaveLength(3);
+  });
+
+  it('can close just-used tabs but keeps the freshest ones', () => {
+    const stale = tab({ lastActive: NOW - 3 * 60 * 60_000 });
+    const recent = tab({ lastActive: NOW - 60_000 });
+    const d = selectTabsToClose([stale, recent], install(1), { now: NOW, withinGrace: false });
+    expect(d.close).toEqual([stale.tabId]);
+  });
+
+  it('still protects active, pinned, grouped, audible and form-filled tabs', () => {
+    const tabs = [
+      tab({ active: true }),
+      tab({ pinned: true }),
+      tab({ grouped: true }),
+      tab({ audible: true }),
+      tab({ hasFormInput: true }),
+      tab(),
+      tab(),
+    ];
+    const d = selectTabsToClose(tabs, install(1), { now: NOW, withinGrace: false });
+    expect(d.close.every((id) => id === tabs[5].tabId || id === tabs[6].tabId)).toBe(true);
+  });
+});

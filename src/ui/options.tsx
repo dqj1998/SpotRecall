@@ -24,6 +24,7 @@ interface Settings {
   autoCloseKeep: number;
   autoCloseConsented: boolean;
   autoCloseLog: AutoClosedEntry[];
+  installTidyPending: boolean;
   total: number;
   pending: number;
   offscreen: ModelStatus | null;
@@ -103,7 +104,9 @@ function App() {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [model, setModel] = useState<ModelStatus | null>(null);
   const [busy, setBusy] = useState('');
+  const [tidy, setTidy] = useState<{ done: number; total: number } | null>(null);
   const scrolledRef = useRef(false);
+  const tidyStartedRef = useRef(false);
 
   const modelLabel = (m: ModelStatus | null): string => {
     switch (m?.state) {
@@ -150,6 +153,26 @@ function App() {
   useEffect(() => {
     document.title = t('panelTitle');
   }, [lang]);
+
+  // First install: run the first tidy here, in front of the user — progress
+  // shows in the auto-close card, and the closures then fill its 48h list.
+  useEffect(() => {
+    if (!s?.installTidyPending || tidyStartedRef.current) return;
+    tidyStartedRef.current = true;
+    setTidy({ done: 0, total: 0 });
+    requestAnimationFrame(() =>
+      document.getElementById('autoclose')?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+    );
+    const onMsg = (m: { type?: string; done?: number; total?: number }) => {
+      if (m?.type === 'INSTALL_TIDY_PROGRESS') setTidy({ done: m.done ?? 0, total: m.total ?? 0 });
+    };
+    chrome.runtime.onMessage.addListener(onMsg);
+    void send({ type: 'INSTALL_TIDY' }).finally(() => {
+      chrome.runtime.onMessage.removeListener(onMsg);
+      setTidy(null);
+      void load();
+    });
+  }, [s]);
 
   // Deep-link from the popup: scroll to the target section once (#autoclose, #backup, …).
   useEffect(() => {
@@ -332,6 +355,17 @@ function App() {
             }}
           />
         </div>
+        {tidy && (
+          <div class="row" style="display:block">
+            <div class="label">{t('tidyTitle')}</div>
+            <div class="desc">
+              {tidy.total ? t('tidyIndexing', { done: tidy.done, total: tidy.total }) : t('tidyClosing')}
+            </div>
+            <span class="progress">
+              <span class="bar" style={`width:${tidy.total ? Math.round((tidy.done / tidy.total) * 100) : 0}%`} />
+            </span>
+          </div>
+        )}
         <div class="row" style="display:block">
           <div class="label" style="margin-bottom:8px">
             {t('autoCloseLogTitle', { n: s.autoCloseLog.length })}

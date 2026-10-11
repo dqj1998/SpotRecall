@@ -60,6 +60,10 @@ export default defineManifest({
     'alarms',
     'favicon',
     'bookmarks',
+    // Inject the capture script into tabs that were already open at install
+    // (declared content scripts only reach pages loaded afterwards). Covered by
+    // the existing <all_urls> host permission, so no new install warning.
+    'scripting',
   ],
   host_permissions: ['<all_urls>'],
   content_security_policy: {

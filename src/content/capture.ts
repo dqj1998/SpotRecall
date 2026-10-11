@@ -6,6 +6,11 @@
   // Only capture the top document. Sub-frames (ads, reCAPTCHA, embedded widgets)
   // must never become their own records. (Belt-and-suspenders vs all_frames.)
   if (window.top !== window.self) return;
+  // The SW may also inject this file into tabs open before install; the declared
+  // and injected copies share the isolated world, so the first one wins.
+  const w = window as Window & { __spotrecallCapture?: true };
+  if (w.__spotrecallCapture) return;
+  w.__spotrecallCapture = true;
 
   let isCommitted = false;
   let stopped = false;

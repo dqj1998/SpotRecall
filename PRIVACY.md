@@ -40,7 +40,12 @@ protect against local access and would give false assurance). Backup files you
 export are your responsibility to protect.
 
 ## Permissions
-- `tabs`, `webNavigation` — detect when pages load / navigate (incl. SPA routes).
+- `tabs`, `webNavigation` — detect when pages load / navigate (incl. SPA routes),
+  and close inactive tabs when auto-close is on.
+- `scripting` — at install, run SpotRecall's own capture script in tabs that were
+  already open, so they are indexed like pages loaded later. No remote code.
+- `bookmarks` — read bookmarked pages to prioritize them in results. Bookmarks are
+  never added, changed, or deleted.
 - `storage`, `unlimitedStorage` — store the local index without eviction.
 - `offscreen` — run the embedding model in a persistent local context.
 - `alarms` — low-priority background indexing.
@@ -74,7 +79,7 @@ SpotRecall 是**本地优先**的 Chrome 扩展。你的浏览数据**始终不�
 
 **存储与暴露**：正文以**明文**存于本地 IndexedDB,安全边界等同浏览器历史(同机进程、备份文件、DevTools 均可读)。刻意不做静态加密(本地密钥防不住本地访问,只会给虚假安全感)。你导出的备份文件请自行妥善保管。
 
-**权限**：`tabs`/`webNavigation`(感知页面加载与 SPA 导航)、`storage`/`unlimitedStorage`(本地索引不被驱逐)、`offscreen`(常驻本地跑模型)、`alarms`(低优后台索引)、`favicon`(Chrome 本地缓存的站点图标,无第三方请求)、`host_permissions: <all_urls>`(读取你访问页面的内容用于索引,仅本地处理)。
+**权限**：`tabs`/`webNavigation`(感知页面加载与 SPA 导航;开启自动关闭时关闭闲置标签页)、`scripting`(安装时在已打开的标签页中运行扩展自带的收录脚本,不加载远程代码)、`bookmarks`(读取书签以在结果中优先显示,绝不增删改书签)、`storage`/`unlimitedStorage`(本地索引不被驱逐)、`offscreen`(常驻本地跑模型)、`alarms`(低优后台索引)、`favicon`(Chrome 本地缓存的站点图标,无第三方请求)、`host_permissions: <all_urls>`(读取你访问页面的内容用于索引,仅本地处理)。
 
 **你的控制**：随时暂停捕获、站点黑名单、一键清空全部数据、导出/导入备份。
 

@@ -346,3 +346,4 @@ export async function appendAutoCloseLog(entries: AutoClosedEntry[]): Promise<vo
     .slice(-AUTOCLOSE_LOG_CAP);
   await setMeta(META_KEYS.autoCloseLog, merged);
 }
+
