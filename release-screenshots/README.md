@@ -15,7 +15,7 @@ shipped interface.
 
 ```
 release-screenshots/
-├── screenshot-1..5.png              1280x800   all-languages screenshots (English)
+├── screenshot-1..5.png              1280x800   all-languages screenshots (English); 1 = auto-close
 ├── promo-marquee-1400x560.png       1400x560   marquee promo tile (English)
 ├── promo-small-440x280.png           440x280   small promo tile (English)
 └── localized/<locale>/

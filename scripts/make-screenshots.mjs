@@ -25,7 +25,7 @@ const optionsCss = await readFile(join(ROOT, 'src/ui/options.css'), 'utf8');
 // file is flat (no nested at-rules), so a selector-prefix pass is enough.
 const OPTIONS_CSS =
   optionsCss
-    .replace(/@import[^;]+;/g, '')
+    .replace(/screenshot-import[^;]+;/g, '')
     .replace(/\/\*[\s\S]*?\*\//g, '')
     .replace(/(^|\})\s*([^{}]+)\{/g, (_m, close, sel) =>
       close +
@@ -312,9 +312,9 @@ const SCREENSHOT_1_LOCALES = {
 // SCREENSHOT_1_LOCALES so both promos and the first screenshot say the same thing.
 const PROMO_LOCALES = {
   en: {
-    mh: "Find any page<br/>you've visited",
-    mp: 'Private, on-device recall —<br/>by keyword & meaning.',
-    stag: "Find any page you've visited —<br/>private, on-device recall.",
+    mh: 'Close tabs freely.<br/>Find any page again.',
+    mp: 'Auto-closes idle tabs —<br/>AI recall, on your device.',
+    stag: 'Auto-close idle tabs —<br/>find any page again with AI.',
     pill: "Search where you've been…",
   },
   ar: {
@@ -360,9 +360,9 @@ const PROMO_LOCALES = {
     pill: 'Cerca dove sei stato…',
   },
   ja: {
-    mh: '見たページを<br/>すべて見つける',
-    mp: '端末内で完結するプライベート検索 —<br/>キーワードでも、意味でも。',
-    stag: '見たページをすべて見つける —<br/>端末内で完結、プライベート。',
+    mh: 'タブは気軽に閉じて、<br/>いつでも見つける',
+    mp: '使っていないタブを自動クローズ —<br/>端末内AIで呼び戻す。',
+    stag: 'タブを自動で整理 —<br/>閉じたページもAIで検索。',
     pill: '訪れたページを検索…',
   },
   ko: {
@@ -643,16 +643,16 @@ const SCREENSHOT_3_LOCALES = {
 const SCREENSHOT_4_LOCALES = {
   en: {
     loc: 'en',
-    h: 'Too many tabs?<br/>Let them close',
-    p: 'Auto-close quietly retires inactive tabs once you pass your limit — and every closed page stays searchable in SpotRecall.',
+    h: 'Close tabs freely.<br/>Find them anytime.',
+    p: 'Idle tabs close on their own once you pass your limit. Every closed page stays in the 48-hour list and searchable in SpotRecall.',
     title: 'Auto-close tabs',
     desc: 'Quietly closes inactive tabs when you have too many open. Closed pages stay searchable in SpotRecall (except empty ones). Pinned, grouped, audible, and active tabs are never touched.',
     label: 'Enable auto-close',
-    note: 'Off until you turn it on. A window is never emptied, and recently-restored tabs get a grace period.',
+    note: 'Turn it off anytime. A window is never emptied, and recently-restored tabs get a grace period.',
     keepLabel: 'Tabs to keep open',
     keepDesc: 'Target number of regular tabs to keep open across all windows (default 12). Pinned and grouped tabs are not counted.',
     logTitle: 'Closed in the last 48h (4)',
-    tag: 'not indexed',
+    tag: 'title only',
   },
   ar: {
     loc: 'ar',
@@ -747,16 +747,16 @@ const SCREENSHOT_4_LOCALES = {
   },
   ja: {
     loc: 'ja',
-    h: 'タブが多すぎる？<br/>自動で閉じよう',
-    p: '上限を超えると、使っていないタブを静かに閉じます。閉じたページは SpotRecall でそのまま検索できます。',
+    h: 'タブは気軽に閉じて、<br/>いつでも見つける',
+    p: '上限を超えると、使っていないタブを自動で閉じます。閉じたページは48時間の一覧に残り、SpotRecall で検索できます。',
     title: 'タブ自動クローズ',
     desc: '開きすぎた非アクティブなタブを静かに閉じます。閉じたページは SpotRecall で検索可能なまま（中身が空のものを除く）。固定・グループ・音声再生中・アクティブなタブは対象外です。',
     label: '自動クローズを有効化',
-    note: 'オンにするまで動作しません。ウィンドウ最後の1枚は閉じず、復元直後のタブには猶予期間があります。',
+    note: 'いつでもオフにできます。ウィンドウ最後の1枚は閉じず、復元直後のタブには猶予期間があります。',
     keepLabel: '開いたままにするタブ数',
     keepDesc: '全ウィンドウで開いておく通常タブの目標数（既定 12）。固定・グループタブはカウントされません。',
     logTitle: '直近48時間で閉じたタブ（4）',
-    tag: '未インデックス',
+    tag: 'タイトルのみ',
   },
   ko: {
     loc: 'ko',
@@ -982,21 +982,30 @@ const AC1 = { l: 'a', c: '#ff9900', title: "Amazon | 【標準取付工事費込
 const AC2 = { l: 'a', c: '#ff9900', title: "Amazon.co.jp: [2026年モデル] COMFEE' エアコン 10畳", snippet: 'オンライン通販のAmazon公式サイトなら COMFEE インバーター冷暖房 省エネ 6畳〜10畳', time: '8 min ago' };
 const KAK = { l: '価', c: '#2f80ff', title: '価格.com - エアコン 人気売れ筋ランキング', snippet: '自分にピッタリのエアコンを選べる 比較・検討 メーカー・畳数・価格で絞り込み', time: 'yesterday' };
 
+// Store order (1.5.0): auto-close leads, then keyword, semantic, history,
+// privacy. The SCREENSHOT_<n>_LOCALES tables keep their original scene numbers;
+// the output names here and in the localized loops below set the store order.
 const scenes = [
   {
     name: 'screenshot-1',
+    h: SCREENSHOT_4_LOCALES.en.h,
+    p: SCREENSHOT_4_LOCALES.en.p,
+    body: autoCloseCard(SCREENSHOT_4_LOCALES.en),
+  },
+  {
+    name: 'screenshot-2',
     h: 'Recall any page,<br/>instantly',
     p: "Blazing-fast keyword search across everything you've visited — error codes, versions, exact titles.",
     body: palette({ value: 'noise cancelling headphones', mode: 'Keyword', sections: [{ rows: ENG_ROWS }] }),
   },
   {
-    name: 'screenshot-2',
+    name: 'screenshot-3',
     h: 'Search by meaning —<br/>across languages',
     p: 'Type in English, find that Japanese page. An on-device model understands intent and bridges languages.',
     body: palette({ value: 'air conditioner installation', mode: 'Semantic', sections: [{ rows: [AC1, AC2, KAK] }] }),
   },
   {
-    name: 'screenshot-3',
+    name: 'screenshot-4',
     h: 'Pick up where<br/>you left off',
     p: 'Recent searches are one click away — run again, or remove any with a tap.',
     body: palette({
@@ -1009,12 +1018,6 @@ const scenes = [
       ],
       sections: [],
     }),
-  },
-  {
-    name: 'screenshot-4',
-    h: SCREENSHOT_4_LOCALES.en.h,
-    p: SCREENSHOT_4_LOCALES.en.p,
-    body: autoCloseCard(SCREENSHOT_4_LOCALES.en),
   },
   {
     name: 'screenshot-5',
@@ -1043,12 +1046,12 @@ const outputs = scenes.map((scene) => ({
   ),
 }));
 
-// One language-matched first screenshot per Store listing locale. These are
-// uploaded as each locale's localized asset; the five primary screenshots stay
-// English in the default listing.
+// Language-matched keyword-search screenshot per Store listing locale (store
+// slot 2). These are uploaded as each locale's localized assets; the five
+// primary screenshots stay English in the default listing.
 for (const [locale, copy] of Object.entries(SCREENSHOT_1_LOCALES)) {
   outputs.push({
-    name: `localized/${locale}/screenshot-1`,
+    name: `localized/${locale}/screenshot-2`,
     w: 1280,
     h: 800,
     html: doc(
@@ -1065,11 +1068,11 @@ for (const [locale, copy] of Object.entries(SCREENSHOT_1_LOCALES)) {
   });
 }
 
-// Language-matched screenshots 2–5 per locale.
+// The remaining language-matched screenshots per locale (store slots 3, 4, 1, 5).
 for (const [locale, copy] of Object.entries(SCREENSHOT_2_LOCALES)) {
   const s1 = SCREENSHOT_1_LOCALES[locale];
   outputs.push({
-    name: `localized/${locale}/screenshot-2`,
+    name: `localized/${locale}/screenshot-3`,
     w: 1280,
     h: 800,
     html: doc(
@@ -1089,7 +1092,7 @@ for (const [locale, copy] of Object.entries(SCREENSHOT_2_LOCALES)) {
 for (const [locale, copy] of Object.entries(SCREENSHOT_3_LOCALES)) {
   const s1 = SCREENSHOT_1_LOCALES[locale];
   outputs.push({
-    name: `localized/${locale}/screenshot-3`,
+    name: `localized/${locale}/screenshot-4`,
     w: 1280,
     h: 800,
     html: doc(
@@ -1113,7 +1116,7 @@ for (const [locale, copy] of Object.entries(SCREENSHOT_3_LOCALES)) {
 
 for (const [locale, copy] of Object.entries(SCREENSHOT_4_LOCALES)) {
   outputs.push({
-    name: `localized/${locale}/screenshot-4`,
+    name: `localized/${locale}/screenshot-1`,
     w: 1280,
     h: 800,
     html: doc(

@@ -1,8 +1,8 @@
 {
   "extName": {
-    "message": "SpotRecall - AI Search for Your Browsing History"
+    "message": "SpotRecall - Auto Tab Closer with AI Recall"
   },
   "extDesc": {
-    "message": "Search your browsing history by meaning or keyword. The AI runs on your device; your pages and queries never leave it."
+    "message": "Auto-closes idle tabs safely. Find any page again, even closed ones, by describing what you remember. The AI runs on your device."
   }
 }

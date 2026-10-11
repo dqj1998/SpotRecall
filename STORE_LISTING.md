@@ -3,12 +3,12 @@
 Everything needed to fill both stores' forms. The **same package** works for both.
 
 ## Package
-- Upload file: `spotrecall-store-1.2.1.zip` (built from `dist/`; `manifest.json` at
+- Upload file: `spotrecall-store-1.5.0.zip` (built from `dist/`; `manifest.json` at
   the zip root). Regenerate with:
   ```bash
-  npm run build && (cd dist && zip -rq ../spotrecall-store-1.2.1.zip . -x '*.DS_Store')
+  npm run build && (cd dist && zip -rq ../spotrecall-store-1.5.0.zip . -x '*.DS_Store')
   ```
-- Version: `1.2.1` · Package size: ~5.2 MB (the semantic model is **not** bundled;
+- Version: `1.5.0` · Package size: ~5.2 MB (the semantic model is **not** bundled;
   it downloads once at runtime and is cached locally).
 - Manifest V3 · minimum Chrome/Chromium 116.
 
@@ -41,10 +41,10 @@ so on both stores this copy goes in as the **last paragraph of each locale's des
 *replacing* the previous release's paragraph rather than stacking onto it.
 
 ### Name
-`SpotRecall — AI Search for Your Browsing History`
+`SpotRecall - Auto Tab Closer with AI Recall`
 
 ### Summary / short description (≤132 chars)
-`Search your browsing history by meaning or keyword. The AI runs on your device — your pages and queries never leave it.`
+`Auto-closes idle tabs safely. Find any page again, even closed ones, by describing what you remember. The AI runs on your device.`
 
 ### Detailed description
 ```
@@ -61,8 +61,9 @@ command palette (Cmd/Ctrl+Shift+K, or click the icon):
 • Works across languages. Query in English, Japanese, or Chinese and still find a
     page written in another language where Chrome's on-device Translation API is
     available (Chrome 138+). Otherwise, SpotRecall searches in the same language.
-  • KEEP TABS TIDY. Optionally close inactive tabs when you have more than your
-    chosen limit open. Indexed pages stay searchable. Active, pinned, grouped,
+  • KEEP TABS TIDY. Closes inactive tabs when you have more than your chosen
+    limit open (on by default; off anytime). Pages are indexed first and stay
+    searchable. Active, pinned, grouped,
     audible, and form-filled tabs are never closed; neither is the last tab in a
     window. Review and reopen tabs closed in the previous 48 hours.
   • Private & local-first. Page text, titles, URLs, and timestamps are stored in a
@@ -98,10 +99,10 @@ command palette (Cmd/Ctrl+Shift+K, or click the icon):
   ## Japanese listing (Chrome Web Store dashboard)
 
   ### Name
-  `SpotRecall — 閲覧履歴をAIで検索`
+  `SpotRecall - タブを自動で整理、閉じたページもAIで検索`
 
   ### Summary / short description
-  `閲覧履歴を意味やキーワードで検索。AIは端末内で動作し、ページ内容や検索語を外部に送信しません。`
+  `使っていないタブを安全に自動クローズ。閉じたページも、覚えている言葉で探し出せます。AIは端末内で動作し、データを外部に送信しません。`
 
   ### Detailed description
   ```
@@ -109,7 +110,7 @@ command palette (Cmd/Ctrl+Shift+K, or click the icon):
 
   ・キーワードと意味で検索。エラーコード、URL、バージョン番号はキーワード検索で正確に見つけ、多言語AIモデルが意味による検索も補います。
   ・言語をまたいで検索。Chrome の端末内 Translation API が利用できる環境（Chrome 138以降）では、英語・日本語・中国語の検索語から別言語のページを探せます。利用できない場合は同一言語で検索します。
-  ・タブ自動クローズ。オンにした場合のみ、保持数を超えた非アクティブなタブを閉じます。インデックス済みのページは検索可能なままです。アクティブ、固定、グループ、音声再生中、入力途中のフォームがあるタブ、各ウィンドウの最後の1枚は対象外です。直近48時間に閉じたタブは確認して再度開けます。
+  ・タブ自動クローズ。保持数を超えた非アクティブなタブを閉じます（既定でオン、いつでもオフにできます）。インデックス済みのページは検索可能なままです。アクティブ、固定、グループ、音声再生中、入力途中のフォームがあるタブ、各ウィンドウの最後の1枚は対象外です。直近48時間に閉じたタブは確認して再度開けます。
   ・データは端末内に保存。ページ本文、タイトル、URL、時刻はブラウザ内のローカルデータベースに保存され、ページ内容や検索語が送信されることはありません。アカウント、クラウド同期、分析、追跡はありません。
 
   インストール直後は、ブックマークと開いているタブのタイトル・URLを検索できます。過去の履歴は取り込みません。本文のインデックスは、インストール後に実際に閲覧したページから始まります。
@@ -155,8 +156,9 @@ Primary: English. Also localized in-product: 日本語, 简体中文.
 
 ## Privacy & permissions (Chrome requires justifications)
 
-**Single purpose:** Help users find and reopen web pages they previously visited,
-via a local, private search index of their browsing.
+**Single purpose:** Keep the tab bar manageable without losing pages: close
+inactive tabs, and let users find and reopen any page they previously visited via
+a local, private search index of their browsing.
 
 **Remote code:** No. All executable code is bundled. Only a public machine-learning
 model file (data, not code) is downloaded once and cached locally.
@@ -164,7 +166,9 @@ model file (data, not code) is downloaded once and cached locally.
 **Permission justifications:**
 | Permission | Justification |
 |---|---|
-| `tabs` | Open a selected result in a new tab and detect when it finished loading; remove records when their tab closes. |
+| `tabs` | Open a selected result in a new tab and detect when it finished loading; remove records when their tab closes; close inactive tabs when auto-close is on (on by default for new installs, off anytime). |
+| `scripting` | At install only, run the extension's own bundled capture script in tabs that were already open, so they are indexed before auto-close can close them. No remote code. |
+| `bookmarks` | Read bookmarked HTTP(S) pages to identify them and prioritize them in results. The extension never adds, changes, or deletes bookmarks. |
 | `webNavigation` | Detect page loads and in-page (SPA) navigations so pages are indexed as you browse. |
 | `storage`, `unlimitedStorage` | Store the local search index on the device without eviction. |
 | `offscreen` | Run the on-device embedding model in a persistent local document. |
@@ -188,16 +192,16 @@ model file (data, not code) is downloaded once and cached locally.
 ---
 
 ## Screenshot captions (screenshot-1..5.png, in order)
-1. Recall any page instantly — fast keyword search across your history.
-2. Search by meaning, across languages — an English query finds a Japanese page.
-3. Start with bookmarks and open tabs — full-text indexing begins as you browse.
-4. Recent pages grouped by time, with a content preview instead of a URL.
-5. Keep tabs tidy — automatically close inactive tabs without losing searchable pages.
+1. Close tabs freely — idle tabs close automatically and stay searchable.
+2. Recall any page instantly — fast keyword search across your history.
+3. Search by meaning, across languages — an English query finds a Japanese page.
+4. Pick up where you left off — recent searches one click away.
+5. Private by design — nothing leaves your device.
 
 ---
 
 ## Edge Add-ons notes
-- Upload the **same** `spotrecall-store-1.2.1.zip`.
+- Upload the **same** `spotrecall-store-1.5.0.zip`.
 - Store logo: **300×300** (`release-screenshots/edge-logo-300.png`).
 - Screenshots: 1280×800 (same files).
 - Provide the same description, category (Productivity), and privacy policy URL.
