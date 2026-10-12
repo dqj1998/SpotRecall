@@ -3,12 +3,12 @@
 Everything needed to fill both stores' forms. The **same package** works for both.
 
 ## Package
-- Upload file: `spotrecall-store-1.5.0.zip` (built from `dist/`; `manifest.json` at
+- Upload file: `spotrecall-store-1.5.1.zip` (built from `dist/`; `manifest.json` at
   the zip root). Regenerate with:
   ```bash
-  npm run build && (cd dist && zip -rq ../spotrecall-store-1.5.0.zip . -x '*.DS_Store')
+  npm run build && (cd dist && zip -rq ../spotrecall-store-1.5.1.zip . -x '*.DS_Store')
   ```
-- Version: `1.5.0` · Package size: ~5.2 MB (the semantic model is **not** bundled;
+- Version: `1.5.1` · Package size: ~5.2 MB (the semantic model is **not** bundled;
   it downloads once at runtime and is cached locally).
 - Manifest V3 · minimum Chrome/Chromium 116.
 
@@ -201,7 +201,7 @@ model file (data, not code) is downloaded once and cached locally.
 ---
 
 ## Edge Add-ons notes
-- Upload the **same** `spotrecall-store-1.5.0.zip`.
+- Upload the **same** `spotrecall-store-1.5.1.zip`.
 - Store logo: **300×300** (`release-screenshots/edge-logo-300.png`).
 - Screenshots: 1280×800 (same files).
 - Provide the same description, category (Productivity), and privacy policy URL.
