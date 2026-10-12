@@ -5,6 +5,7 @@
 import { zipSync, unzipSync, strToU8, strFromU8 } from 'fflate';
 import { getDb } from './db';
 import { allRecords, allVectors, setMeta } from './dao';
+import { tidyAllRecords, mergeRecord } from './tidy';
 import type { PageRecord, VectorRecord } from '@shared/types';
 import { META_KEYS } from '@shared/types';
 import { MODEL_ID, MODEL_DIM } from '@shared/protocol';
@@ -23,24 +24,7 @@ export interface BackupMeta {
   includesVectors: boolean;
 }
 
-/**
- * Idempotent field-wise merge of two records for the same id.
- * MAX/MIN only — committedVisits is MAX (never summed) so re-import is a no-op.
- */
-export function mergeRecord(local: PageRecord | undefined, incoming: PageRecord): PageRecord {
-  if (!local) return { ...incoming };
-  const newer = incoming.lastVisited > local.lastVisited ? incoming : local;
-  return {
-    ...newer,
-    id: local.id,
-    firstSeen: Math.min(local.firstSeen, incoming.firstSeen),
-    lastVisited: Math.max(local.lastVisited, incoming.lastVisited),
-    committedVisits: Math.max(local.committedVisits, incoming.committedVisits),
-    language: newer.language ?? local.language ?? incoming.language,
-    // status: committed dominates provisional
-    status: local.status === 'committed' || incoming.status === 'committed' ? 'committed' : newer.status,
-  };
-}
+export { mergeRecord };
 
 export async function exportBackup(includeVectors = false, deviceId = 'unknown'): Promise<Blob> {
   const records = await allRecords();
@@ -126,6 +110,8 @@ export async function importBackup(fileBytes: Uint8Array): Promise<ImportResult>
     await tx.objectStore('vectors').put(v);
   }
   await tx.done;
+  // A backup made under older capture/dedup rules must not bring old duplicates back.
+  await tidyAllRecords();
 
   await setMeta(META_KEYS.modelId, MODEL_ID);
   await setMeta(META_KEYS.modelDim, MODEL_DIM);

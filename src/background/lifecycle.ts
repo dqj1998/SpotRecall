@@ -2,7 +2,7 @@
 // it reads identity from the MessageSender, enforces the privacy gate, dedups by
 // normalized-URL id, and GCs by page-instance refCount (never by URL key).
 
-import { normalizeUrl, domainOf } from '@shared/url';
+import { normalizeUrl, domainOf, withUrlText } from '@shared/url';
 import { recordIdFor, sha256Hex } from '@shared/hash';
 import {
   upsertProvisional,
@@ -12,7 +12,9 @@ import {
   getBlacklist,
   allRecords,
   deleteRecordsCascade,
+  getRecord,
 } from '@storage/dao';
+import { isTypingIntermediate } from '@storage/tidy';
 import {
   registerProvisional,
   isCurrentDocument,
@@ -81,6 +83,24 @@ async function gcAll(ids: string[]): Promise<void> {
   }
 }
 
+/**
+ * Typing into an input the page mirrors into its URL (Google Translate's `text=`)
+ * fires one SPA navigation per keystroke, and the keystroke itself commits the
+ * page. Each superseded state of this frame is deleted, so one translation is
+ * one record — while separate translations stay separate.
+ */
+async function dropTypingIntermediates(displaced: string[], nextUrl: string, now: number): Promise<void> {
+  const drop: string[] = [];
+  for (const id of displaced) {
+    const prev = await getRecord(id);
+    if (prev && isTypingIntermediate(prev, nextUrl, now)) drop.push(id);
+  }
+  if (drop.length === 0) return;
+  await deleteRecordsCascade(drop);
+  for (const id of drop) await bm25Remove(id);
+  await vectorRemove(drop).catch(() => {});
+}
+
 export async function handleInit(
   sender: chrome.runtime.MessageSender,
   data: { url: string; title: string; description: string; domain: string; lang?: string },
@@ -97,6 +117,7 @@ export async function handleInit(
   const now = Date.now();
 
   const displaced = registerProvisional(tabId, frameId, sender.documentId, id);
+  await dropTypingIntermediates(displaced, data.url, now);
   await gcAll(displaced);
 
   const rec = await upsertProvisional({
@@ -126,7 +147,7 @@ export async function handleCommit(
 
   const normalizedUrl = normalizeUrl(data.url);
   const id = await recordIdFor(normalizedUrl);
-  const cleanText = data.content.slice(0, 2000);
+  const cleanText = withUrlText(data.url, data.content);
   const contentHash = cleanText ? await sha256Hex(cleanText) : '';
   const firstCommit = markCommitted(tabId, frameId);
 

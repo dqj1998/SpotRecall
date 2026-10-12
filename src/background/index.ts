@@ -8,6 +8,7 @@ import {
   handleFrameGone,
   purgeBuiltinJunk,
 } from './lifecycle';
+import { tidyAllRecords } from '@storage/tidy';
 import {
   runAutoClose,
   recordActivation,
@@ -78,6 +79,15 @@ async function bootstrap(): Promise<void> {
       await vectorRemove(removed).catch(() => {});
     }
     await setMeta('junkPurged_v1', true);
+  }
+  // One-time cleanup under the current capture/dedup rules (sign-in steps
+  // collapse to one record each; URL-typed text is indexed; keystroke
+  // intermediates dropped). Changed records are re-embedded.
+  if (!(await getMeta<boolean>('tidyRecords_v1', false))) {
+    const removed = await tidyAllRecords();
+    await resetBm25();
+    if (removed.length) await vectorRemove(removed).catch(() => {});
+    await setMeta('tidyRecords_v1', true);
   }
 
   // One-time metadata backfill from bookmarks + open tabs (covers new installs

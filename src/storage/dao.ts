@@ -261,6 +261,29 @@ export async function backfillRecords(
   return created;
 }
 
+/**
+ * Bulk rewrite (see storage/tidy.ts): delete `remove` ids (cascading) and write
+ * `put`, atomically. Written records with text and no embedding are (re)queued.
+ */
+export async function replaceRecords(remove: string[], put: PageRecord[]): Promise<void> {
+  if (remove.length === 0 && put.length === 0) return;
+  const db = await getDb();
+  const tx = db.transaction(['records', 'vectors', 'pendingEmbed'], 'readwrite');
+  for (const id of remove) {
+    await tx.objectStore('records').delete(id);
+    await tx.objectStore('vectors').delete(id);
+    await tx.objectStore('pendingEmbed').delete(id);
+  }
+  const now = Date.now();
+  for (const rec of put) {
+    await tx.objectStore('records').put(rec);
+    if (rec.status === 'committed' && rec.cleanText && rec.embedModelId === null) {
+      await tx.objectStore('pendingEmbed').put({ id: rec.id, enqueuedAt: now });
+    }
+  }
+  await tx.done;
+}
+
 /** Hard-delete records (any status) + their vectors + queue entries, atomically. */
 export async function deleteRecordsCascade(ids: string[]): Promise<void> {
   if (ids.length === 0) return;
