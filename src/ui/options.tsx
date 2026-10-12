@@ -30,6 +30,11 @@ interface Settings {
   offscreen: ModelStatus | null;
 }
 
+// Static link to our sibling extension; utm_* shows up as a traffic source in the CWS dashboard.
+const CONTEXTWIZARD_URL =
+  'https://chromewebstore.google.com/detail/contextwizard/lmhnmmedgmnfggecdalkancllnekofnb' +
+  '?utm_source=spotrecall&utm_medium=options&utm_campaign=cross_promo';
+
 const send = <T,>(msg: unknown): Promise<T> => chrome.runtime.sendMessage(msg) as Promise<T>;
 
 function relTime(ts: number, lang: string): string {
@@ -427,6 +432,10 @@ function App() {
       </div>
 
       {busy && <p class="note" style="text-align:center">{busy}</p>}
+      <p class="sibling">
+        {t('siblingLead')}{' '}
+        <a href={CONTEXTWIZARD_URL} target="_blank" rel="noopener noreferrer">{t('siblingDesc')} →</a>
+      </p>
       <div class="version-bar">{t('versionLabel', { version })}</div>
     </div>
   );

@@ -133,6 +133,15 @@ textarea, input[type='number'] {
 .progress .bar { display: block; height: 100%; background: var(--sr-grad); transition: width 0.3s; }
 .warn { color: #c9862b; }
 .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+.sibling {
+  text-align: center;
+  font-size: 12px;
+  color: var(--sr-fg-faint);
+  margin: 24px 0 0;
+}
+.sibling a { color: var(--sr-fg-dim); text-decoration: none; }
+.sibling a:hover { color: var(--sr-blue); text-decoration: underline; }
+
 .version-bar {
   text-align: center;
   font-size: 10px;
