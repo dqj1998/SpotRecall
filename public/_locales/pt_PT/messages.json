@@ -1,4 +1,8 @@
 {
-  "extName": { "message": "SpotRecall - Pesquisa com IA no histórico" },
-  "extDesc": { "message": "Pesquise o histórico por significado ou palavra-chave. A IA funciona no dispositivo; as páginas e pesquisas não saem dele." }
+  "extName": {
+    "message": "SpotRecall - Fecho automático de separadores com recuperação por IA"
+  },
+  "extDesc": {
+    "message": "Fecha separadores inativos em segurança. Reencontre qualquer página, mesmo fechada, descrevendo o que recorda. A IA é local."
+  }
 }

@@ -1,18 +1,23 @@
 # Italiano (it)
 
 ## Name
-SpotRecall - Ricerca AI nella cronologia di navigazione
+SpotRecall - Chiusura automatica delle schede con ricerca AI
 
 ## Short description
-Cerca nella cronologia per significato o parola chiave. L'IA funziona sul tuo dispositivo; pagine e query non lo lasciano.
+Chiusura automatica e sicura delle schede inattive. Ritrova ogni pagina, anche chiusa, descrivendola. L'IA gira sul tuo dispositivo.
 
 ## Detailed description
-Ritrova la pagina che ricordi senza rovistare nella cronologia. Cerca termini esatti o significato con Cmd/Ctrl+Shift+K.
+Troppe schede aperte, ma hai paura di chiuderne anche solo una? SpotRecall chiude le schede che non usi e ti garantisce di poterle sempre recuperare. Ti basta descrivere ciò che ricordi.
 
-SpotRecall combina la ricerca per parole chiave di codici errore, URL e versioni con un modello IA multilingue sul dispositivo per la ricerca semantica. Quando il browser offre la Translation API locale, puoi cercare tra inglese, giapponese e cinese; altrimenti la ricerca resta nella stessa lingua.
+Subito dopo l'installazione, SpotRecall indicizza le schede già aperte e le riduce a 12 (il numero lo scegli tu). Ogni scheda chiusa compare nell'elenco delle 48 ore, da cui la riapri con un clic.
 
-Tieni ordinate le schede con la chiusura automatica facoltativa. Funziona solo dopo l'attivazione e oltre il limite scelto. Le pagine indicizzate restano ricercabili. Schede attive, fissate, raggruppate, con audio e con moduli non salvati sono protette, e ogni finestra conserva almeno una scheda. Riapri quelle chiuse nelle ultime 48 ore.
+Sicuro per progettazione. Le schede attive, fissate, raggruppate, con audio e con moduli compilati non vengono mai chiuse, e ogni finestra conserva almeno una scheda. Le pagine vengono indicizzate prima di essere chiuse; le schede che il browser ha già scaricato dalla memoria mantengono titolo e URL. Riapri tutto ciò che è stato chiuso nelle ultime 48 ore e disattiva la chiusura automatica quando vuoi dal popup della barra degli strumenti.
 
-Testo, titolo, URL e ora delle pagine rimangono in un database locale del browser. Pagine e query non vengono mai caricate. Nessun account, sincronizzazione cloud, analisi o tracciamento. All'installazione SpotRecall indicizza titoli e URL di segnalibri e schede aperte, non la vecchia cronologia. La ricerca semantica scarica una volta un modello pubblico multilingue di circa 135 MB e lo memorizza localmente; nessun dato di navigazione viene inviato e poi funziona offline.
+Ritrovare, non solo riaprire. Premi Cmd/Ctrl+Shift+K e cerca per parola chiave esatta o per significato. La ricerca per parola chiave trova codici di errore, URL e numeri di versione. Un modello IA multilingue sul tuo dispositivo trova le pagine a partire da una descrizione vaga. Quando il browser offre una Translation API locale, puoi cercare tra inglese, giapponese e cinese; altrimenti la ricerca resta nella stessa lingua.
 
-SpotRecall è open source con AGPL-3.0. Privacy: https://github.com/dqj1998/SpotRecall/blob/main/PRIVACY.md
+Testo, titolo, URL e ora delle pagine rimangono in un database locale del browser. Pagine e query non vengono mai caricate. Nessun account, sincronizzazione cloud, analisi o tracciamento. All'installazione SpotRecall indicizza le schede aperte e i titoli e gli URL dei segnalibri; non importa la vecchia cronologia. La ricerca semantica scarica una sola volta un modello pubblico multilingue di circa 135 MB e lo memorizza nella cache locale. Nessun dato di navigazione viene inviato; una volta in cache, funziona offline.
+
+SpotRecall è open source con licenza AGPL-3.0. Privacy: https://github.com/dqj1998/SpotRecall/blob/main/PRIVACY.md
+
+Dallo stesso sviluppatore: ContextWizard salva automaticamente le conversazioni con ChatGPT, Claude e Gemini e ti permette di cercarle. I dati sono salvati in locale per impostazione predefinita.
+https://chromewebstore.google.com/detail/contextwizard/lmhnmmedgmnfggecdalkancllnekofnb?utm_source=spotrecall&utm_medium=cws_listing&utm_campaign=cross_promo

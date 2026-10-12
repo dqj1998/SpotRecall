@@ -1,4 +1,8 @@
 {
-  "extName": { "message": "SpotRecall - Recherche IA dans votre historique" },
-  "extDesc": { "message": "Recherchez votre historique par sens ou mot-clé. L'IA fonctionne sur votre appareil ; vos pages et requêtes ne le quittent pas." }
+  "extName": {
+    "message": "SpotRecall - Fermeture automatique des onglets et recherche IA"
+  },
+  "extDesc": {
+    "message": "Fermeture auto et sûre des onglets inactifs. Retrouvez toute page, même fermée, en la décrivant. L'IA tourne sur votre appareil."
+  }
 }

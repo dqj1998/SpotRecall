@@ -1,4 +1,8 @@
 {
-  "extName": { "message": "SpotRecall - Busca tu historial con IA" },
-  "extDesc": { "message": "Busca en tu historial por significado o palabra clave. La IA funciona en tu dispositivo; tus páginas y consultas no salen de él." }
+  "extName": {
+    "message": "SpotRecall - Cierre automático de pestañas y búsqueda con IA"
+  },
+  "extDesc": {
+    "message": "Cierre automático y seguro de pestañas inactivas. Encuentra cualquier página, incluso cerrada, describiéndola. IA en tu equipo."
+  }
 }

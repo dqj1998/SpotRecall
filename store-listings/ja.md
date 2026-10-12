@@ -18,3 +18,6 @@ SpotRecall - タブを自動で整理、閉じたページもAIで検索
 ページ本文、タイトル、URL、時刻はブラウザ内のローカルデータベースに保存されます。ページ内容や検索語がアップロードされることはありません。アカウント、クラウド同期、分析、追跡はありません。インストール時には開いているタブと、ブックマークのタイトル・URLを索引化し、過去の履歴は取り込みません。意味検索は公開の多言語モデル約135 MBを一度だけダウンロードしてローカルにキャッシュします。閲覧データは送信されず、キャッシュ後はオフラインで使えます。
 
 SpotRecall は AGPL-3.0 のオープンソースです。プライバシー: https://github.com/dqj1998/SpotRecall/blob/main/PRIVACY.md
+
+同じ開発者のツール：ContextWizard は ChatGPT・Claude・Gemini の会話を自動保存し、まとめて検索できます。データは標準で端末内に保存されます。
+https://chromewebstore.google.com/detail/contextwizard/lmhnmmedgmnfggecdalkancllnekofnb?utm_source=spotrecall&utm_medium=cws_listing&utm_campaign=cross_promo

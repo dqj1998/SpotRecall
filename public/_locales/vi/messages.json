@@ -1,4 +1,8 @@
 {
-  "extName": { "message": "SpotRecall - Tìm kiếm lịch sử duyệt web bằng AI" },
-  "extDesc": { "message": "Tìm lịch sử duyệt web theo ý nghĩa hoặc từ khóa. AI chạy trên thiết bị; trang và truy vấn của bạn không rời khỏi thiết bị." }
+  "extName": {
+    "message": "SpotRecall - Tự động đóng thẻ, tìm lại bằng AI"
+  },
+  "extDesc": {
+    "message": "Tự động đóng an toàn các thẻ không dùng. Tìm lại mọi trang, kể cả trang đã đóng, bằng cách mô tả điều bạn nhớ. AI chạy trên máy."
+  }
 }

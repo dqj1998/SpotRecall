@@ -18,3 +18,6 @@ Recall, not just reopen. Press Cmd/Ctrl+Shift+K and search by exact keyword or b
 Page text, titles, URLs, and timestamps stay in a local browser database. Your pages and queries are never uploaded. There is no account, cloud sync, analytics, or tracking. At install, SpotRecall indexes your open tabs and the titles and URLs of your bookmarks; it does not import old history. Semantic search downloads a public multilingual model of about 135 MB once and caches it locally. No browsing data is sent; after caching, it works offline.
 
 SpotRecall is open source under AGPL-3.0. Privacy policy: https://github.com/dqj1998/SpotRecall/blob/main/PRIVACY.md
+
+Also from the same developer: ContextWizard automatically saves your ChatGPT, Claude and Gemini conversations and lets you search them. Data is stored locally by default.
+https://chromewebstore.google.com/detail/contextwizard/lmhnmmedgmnfggecdalkancllnekofnb?utm_source=spotrecall&utm_medium=cws_listing&utm_campaign=cross_promo

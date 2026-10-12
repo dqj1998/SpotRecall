@@ -1,4 +1,8 @@
 {
-  "extName": { "message": "SpotRecall - KI-Suche im Browserverlauf" },
-  "extDesc": { "message": "Durchsuche deinen Browserverlauf nach Bedeutung oder Stichwort. Die KI läuft auf deinem Gerät; Seiten und Suchanfragen verlassen es nicht." }
+  "extName": {
+    "message": "SpotRecall - Tabs automatisch schließen, mit KI wiederfinden"
+  },
+  "extDesc": {
+    "message": "Schließt inaktive Tabs sicher von selbst. Finde jede Seite wieder, auch geschlossene, indem du sie beschreibst. Die KI läuft lokal."
+  }
 }

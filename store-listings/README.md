@@ -14,6 +14,10 @@ On both stores the What's New text is appended as the **last paragraph of each l
 description**, replacing the previous release's paragraph so descriptions do not
 accumulate old notes.
 
+Each locale file ends with a short ContextWizard cross-promo paragraph (store link
+tagged `utm_source=spotrecall&utm_medium=cws_listing`). Paste it with the rest of the
+description; the What's New paragraph goes after it.
+
 Supported release locales: `ar`, `de`, `en`, `es`, `fr`, `hi`, `id`, `it`, `ja`,
 `ko`, `nl`, `pl`, `pt_BR`, `pt_PT`, `ru`, `th`, `tr`, `uk`, `vi`, `zh_CN`, and
 `zh_TW`.

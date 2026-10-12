@@ -1,4 +1,8 @@
 {
-  "extName": { "message": "SpotRecall - AI 搜尋你的瀏覽紀錄" },
-  "extDesc": { "message": "依意思或關鍵字搜尋瀏覽紀錄。AI 在裝置上執行，頁面內容和搜尋詞都不會離開你的電腦。" }
+  "extName": {
+    "message": "SpotRecall - 自動關閉閒置分頁，用 AI 找回"
+  },
+  "extDesc": {
+    "message": "安全地自動關閉閒置分頁。描述你記得的內容，就能再次找到任何網頁，包括已關閉的。AI 在你的裝置上執行。"
+  }
 }

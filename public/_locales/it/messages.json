@@ -1,4 +1,8 @@
 {
-  "extName": { "message": "SpotRecall - Ricerca AI nella cronologia" },
-  "extDesc": { "message": "Cerca nella cronologia per significato o parola chiave. L'IA funziona sul tuo dispositivo; pagine e query non lo lasciano." }
+  "extName": {
+    "message": "SpotRecall - Chiusura automatica delle schede con ricerca AI"
+  },
+  "extDesc": {
+    "message": "Chiusura automatica e sicura delle schede inattive. Ritrova ogni pagina, anche chiusa, descrivendola. L'IA gira sul tuo dispositivo."
+  }
 }

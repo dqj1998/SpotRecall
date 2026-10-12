@@ -1,4 +1,8 @@
 {
-  "extName": { "message": "SpotRecall - Pencarian AI untuk Riwayat Penjelajahan" },
-  "extDesc": { "message": "Cari riwayat penjelajahan berdasarkan makna atau kata kunci. AI berjalan di perangkat Anda; halaman dan kueri Anda tidak keluar dari perangkat." }
+  "extName": {
+    "message": "SpotRecall - Tutup Tab Otomatis & Temukan Lagi dengan AI"
+  },
+  "extDesc": {
+    "message": "Tutup otomatis tab menganggur dengan aman. Temukan lagi halaman apa pun, bahkan yang ditutup, dari yang Anda ingat. AI di perangkat."
+  }
 }

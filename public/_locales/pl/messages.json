@@ -1,4 +1,8 @@
 {
-  "extName": { "message": "SpotRecall - Wyszukiwanie AI w historii przeglądania" },
-  "extDesc": { "message": "Przeszukuj historię według znaczenia lub słów kluczowych. AI działa na urządzeniu; strony i zapytania go nie opuszczają." }
+  "extName": {
+    "message": "SpotRecall - Automatyczne zamykanie kart i odnajdywanie z AI"
+  },
+  "extDesc": {
+    "message": "Bezpiecznie zamyka nieużywane karty. Odnajdź każdą stronę, nawet zamkniętą, opisując, co pamiętasz. AI działa na Twoim urządzeniu."
+  }
 }

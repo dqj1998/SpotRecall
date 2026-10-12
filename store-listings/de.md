@@ -1,18 +1,23 @@
 # Deutsch (de)
 
 ## Name
-SpotRecall - KI-Suche in deinem Browserverlauf
+SpotRecall - Tabs automatisch schließen, mit KI wiederfinden
 
 ## Short description
-Durchsuche deinen Browserverlauf nach Bedeutung oder Stichwort. Die KI läuft auf deinem Gerät; Seiten und Suchanfragen verlassen es nicht.
+Schließt inaktive Tabs sicher von selbst. Finde jede Seite wieder, auch geschlossene, indem du sie beschreibst. Die KI läuft lokal.
 
 ## Detailed description
-Finde die Seite wieder, an die du dich erinnerst, ohne den Browserverlauf zu durchforsten. Suche mit Cmd/Ctrl+Shift+K nach exakten Begriffen oder Bedeutung.
+Zu viele Tabs offen, aber du traust dich nicht, auch nur einen zu schließen? SpotRecall schließt die Tabs, die du nicht nutzt, und sorgt dafür, dass du sie jederzeit zurückbekommst. Beschreib einfach, woran du dich erinnerst.
 
-SpotRecall kombiniert Stichwortsuche für Fehlercodes, URLs und Versionsnummern mit einem mehrsprachigen KI-Modell auf deinem Gerät für semantische Suche. Wenn der Browser die lokale Translation API bereitstellt, kannst du über Englisch, Japanisch und Chinesisch hinweg suchen; sonst erfolgt die Suche in derselben Sprache.
+Direkt nach der Installation indexiert SpotRecall deine bereits geöffneten Tabs und räumt sie auf 12 auf (die Anzahl bestimmst du). Jeder geschlossene Tab erscheint in der 48-Stunden-Liste, wo du ihn mit einem Klick wieder öffnest.
 
-Halte Tabs mit optionalem Auto-Close aufgeräumt. Es arbeitet nur nach Aktivierung und nur oberhalb deines Limits. Indexierte Seiten bleiben durchsuchbar. Aktive, angeheftete, gruppierte, hörbare und Tabs mit nicht gespeicherten Formulareingaben sind geschützt; jedes Fenster behält mindestens einen Tab. Geschlossene Tabs der letzten 48 Stunden lassen sich erneut öffnen.
+Sicher von Grund auf. Aktive, angeheftete, gruppierte und hörbare Tabs sowie Tabs mit ausgefüllten Formularen werden nie geschlossen, und jedes Fenster behält mindestens einen Tab. Seiten werden indexiert, bevor sie geschlossen werden; Tabs, die der Browser bereits entladen hat, behalten Titel und URL. Öffne alles wieder, was in den letzten 48 Stunden geschlossen wurde, und schalte das automatische Schließen jederzeit über das Pop-up in der Symbolleiste aus.
 
-Seitentext, Titel, URLs und Zeitstempel bleiben in einer lokalen Browserdatenbank. Seiten und Suchanfragen werden nie hochgeladen. Kein Konto, keine Cloud-Synchronisierung, keine Analyse, kein Tracking. Bei der Installation indexiert SpotRecall Titel und URLs aus Lesezeichen und offenen Tabs, aber keinen alten Verlauf. Die semantische Suche lädt einmal ein öffentliches mehrsprachiges Modell von etwa 135 MB und speichert es lokal; es werden keine Browserdaten gesendet, danach funktioniert es offline.
+Wiederfinden statt nur wieder öffnen. Drück Cmd/Ctrl+Shift+K und suche nach exaktem Stichwort oder nach Bedeutung. Die Stichwortsuche findet Fehlercodes, URLs und Versionsnummern. Ein mehrsprachiges KI-Modell auf deinem Gerät findet Seiten anhand einer vagen Beschreibung. Wenn der Browser eine lokale Translation API bereitstellt, kannst du über Englisch, Japanisch und Chinesisch hinweg suchen; sonst wird in derselben Sprache gesucht.
+
+Seitentext, Titel, URLs und Zeitstempel bleiben in einer lokalen Browserdatenbank. Deine Seiten und Suchanfragen werden nie hochgeladen. Kein Konto, keine Cloud-Synchronisierung, keine Analyse, kein Tracking. Bei der Installation indexiert SpotRecall deine offenen Tabs sowie Titel und URLs deiner Lesezeichen; alter Verlauf wird nicht importiert. Die semantische Suche lädt einmalig ein öffentliches mehrsprachiges Modell von etwa 135 MB herunter und speichert es lokal. Es werden keine Browserdaten gesendet; danach funktioniert sie offline.
 
 SpotRecall ist Open Source unter AGPL-3.0. Datenschutz: https://github.com/dqj1998/SpotRecall/blob/main/PRIVACY.md
+
+Vom selben Entwickler: ContextWizard speichert Ihre ChatGPT-, Claude- und Gemini-Unterhaltungen automatisch und macht sie durchsuchbar. Die Daten werden standardmäßig lokal gespeichert.
+https://chromewebstore.google.com/detail/contextwizard/lmhnmmedgmnfggecdalkancllnekofnb?utm_source=spotrecall&utm_medium=cws_listing&utm_campaign=cross_promo
