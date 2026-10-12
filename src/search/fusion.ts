@@ -4,6 +4,7 @@
 
 import { fuseRanked } from './rrf';
 import { coversAllTerms } from './bm25';
+import { isAuthUrl } from '@shared/url';
 
 export interface FusionParams {
   bm25Weight: number;
@@ -22,6 +23,13 @@ export interface FusionParams {
    *  every term of any query variant, e.g. a backfilled bookmark sharing one stray
    *  word with the query. Short titles otherwise score high on a single term. 1 = off. */
   contentlessWeight: number;
+  /** Score multiplier for login / security-check pages: their few words (and generic
+   *  embeddings) match many queries, but they are never what the user is looking for. */
+  interstitialWeight: number;
+  /** A sign-in URL only counts as an interstitial below this much captured text, so a
+   *  real page under such a path (OAuth docs, a long consent screen) keeps its rank.
+   *  Real auth steps measured ≤ ~800 chars; the median content page hits the 2000 cap. */
+  interstitialMaxChars: number;
 }
 
 // Tuned with eval/fusion-eval.ts on real captured data; see eval/README.md.
@@ -33,6 +41,8 @@ export const FUSION_PARAMS: FusionParams = {
   vecMargin: 0.06,
   vecDepth: 20,
   contentlessWeight: 0.5,
+  interstitialWeight: 0.3,
+  interstitialMaxChars: 1000,
 };
 
 /** Trim a score-sorted vector list to hits close to the top score. */
@@ -67,18 +77,28 @@ export function fuseVariants(
   return fuseRanked(lists, params.rrfK);
 }
 
+/** Sign-in / security-check step: auth-looking URL AND little captured text. */
+export function isInterstitial(
+  r: { url: string; cleanText?: string },
+  { interstitialMaxChars }: Pick<FusionParams, 'interstitialMaxChars'> = FUSION_PARAMS,
+): boolean {
+  return (r.cleanText ?? '').length < interstitialMaxChars && isAuthUrl(r.url);
+}
+
 /**
  * Query-dependent score multiplier for a record: penalize a title-only record
- * unless it contains every term of some variant (`variantTerms`, from queryTerms).
+ * unless it contains every term of some variant (`variantTerms`, from queryTerms),
+ * and always penalize sign-in interstitials.
  */
 export function recordPrior(
-  r: { status: string; title: string; url: string },
+  r: { status: string; title: string; url: string; cleanText?: string },
   variantTerms: string[][],
-  params: Pick<FusionParams, 'contentlessWeight'> = FUSION_PARAMS,
+  params: Pick<FusionParams, 'contentlessWeight' | 'interstitialWeight' | 'interstitialMaxChars'> = FUSION_PARAMS,
 ): number {
-  if (r.status !== 'provisional' || params.contentlessWeight === 1) return 1;
+  const auth = isInterstitial(r, params) ? params.interstitialWeight : 1;
+  if (r.status !== 'provisional' || params.contentlessWeight === 1) return auth;
   const text = `${r.title} ${r.url}`;
-  return variantTerms.some((terms) => coversAllTerms(text, terms)) ? 1 : params.contentlessWeight;
+  return auth * (variantTerms.some((terms) => coversAllTerms(text, terms)) ? 1 : params.contentlessWeight);
 }
 
 /**

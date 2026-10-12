@@ -10,7 +10,7 @@
 //   npm run eval:fusion -- --backup … --ablation       # each improvement alone + stacked
 //   npm run eval:fusion -- --backup … --grid           # parameter sweep
 //   npm run eval:fusion -- --backup … --cv             # 2-fold tune/test split (overfit check)
-//   npm run eval:fusion -- --backup … --rrf-k 5 --contentless-w 0.7   # overrides
+//   npm run eval:fusion -- --backup … --rrf-k 5 --contentless-w 0.7 --interstitial-w 0.5   # overrides
 //
 // Options: --labels eval/labels-fusion.json  --dump eval/.cache/fusion-dump.json  --k 10
 //          --bookmarked-backfill  (worst case: treat title-only records as bookmarks,
@@ -185,13 +185,15 @@ async function main() {
       vecMargin: num('margin', FUSION_PARAMS.vecMargin),
       vecDepth: num('depth', FUSION_PARAMS.vecDepth),
       contentlessWeight: num('contentless-w', FUSION_PARAMS.contentlessWeight),
+      interstitialWeight: num('interstitial-w', FUSION_PARAMS.interstitialWeight),
+      interstitialMaxChars: num('interstitial-chars', FUSION_PARAMS.interstitialMaxChars),
     },
   };
   // Before Han hints / contentless prior: Han ⇒ zh, no priors.
   const neutral: Config = {
     name: 'baseline',
     lang: { hanHints: false, ambiguousHan: 'zh' },
-    fusion: { ...prod.fusion, contentlessWeight: 1 },
+    fusion: { ...prod.fusion, contentlessWeight: 1, interstitialWeight: 1 },
   };
 
   console.log(
@@ -221,6 +223,7 @@ async function main() {
       pick('+ ambiguous ⇒ ja (instead of both)', { hanHints: true, ambiguousHan: 'ja' }, {}),
       pick('+ contentless prior', {}, prior),
       pick('lang + contentless', both, prior),
+      pick('+ interstitial prior', {}, { interstitialWeight: num('interstitial-w', FUSION_PARAMS.interstitialWeight) }),
       prod,
     ]);
     return;
