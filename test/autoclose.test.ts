@@ -15,6 +15,7 @@ function settings(keep: number): AutoCloseSettings {
     keep,
     thinCharLimit: AC_DEFAULTS.thinChars,
     minInactiveMs: AC_DEFAULTS.minInactiveMs,
+    thinMinIdleMs: AC_DEFAULTS.thinMinIdleMs,
     overAgeMs: AC_DEFAULTS.overAgeMs,
     tauMs: AC_DEFAULTS.tauMs,
     wRelevance: AC_DEFAULTS.wRelevance,
@@ -146,6 +147,38 @@ describe('selectTabsToClose (autoclose-plan v2, R6 contracts)', () => {
       withinGrace: false,
     });
     expect(out.close).toEqual([thin.tabId]);
+  });
+
+  it('does not jump a recently used thin tab ahead of older substantive ones', () => {
+    // Regression: a just-used login / confirmation page (little text) was closed
+    // 5 minutes after use while hours-old substantive tabs stayed open.
+    const anchor = tab({ active: true });
+    const substantiveOld = tab({ cleanTextLen: 800, lastActive: NOW - 6 * 60 * 60_000 });
+    const thinRecent = tab({ cleanTextLen: 30, lastActive: NOW - 6 * 60_000 });
+    const out = selectTabsToClose([anchor, substantiveOld, thinRecent], settings(2), {
+      now: NOW,
+      withinGrace: false,
+      relevance: new Map([[substantiveOld.tabId, 0.9]]),
+    });
+    expect(out.close).toEqual([substantiveOld.tabId]);
+  });
+
+  it('does not jump a recently used uncapturable tab ahead of older substantive ones', () => {
+    // Store pages etc. never commit; after the capture budget they become closeable,
+    // but must still be ranked by freshness until idle long enough to count as junk.
+    const anchor = tab({ active: true });
+    const substantiveOld = tab({ cleanTextLen: 800, lastActive: NOW - 6 * 60 * 60_000 });
+    const uncapturable = tab({
+      committed: false,
+      cleanTextLen: 0,
+      lastActive: NOW - 10 * 60_000,
+      captureAttempts: AC_DEFAULTS.captureMaxAttempts,
+    });
+    const out = selectTabsToClose([anchor, substantiveOld, uncapturable], settings(2), {
+      now: NOW,
+      withinGrace: false,
+    });
+    expect(out.close).toEqual([substantiveOld.tabId]);
   });
 
   it('routes never-committed inactive tabs to capture; closes over-age ones as thin', () => {

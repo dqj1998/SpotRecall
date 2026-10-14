@@ -31,6 +31,7 @@ export const AC_DEFAULTS = {
   keep: 12,
   thinChars: 100, // committed & shorter => "no substantive content"
   minInactiveMs: 5 * 60_000, // a tab must be idle this long to be eligible
+  thinMinIdleMs: 60 * 60_000, // thin tabs jump the queue only once idle this long
   graceMs: 10 * 60_000, // after browser/session start, close nothing
   overAgeMs: 24 * 60 * 60_000, // never-committed & older => treated as thin (option A)
   tauMs: 12 * 60 * 60_000, // freshness = exp(-Δt/τ)
@@ -79,6 +80,13 @@ export interface AutoCloseSettings {
   keep: number;
   thinCharLimit: number;
   minInactiveMs: number;
+  /**
+   * A thin tab is closed ahead of substantive ones only after this much idle
+   * time. Before that it is ranked by freshness like any other tab: thin pages
+   * are often ones the user is in the middle of (login / confirmation / search
+   * flows yield little text, store pages can't be captured at all).
+   */
+  thinMinIdleMs: number;
   overAgeMs: number;
   tauMs: number;
   wRelevance: number;
@@ -152,31 +160,32 @@ export function selectTabsToClose(
     if (now - t.lastActive < s.minInactiveMs) continue; // too recently used / just restored
 
     const fresh = freshness(now, t.lastActive, s.tauMs);
+    const stale = now - t.lastActive >= s.thinMinIdleMs; // eligible for the thin tier
     if (t.committed) {
-      const thin = t.cleanTextLen < s.thinCharLimit;
-      const rel = thin ? undefined : ctx.relevance?.get(t.tabId);
+      const thinText = t.cleanTextLen < s.thinCharLimit;
+      const rel = thinText ? undefined : ctx.relevance?.get(t.tabId);
       const keepScore =
         rel === undefined ? fresh : s.wRelevance * ((rel + 1) / 2) + s.wFreshness * fresh;
-      cands.push({ tabId: t.tabId, windowId: t.windowId, thin, capturable: false, keepScore });
+      cands.push({ tabId: t.tabId, windowId: t.windowId, thin: thinText && stale, capturable: false, keepScore });
     } else if (now - t.lastActive > s.overAgeMs || t.discarded) {
       // Close directly when: (a) never captured & very old, OR (b) Chrome
       // discarded the renderer — the content script is dead so FORCE_CAPTURE
       // would loop silently forever; closing is safe because a discarded tab
       // has no live renderer state to lose.
-      cands.push({ tabId: t.tabId, windowId: t.windowId, thin: true, capturable: false, keepScore: fresh });
+      cands.push({ tabId: t.tabId, windowId: t.windowId, thin: stale, capturable: false, keepScore: fresh });
     } else if (t.captureAttempts >= s.captureMaxAttempts) {
       // FORCE_CAPTURE has been sent this many ticks with no commit: the content
       // script is absent or blocked (CSP, pre-install tab). Stop retrying and
       // close. Safe because the provisional record (url + title) outlives the
       // tab — handleTabRemoved no longer GCs it — so the page stays searchable.
-      cands.push({ tabId: t.tabId, windowId: t.windowId, thin: true, capturable: false, keepScore: fresh });
+      cands.push({ tabId: t.tabId, windowId: t.windowId, thin: stale, capturable: false, keepScore: fresh });
     } else {
       // Never committed but inactive: index it first, then close on a later tick.
       cands.push({ tabId: t.tabId, windowId: t.windowId, thin: false, capturable: true, keepScore: fresh });
     }
   }
 
-  // Priority: thin (junk) first; then least-worth-keeping (lowest keepScore).
+  // Priority: stale thin (junk) first; then least-worth-keeping (lowest keepScore).
   cands.sort((a, b) => {
     if (a.thin !== b.thin) return a.thin ? -1 : 1;
     return a.keepScore - b.keepScore;
@@ -346,6 +355,7 @@ export async function runAutoClose(opts: { install?: boolean } = {}): Promise<Au
     keep,
     thinCharLimit: AC_DEFAULTS.thinChars,
     minInactiveMs: opts.install ? 0 : AC_DEFAULTS.minInactiveMs,
+    thinMinIdleMs: AC_DEFAULTS.thinMinIdleMs,
     overAgeMs: AC_DEFAULTS.overAgeMs,
     tauMs: AC_DEFAULTS.tauMs,
     wRelevance: AC_DEFAULTS.wRelevance,
