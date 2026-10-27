@@ -214,13 +214,21 @@ function App() {
     setBusy(t('savedBlocklist'));
     setTimeout(() => setBusy(''), 1500);
   };
+  // Browser tag for the backup filename, so exports from different browsers are distinguishable.
+  const browserTag = (): string => {
+    const ua = navigator.userAgent;
+    if (/Edg\//.test(ua)) return 'edge';
+    if (/OPR\//.test(ua)) return 'opera';
+    if ((navigator as Navigator & { brave?: unknown }).brave) return 'brave';
+    return 'chrome';
+  };
   const doExport = async (withVectors: boolean) => {
     setBusy(t('exporting'));
     const blob = await exportBackup(withVectors, 'this-device');
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `spotrecall-backup-${Date.now()}.zip`;
+    a.download = `spotrecall-backup-${browserTag()}-${Date.now()}.zip`;
     a.click();
     URL.revokeObjectURL(url);
     // Record the indexed count at export time so the popup can remind when new pages accumulate.
