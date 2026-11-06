@@ -42,6 +42,7 @@ export const AC_DEFAULTS = {
   signalTitleCap: 5,
   captureCap: 15, // max never-committed tabs to force-capture per tick
   captureMaxAttempts: 3, // give up forcing capture after this many ticks, then close
+  localOpenGraceMs: 60 * 60_000, // local tabs must be open this long before priority
 } as const;
 
 // ---- pure decision layer (no chrome.*) ----
@@ -55,6 +56,14 @@ export interface TabInfo {
   grouped: boolean; // groupId !== -1
   incognito: boolean;
   internal: boolean; // chrome://, extension pages, newtab, etc.
+  /** Address bar is empty (new tab / blank page): no page state worth keeping. */
+  empty: boolean;
+  /** Cheap to reopen locally (file://, loopback, .local host, chrome:///edge://). */
+  local: boolean;
+  /** Normalized-URL identity for duplicate detection; '' = not deduplicated. */
+  dupeKey: string;
+  /** ms when the tab was opened; 0 = unknown. */
+  openedAt: number;
   /** Page has unsaved form input (user typed but didn't submit) — never close. */
   hasFormInput: boolean;
   /**
@@ -87,6 +96,12 @@ export interface AutoCloseSettings {
    * flows yield little text, store pages can't be captured at all).
    */
   thinMinIdleMs: number;
+  /**
+   * Local pages (file://, loopback, chrome:///edge://) are cheap to reopen, so
+   * they are closed ahead of substantive tabs — but only after being open this
+   * long, so a just-opened dev tab is not killed mid-task.
+   */
+  localOpenGraceMs: number;
   overAgeMs: number;
   tauMs: number;
   wRelevance: number;
@@ -118,24 +133,25 @@ export interface AutoCloseDecision {
 
 /**
  * Decide which tabs to close / capture. Only acts when the total non-incognito
- * tab count exceeds `keep`; then walks candidates in priority order (thin first,
- * then ascending keepScore) up to the overflow — never emptying a window and
- * never touching an excluded tab. Never-committed inactive tabs are routed to
- * `capture` (indexed then closed next tick) instead of being skipped.
+ * tab count exceeds `keep`; then walks candidates in priority order
+ * (blank > duplicate > local > thin > substantive) up to the overflow — never
+ * emptying a window and never touching an excluded tab. Never-committed inactive
+ * tabs are routed to `capture` (indexed then closed next tick) instead of being
+ * skipped.
  */
 export function selectTabsToClose(
   tabs: TabInfo[],
   s: AutoCloseSettings,
   ctx: AutoCloseContext,
 ): AutoCloseDecision {
-  const empty: AutoCloseDecision = { close: [], capture: [] };
-  if (ctx.withinGrace) return empty;
+  const none: AutoCloseDecision = { close: [], capture: [] };
+  if (ctx.withinGrace) return none;
 
   const normal = tabs.filter((t) => !t.incognito);
   // Pinned and grouped tabs are excluded from the keep count: users accumulate
   // many of them intentionally and closing regular tabs to compensate is surprising.
   const total = normal.filter((t) => !t.pinned && !t.grouped).length;
-  if (total <= s.keep) return empty;
+  if (total <= s.keep) return none;
 
   // winRemaining uses the full normal set so the "never empty a window" guard
   // accounts for every tab in the window, including pinned/grouped ones.
@@ -143,10 +159,52 @@ export function selectTabsToClose(
   for (const t of normal) winRemaining.set(t.windowId, (winRemaining.get(t.windowId) ?? 0) + 1);
 
   const now = ctx.now;
+  const freshOf = (t: TabInfo) => freshness(now, t.lastActive, s.tauMs);
+  const keepScoreOf = (t: TabInfo): number => {
+    const fresh = freshOf(t);
+    if (!t.committed) return fresh;
+    const thinText = t.cleanTextLen < s.thinCharLimit;
+    const rel = thinText ? undefined : ctx.relevance?.get(t.tabId);
+    return rel === undefined ? fresh : s.wRelevance * ((rel + 1) / 2) + s.wFreshness * fresh;
+  };
+
+  // Duplicate URLs are pure redundancy. Keep one copy per normalized URL: prefer
+  // a hard-protected tab, else the most recently used (then the one with the most
+  // captured text). Every other copy is ranked ahead of substantive tabs below.
+  const groups = new Map<string, TabInfo[]>();
+  for (const t of normal) {
+    if (!t.dupeKey) continue;
+    const g = groups.get(t.dupeKey);
+    if (g) g.push(t);
+    else groups.set(t.dupeKey, [t]);
+  }
+  const keeperFor = new Map<string, number>();
+  for (const [key, g] of groups) {
+    if (g.length < 2) continue;
+    const protectedCopy =
+      g.find((t) => t.active) ??
+      g.find((t) => t.pinned || t.grouped) ??
+      g.find((t) => t.audible) ??
+      g.find((t) => t.hasFormInput);
+    const keeper =
+      protectedCopy ??
+      [...g].sort(
+        (a, b) =>
+          b.lastActive - a.lastActive || b.cleanTextLen - a.cleanTextLen || a.tabId - b.tabId,
+      )[0];
+    keeperFor.set(key, keeper.tabId);
+  }
+
+  const TIER_EMPTY = 0;
+  const TIER_DUPLICATE = 1;
+  const TIER_LOCAL = 2;
+  const TIER_THIN = 3;
+  const TIER_NORMAL = 4;
+
   interface Cand {
     tabId: number;
     windowId: number;
-    thin: boolean;
+    tier: number;
     capturable: boolean; // never-committed: index before closing
     keepScore: number;
   }
@@ -154,42 +212,80 @@ export function selectTabsToClose(
 
   for (const t of normal) {
     // Hard exclusions — never eligible.
-    if (t.active || t.pinned || t.audible || t.grouped || t.internal) continue;
+    if (t.active || t.pinned || t.audible || t.grouped) continue;
     if (t.hasFormInput) continue; // unsaved form input — closing would lose data
+    if (t.internal && !t.empty && !t.local) continue; // extension/devtools/error pages
     if ((winRemaining.get(t.windowId) ?? 0) <= 1) continue; // window's only tab
     if (now - t.lastActive < s.minInactiveMs) continue; // too recently used / just restored
 
-    const fresh = freshness(now, t.lastActive, s.tauMs);
+    const fresh = freshOf(t);
     const stale = now - t.lastActive >= s.thinMinIdleMs; // eligible for the thin tier
+
+    // Blank address bar / new tab: nothing to index, nothing to lose.
+    if (t.empty) {
+      cands.push({ tabId: t.tabId, windowId: t.windowId, tier: TIER_EMPTY, capturable: false, keepScore: fresh });
+      continue;
+    }
+
+    // Never close the last copy of a duplicated URL.
+    if (t.dupeKey && keeperFor.get(t.dupeKey) === t.tabId) continue;
+    if (t.dupeKey && (groups.get(t.dupeKey)?.length ?? 0) > 1) {
+      cands.push({
+        tabId: t.tabId,
+        windowId: t.windowId,
+        tier: TIER_DUPLICATE,
+        capturable: false,
+        keepScore: keepScoreOf(t),
+      });
+      continue;
+    }
+
+    // Local pages are cheap to reopen, so close them ahead of substantive tabs —
+    // but only once they have been open long enough that the user is unlikely to
+    // still be mid-task. Within the grace they are fully protected (never closed
+    // or captured). Closing directly is safe: the URL stays in the log.
+    if (t.local) {
+      const openAge = t.openedAt > 0 ? now - t.openedAt : now - t.lastActive;
+      if (openAge < s.localOpenGraceMs) continue;
+      cands.push({
+        tabId: t.tabId,
+        windowId: t.windowId,
+        tier: TIER_LOCAL,
+        capturable: false,
+        keepScore: keepScoreOf(t),
+      });
+      continue;
+    }
+
     if (t.committed) {
       const thinText = t.cleanTextLen < s.thinCharLimit;
-      const rel = thinText ? undefined : ctx.relevance?.get(t.tabId);
-      const keepScore =
-        rel === undefined ? fresh : s.wRelevance * ((rel + 1) / 2) + s.wFreshness * fresh;
-      cands.push({ tabId: t.tabId, windowId: t.windowId, thin: thinText && stale, capturable: false, keepScore });
+      cands.push({
+        tabId: t.tabId,
+        windowId: t.windowId,
+        tier: thinText && stale ? TIER_THIN : TIER_NORMAL,
+        capturable: false,
+        keepScore: keepScoreOf(t),
+      });
     } else if (now - t.lastActive > s.overAgeMs || t.discarded) {
       // Close directly when: (a) never captured & very old, OR (b) Chrome
       // discarded the renderer — the content script is dead so FORCE_CAPTURE
       // would loop silently forever; closing is safe because a discarded tab
       // has no live renderer state to lose.
-      cands.push({ tabId: t.tabId, windowId: t.windowId, thin: stale, capturable: false, keepScore: fresh });
+      cands.push({ tabId: t.tabId, windowId: t.windowId, tier: stale ? TIER_THIN : TIER_NORMAL, capturable: false, keepScore: fresh });
     } else if (t.captureAttempts >= s.captureMaxAttempts) {
       // FORCE_CAPTURE has been sent this many ticks with no commit: the content
       // script is absent or blocked (CSP, pre-install tab). Stop retrying and
       // close. Safe because the provisional record (url + title) outlives the
       // tab — handleTabRemoved no longer GCs it — so the page stays searchable.
-      cands.push({ tabId: t.tabId, windowId: t.windowId, thin: stale, capturable: false, keepScore: fresh });
+      cands.push({ tabId: t.tabId, windowId: t.windowId, tier: stale ? TIER_THIN : TIER_NORMAL, capturable: false, keepScore: fresh });
     } else {
       // Never committed but inactive: index it first, then close on a later tick.
-      cands.push({ tabId: t.tabId, windowId: t.windowId, thin: false, capturable: true, keepScore: fresh });
+      cands.push({ tabId: t.tabId, windowId: t.windowId, tier: TIER_NORMAL, capturable: true, keepScore: fresh });
     }
   }
 
-  // Priority: stale thin (junk) first; then least-worth-keeping (lowest keepScore).
-  cands.sort((a, b) => {
-    if (a.thin !== b.thin) return a.thin ? -1 : 1;
-    return a.keepScore - b.keepScore;
-  });
+  // Priority: blank, duplicate, local, stale thin, then least-worth-keeping.
+  cands.sort((a, b) => a.tier - b.tier || a.keepScore - b.keepScore);
 
   let overflow = total - s.keep;
   const decision: AutoCloseDecision = { close: [], capture: [] };
@@ -217,6 +313,45 @@ export function isInternalUrl(url: string): boolean {
   );
 }
 
+/** Blank address bar / new tab page: carries no page state worth preserving. */
+export function isEmptyTabUrl(url: string): boolean {
+  if (!url) return true;
+  const u = url.trim().toLowerCase();
+  return (
+    u === 'about:blank' ||
+    u.startsWith('about:blank?') ||
+    u.startsWith('about:blank#') ||
+    u === 'about:newtab' ||
+    u.startsWith('about:newtab?') ||
+    u.startsWith('about:newtab#') ||
+    u === 'chrome://newtab' ||
+    u.startsWith('chrome://newtab/') ||
+    u.startsWith('chrome://new-tab-page/') ||
+    u === 'edge://newtab' ||
+    u.startsWith('edge://newtab/') ||
+    u.startsWith('chrome-search://local-ntp/')
+  );
+}
+
+/** Cheap to reopen locally: file://, loopback, mDNS .local, and chrome:///edge:// pages. */
+export function isLocalUrl(url: string): boolean {
+  if (!url) return false;
+  let u: URL;
+  try {
+    u = new URL(url);
+  } catch {
+    return false;
+  }
+  if (u.protocol === 'file:') return true;
+  if (u.protocol === 'chrome:' || u.protocol === 'edge:') return true;
+  if (u.protocol !== 'http:' && u.protocol !== 'https:') return false;
+  const h = u.hostname.toLowerCase().replace(/^\[|\]$/g, '');
+  if (h === 'localhost' || h.endsWith('.localhost')) return true;
+  if (h === '::1' || h === '0.0.0.0') return true;
+  if (/^127\./.test(h)) return true;
+  return h.endsWith('.local');
+}
+
 // ---- session-scoped tab state (cleared on browser restart, survives SW sleep) ----
 
 const SS = {
@@ -225,6 +360,7 @@ const SS = {
   sessionStart: 'ac_sessionStart',
   formDirty: 'ac_formDirty',
   captureAttempts: 'ac_captureAttempts',
+  openedAt: 'ac_openedAt',
 } as const;
 
 async function ssGet<T>(key: string, fallback: T): Promise<T> {
@@ -262,9 +398,14 @@ export async function recordActivation(tabId: number): Promise<void> {
 }
 
 export async function recordCreation(tabId: number): Promise<void> {
+  const now = Date.now();
   const list = await ssGet<{ tabId: number; ts: number }[]>(SS.recentOpened, []);
-  list.push({ tabId, ts: Date.now() });
+  list.push({ tabId, ts: now });
   await ssSet(SS.recentOpened, list.slice(-AC_DEFAULTS.recentOpenedCap));
+
+  const opened = await ssGet<Record<string, number>>(SS.openedAt, {});
+  opened[tabId] = now;
+  await ssSet(SS.openedAt, opened);
 }
 
 export async function forgetTab(tabId: number): Promise<void> {
@@ -277,6 +418,11 @@ export async function forgetTab(tabId: number): Promise<void> {
   if (tabId in att) {
     delete att[tabId];
     await ssSet(SS.captureAttempts, att);
+  }
+  const opened = await ssGet<Record<string, number>>(SS.openedAt, {});
+  if (tabId in opened) {
+    delete opened[tabId];
+    await ssSet(SS.openedAt, opened);
   }
   await clearFormDirty(tabId);
 }
@@ -356,6 +502,7 @@ export async function runAutoClose(opts: { install?: boolean } = {}): Promise<Au
     thinCharLimit: AC_DEFAULTS.thinChars,
     minInactiveMs: opts.install ? 0 : AC_DEFAULTS.minInactiveMs,
     thinMinIdleMs: AC_DEFAULTS.thinMinIdleMs,
+    localOpenGraceMs: AC_DEFAULTS.localOpenGraceMs,
     overAgeMs: AC_DEFAULTS.overAgeMs,
     tauMs: AC_DEFAULTS.tauMs,
     wRelevance: AC_DEFAULTS.wRelevance,
@@ -369,6 +516,7 @@ export async function runAutoClose(opts: { install?: boolean } = {}): Promise<Au
   const lastActive = await ssGet<Record<string, number>>(SS.lastActive, {});
   const formDirty = await ssGet<Record<string, true>>(SS.formDirty, {});
   const captureAttempts = await ssGet<Record<string, number>>(SS.captureAttempts, {});
+  const openedAtMap = await ssGet<Record<string, number>>(SS.openedAt, {});
 
   const tabInfos: TabInfo[] = [];
   const tabById = new Map<number, chrome.tabs.Tab>();
@@ -376,10 +524,11 @@ export async function runAutoClose(opts: { install?: boolean } = {}): Promise<Au
     if (tab.id === undefined) continue;
     tabById.set(tab.id, tab);
     const url = tab.url || tab.pendingUrl || '';
-    const internal = isInternalUrl(url);
+    const empty = isEmptyTabUrl(url);
+    const internal = isInternalUrl(url) && !empty;
     let recordId = '';
     let rec: PageRecord | undefined;
-    if (!internal) {
+    if (!internal && !empty) {
       recordId = await recordIdFor(normalizeUrl(url));
       rec = recMap.get(recordId);
     }
@@ -392,6 +541,10 @@ export async function runAutoClose(opts: { install?: boolean } = {}): Promise<Au
       grouped: (tab.groupId ?? -1) !== -1,
       incognito: !!tab.incognito,
       internal,
+      empty,
+      local: isLocalUrl(url),
+      dupeKey: internal || empty ? '' : recordId,
+      openedAt: openedAtMap[tab.id] ?? 0,
       hasFormInput: !!formDirty[tab.id],
       discarded: !!(tab as chrome.tabs.Tab & { discarded?: boolean }).discarded,
       captureAttempts: captureAttempts[tab.id] ?? 0,

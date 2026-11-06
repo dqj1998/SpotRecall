@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest';
 import {
   selectTabsToClose,
   isInternalUrl,
+  isEmptyTabUrl,
+  isLocalUrl,
   AC_DEFAULTS,
   type TabInfo,
   type AutoCloseSettings,
@@ -16,6 +18,7 @@ function settings(keep: number): AutoCloseSettings {
     thinCharLimit: AC_DEFAULTS.thinChars,
     minInactiveMs: AC_DEFAULTS.minInactiveMs,
     thinMinIdleMs: AC_DEFAULTS.thinMinIdleMs,
+    localOpenGraceMs: AC_DEFAULTS.localOpenGraceMs,
     overAgeMs: AC_DEFAULTS.overAgeMs,
     tauMs: AC_DEFAULTS.tauMs,
     wRelevance: AC_DEFAULTS.wRelevance,
@@ -36,6 +39,10 @@ function tab(over: Partial<TabInfo> = {}): TabInfo {
     grouped: false,
     incognito: false,
     internal: false,
+    empty: false,
+    local: false,
+    dupeKey: `r${seq}`,
+    openedAt: 0,
     hasFormInput: false,
     discarded: false,
     captureAttempts: 0,
@@ -288,6 +295,184 @@ describe('selectTabsToClose (autoclose-plan v2, R6 contracts)', () => {
   });
 });
 
+describe('selectTabsToClose — expendable tabs first', () => {
+  it('closes blank/new-tab tabs before substantive tabs', () => {
+    const anchor = tab({ active: true });
+    const substantive = tab({ cleanTextLen: 800, lastActive: NOW - 10 * 60 * 60_000 });
+    const blank = tab({ empty: true, internal: true, committed: false, cleanTextLen: 0 });
+    // total 3, keep 2 -> overflow 1
+    const out = selectTabsToClose([anchor, substantive, blank], settings(2), {
+      now: NOW,
+      withinGrace: false,
+    });
+    expect(out.close).toEqual([blank.tabId]);
+  });
+
+  it('still never closes a non-empty internal tab', () => {
+    const anchor = tab({ active: true });
+    const settingsTab = tab({ internal: true });
+    const substantive = tab({ cleanTextLen: 800 });
+    // total 3, keep 2 -> overflow 1; only the substantive tab is eligible.
+    const out = selectTabsToClose([anchor, settingsTab, substantive], settings(2), {
+      now: NOW,
+      withinGrace: false,
+    });
+    expect(out.close).toEqual([substantive.tabId]);
+    expect(out.close).not.toContain(settingsTab.tabId);
+  });
+
+  it('collapses duplicate URLs to one copy before closing substantive tabs', () => {
+    const anchor = tab({ active: true });
+    const substantive = tab({ cleanTextLen: 800, lastActive: NOW - 10 * 60 * 60_000 });
+    const keep = tab({ dupeKey: 'same', lastActive: NOW - 30 * 60_000 });
+    const dupOld = tab({ dupeKey: 'same', lastActive: NOW - 2 * 60 * 60_000 });
+    const dupOlder = tab({ dupeKey: 'same', lastActive: NOW - 3 * 60 * 60_000 });
+    // total 5, keep 3 -> overflow 2; both older copies close, fresh copy stays.
+    const out = selectTabsToClose([anchor, substantive, keep, dupOld, dupOlder], settings(3), {
+      now: NOW,
+      withinGrace: false,
+    });
+    expect(out.close.sort()).toEqual([dupOld.tabId, dupOlder.tabId].sort());
+    expect(out.close).not.toContain(keep.tabId);
+    expect(out.close).not.toContain(substantive.tabId);
+  });
+
+  it('keeps an active duplicate and closes the inactive copy', () => {
+    const active = tab({ dupeKey: 'same', active: true });
+    const dup = tab({ dupeKey: 'same', lastActive: OLD });
+    const substantive = tab({ cleanTextLen: 800 });
+    // total 3, keep 2 -> overflow 1
+    const out = selectTabsToClose([active, dup, substantive], settings(2), {
+      now: NOW,
+      withinGrace: false,
+    });
+    expect(out.close).toEqual([dup.tabId]);
+  });
+
+  it('never closes the last copy of a duplicated URL', () => {
+    const older = tab({ dupeKey: 'same', lastActive: NOW - 3 * 60 * 60_000 });
+    const newer = tab({ dupeKey: 'same', lastActive: NOW - 2 * 60 * 60_000 });
+    // total 2, keep 1 -> overflow 1; the older copy closes, the newer stays.
+    const out = selectTabsToClose([older, newer], settings(1), { now: NOW, withinGrace: false });
+    expect(out.close).toEqual([older.tabId]);
+  });
+
+  it('closes duplicate copies directly even when not yet indexed', () => {
+    const anchor = tab({ active: true });
+    const keep = tab({ dupeKey: 'same', lastActive: NOW - 30 * 60_000 });
+    const dup = tab({
+      dupeKey: 'same',
+      committed: false,
+      cleanTextLen: 0,
+      lastActive: NOW - 2 * 60 * 60_000,
+    });
+    // total 3, keep 2 -> overflow 1
+    const out = selectTabsToClose([anchor, keep, dup], settings(2), {
+      now: NOW,
+      withinGrace: false,
+    });
+    expect(out.close).toEqual([dup.tabId]);
+    expect(out.capture).toEqual([]);
+  });
+
+  it('closes an old local tab before a substantive tab', () => {
+    const anchor = tab({ active: true });
+    const substantive = tab({ cleanTextLen: 800, lastActive: NOW - 10 * 60 * 60_000 });
+    const local = tab({ local: true, openedAt: NOW - 2 * 60 * 60_000, lastActive: OLD });
+    // total 3, keep 2 -> overflow 1
+    const out = selectTabsToClose([anchor, substantive, local], settings(2), {
+      now: NOW,
+      withinGrace: false,
+    });
+    expect(out.close).toEqual([local.tabId]);
+  });
+
+  it('does not prioritize a local tab opened less than the grace period ago', () => {
+    const anchor = tab({ active: true });
+    const substantive = tab({ cleanTextLen: 800, lastActive: NOW - 10 * 60 * 60_000 });
+    const local = tab({
+      local: true,
+      openedAt: NOW - 10 * 60_000,
+      lastActive: NOW - 10 * 60_000,
+    });
+    // total 3, keep 2 -> overflow 1. The local tab is within its open grace, so
+    // ordinary freshness ranking closes the older substantive tab instead.
+    const out = selectTabsToClose([anchor, substantive, local], settings(2), {
+      now: NOW,
+      withinGrace: false,
+    });
+    expect(out.close).toEqual([substantive.tabId]);
+    expect(out.close).not.toContain(local.tabId);
+  });
+
+  it('fully protects a local tab inside its open grace, even as the only candidate', () => {
+    const anchor = tab({ active: true });
+    const localA = tab({ local: true, openedAt: NOW - 10 * 60_000, lastActive: NOW - 10 * 60_000 });
+    const localB = tab({ local: true, openedAt: NOW - 20 * 60_000, lastActive: NOW - 20 * 60_000 });
+    // total 3, keep 1 -> overflow 2, but both local tabs are inside the 1h grace.
+    const out = selectTabsToClose([anchor, localA, localB], settings(1), {
+      now: NOW,
+      withinGrace: false,
+    });
+    expect(out.close).toEqual([]);
+    expect(out.capture).toEqual([]);
+  });
+
+  it('closes an old chrome:// tab before a substantive tab', () => {
+    const anchor = tab({ active: true });
+    const substantive = tab({ cleanTextLen: 800, lastActive: NOW - 10 * 60 * 60_000 });
+    const chrome = tab({
+      internal: true,
+      local: true,
+      committed: false,
+      cleanTextLen: 0,
+      openedAt: NOW - 2 * 60 * 60_000,
+      lastActive: OLD,
+    });
+    // total 3, keep 2 -> overflow 1
+    const out = selectTabsToClose([anchor, substantive, chrome], settings(2), {
+      now: NOW,
+      withinGrace: false,
+    });
+    expect(out.close).toEqual([chrome.tabId]);
+    expect(out.capture).toEqual([]);
+  });
+
+  it('does not capture a chrome:// tab inside its open grace', () => {
+    const anchor = tab({ active: true });
+    const chrome = tab({
+      internal: true,
+      local: true,
+      committed: false,
+      cleanTextLen: 0,
+      openedAt: NOW - 10 * 60_000,
+      lastActive: NOW - 10 * 60_000,
+    });
+    // total 2, keep 1 -> overflow 1; the chrome:// tab is protected by the grace.
+    const out = selectTabsToClose([anchor, chrome], settings(1), {
+      now: NOW,
+      withinGrace: false,
+    });
+    expect(out.close).toEqual([]);
+    expect(out.capture).toEqual([]);
+  });
+
+  it('closes an old uncommitted local tab directly instead of capturing it', () => {
+    const anchor = tab({ active: true });
+    const local = tab({
+      local: true,
+      committed: false,
+      cleanTextLen: 0,
+      openedAt: NOW - 2 * 60 * 60_000,
+      lastActive: OLD,
+    });
+    // total 2, keep 1 -> overflow 1
+    const out = selectTabsToClose([anchor, local], settings(1), { now: NOW, withinGrace: false });
+    expect(out.close).toEqual([local.tabId]);
+    expect(out.capture).toEqual([]);
+  });
+});
+
 describe('isInternalUrl', () => {
   it('flags browser-internal and extension URLs', () => {
     for (const u of [
@@ -306,6 +491,57 @@ describe('isInternalUrl', () => {
   it('treats real web pages as non-internal', () => {
     expect(isInternalUrl('https://example.com/article')).toBe(false);
     expect(isInternalUrl('http://localhost:3000/')).toBe(false);
+  });
+});
+
+describe('isEmptyTabUrl', () => {
+  it('flags blank and new-tab pages', () => {
+    for (const u of [
+      '',
+      'about:blank',
+      'about:newtab',
+      'chrome://newtab/',
+      'chrome://newtab',
+      'chrome://newtab/?source=abc',
+      'chrome://new-tab-page/',
+      'edge://newtab/',
+      'chrome-search://local-ntp/local-ntp.html',
+    ]) {
+      expect(isEmptyTabUrl(u)).toBe(true);
+    }
+  });
+  it('does not flag real pages or other internal pages', () => {
+    for (const u of ['https://example.com', 'chrome://settings', 'about:preferences']) {
+      expect(isEmptyTabUrl(u)).toBe(false);
+    }
+  });
+});
+
+describe('isLocalUrl', () => {
+  it('flags files, loopback and mDNS hosts', () => {
+    for (const u of [
+      'file:///Users/a.pdf',
+      'http://localhost:3000/',
+      'http://app.localhost:5173/',
+      'http://127.0.0.1:8080/',
+      'http://[::1]:5173/',
+      'http://myapp.local/',
+      'chrome://settings/',
+      'edge://settings/',
+    ]) {
+      expect(isLocalUrl(u)).toBe(true);
+    }
+  });
+  it('does not flag remote, private-LAN, or non-local internal pages', () => {
+    for (const u of [
+      'https://example.com',
+      'http://192.168.1.10/',
+      'https://localhost.example.com/',
+      'chrome-extension://abc/page.html',
+      'devtools://devtools/',
+    ]) {
+      expect(isLocalUrl(u)).toBe(false);
+    }
   });
 });
 
