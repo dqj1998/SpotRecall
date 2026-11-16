@@ -2,13 +2,16 @@
 
 A minimal, local-first context & entry-recall engine for Chrome (MV3). It quietly
 indexes the pages you visit and lets you get back to "that page I saw" from a fast
-command palette — by keyword and by meaning. **Your data stays 100% on-device;
-zero network at runtime.**
+command palette — by keyword and by meaning. **The AI runs on your device; your
+pages and queries never leave it.**
 
+**Website: https://spotrecall.com/** ·
 Design & architecture: [SpotRecall-dev-plan.md](SpotRecall-dev-plan.md) ·
 Privacy: [PRIVACY.md](PRIVACY.md)
 
-On Chrome Store: https://chromewebstore.google.com/detail/spotrecall/lfdjmifmmmimonedmclkpckjebmcabcg
+[![Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-Add%20to%20Chrome-4285F4?logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/spotrecall/lfdjmifmmmimonedmclkpckjebmcabcg)
+[![Edge Add-ons](https://img.shields.io/badge/Edge%20Add--ons-Add%20to%20Edge-0a84ff?logo=microsoftedge&logoColor=white)](https://microsoftedge.microsoft.com/addons/detail/hfeblljpbjjebgdedbiemhfbicoelmlf)
+[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 
 ## Quick start
 
